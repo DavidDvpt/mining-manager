@@ -1,0 +1,94 @@
+# Local development stack for the Mining Manager backend.
+#
+# Start from the repository root with:
+#   docker compose -f docker/dev/compose.yaml --env-file docker/dev/.env up --build
+
+name: mining-manager-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mining-manager-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mining_manager
+      POSTGRES_PASSWORD: mining_manager
+      POSTGRES_DB: mining_manager
+    ports:
+      - '127.0.0.1:${PG_PORT:-5440}:5432'
+    volumes:
+      - pg-dev-data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U mining_manager -d mining_manager']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: mining-manager-redis-dev
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:${REDIS_PORT:-6340}:6379'
+    volumes:
+      - redis-dev-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: mining-manager-n8n-dev
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      TZ: Europe/Paris
+      GENERIC_TIMEZONE: Europe/Paris
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      N8N_SECURE_COOKIE: 'false'
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:-dev_only_change_me}
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: '5432'
+      DB_POSTGRESDB_DATABASE: mining_manager
+      DB_POSTGRESDB_USER: mining_manager
+      DB_POSTGRESDB_PASSWORD: mining_manager
+      DB_POSTGRESDB_SCHEMA: n8n
+    ports:
+      - '127.0.0.1:5640:5678'
+    volumes:
+      - n8n-dev-data:/home/node/.n8n
+
+  api:
+    build:
+      context: ../../apps/api
+      dockerfile: Dockerfile.dev
+    container_name: mining-manager-api-dev
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      APP_ENV: development
+      DEBUG: 'true'
+      PORT: '8040'
+      DATABASE_URL: postgresql+asyncpg://mining_manager:mining_manager@postgres:5432/mining_manager
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+    ports:
+      - '127.0.0.1:${API_PORT:-8040}:8040'
+    volumes:
+      - ../../apps/api/src:/app/src
+
+volumes:
+  pg-dev-data:
+  n8n-dev-data:
+  redis-dev-data:

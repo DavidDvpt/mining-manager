@@ -1,0 +1,20 @@
+{
+  "name": "dev",
+  "projectType": "utility",
+  "targets": {
+    "start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker compose -f docker/dev/compose.yaml --env-file docker/dev/.env up --build -d",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "stop": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker compose -f docker/dev/compose.yaml --env-file docker/dev/.env down",
+        "cwd": "{workspaceRoot}"
+      }
+    }
+  }
+}
