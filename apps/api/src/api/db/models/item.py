@@ -1,12 +1,16 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from sqlalchemy import DateTime, ForeignKey, Numeric, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..base import Base
+
+if TYPE_CHECKING:
+    from .economy import Economy
 
 
 class Item(Base):
@@ -63,4 +67,8 @@ class Item(Base):
         DateTime(timezone=True),
         nullable=True,
         server_default=None,
+    )
+    economy: Mapped["Economy | None"] = relationship(
+        back_populates="item",
+        uselist=False,
     )

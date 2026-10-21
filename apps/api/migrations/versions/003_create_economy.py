@@ -23,7 +23,7 @@ def upgrade() -> None:
         sa.Column("avg_mu_percent", sa.Numeric(), nullable=True),
         sa.Column("avg_mu_plus", sa.Numeric(), nullable=True),
         sa.ForeignKeyConstraint(["item_id"], ["item.id"]),
-        sa.PrimaryKeyConstraint("id"),
+        sa.PrimaryKeyConstraint("item_id"),
     )
 
 
