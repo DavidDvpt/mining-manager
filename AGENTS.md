@@ -40,6 +40,13 @@ controller -> service -> repository -> PostgreSQL
 
 Do not reverse these dependencies. Controllers should not access the database directly, repositories should not decide business behavior, and services should remain independent from HTTP concerns. A cross-domain workflow must use the service responsible for each domain and must never bypass it by calling its repository directly.
 
+## Database models
+
+Database models live under `apps/api/src/api/db/models` with one model per file.
+The `models/__init__.py` file exports the models in that directory, while
+`db/__init__.py` exposes database infrastructure such as `Base`. Each package's
+`__init__.py` must only expose the public API of its own directory.
+
 ## Database migrations
 
 Database migrations use a zero-padded incremental numeric prefix:

@@ -1,6 +1,5 @@
-"""Database primitives for the API."""
+"""Database infrastructure and persistence models."""
 
 from .base import Base
-from .models import Category
 
-__all__ = ["Base", "Category"]
+__all__ = ["Base"]

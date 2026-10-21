@@ -65,7 +65,7 @@ def upgrade() -> None:
                 "updated_at": None,
             },
             {
-                "id": UUID("3ba994f3-be40-4710-8525-755bad28802e"),
+                "id": UUID("761d24c4-8bc5-42e2-b30d-b749bc4d3eb4"),
                 "name": "Tool",
                 "is_active": True,
                 "created_at": datetime(
