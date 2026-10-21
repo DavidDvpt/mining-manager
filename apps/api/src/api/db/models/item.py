@@ -1,0 +1,66 @@
+from datetime import datetime
+from decimal import Decimal
+from uuid import UUID
+
+from sqlalchemy import DateTime, ForeignKey, Numeric, String, Text, text
+from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
+from sqlalchemy.orm import Mapped, mapped_column
+
+from ..base import Base
+
+
+class Item(Base):
+    __tablename__ = "item"
+
+    id: Mapped[UUID] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    )
+    name: Mapped[str] = mapped_column(
+        String(255),
+        unique=True,
+        nullable=False,
+    )
+    img_id: Mapped[int | None] = mapped_column(
+        nullable=True,
+        server_default=None,
+    )
+    weight: Mapped[Decimal | None] = mapped_column(
+        Numeric(),
+        nullable=True,
+        server_default=None,
+    )
+    is_untradeable: Mapped[bool | None] = mapped_column(
+        nullable=True,
+        server_default=text("false"),
+    )
+    is_rare: Mapped[bool | None] = mapped_column(
+        nullable=True,
+        server_default=text("false"),
+    )
+    nexus_link: Mapped[str | None] = mapped_column(
+        String(),
+        nullable=True,
+        server_default=None,
+    )
+    description: Mapped[str | None] = mapped_column(
+        Text(),
+        nullable=True,
+        server_default=None,
+    )
+    type_id: Mapped[UUID] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("type.id"),
+        nullable=False,
+    )
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        server_default=text("now()"),
+    )
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        server_default=None,
+    )
