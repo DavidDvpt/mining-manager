@@ -30,6 +30,11 @@ class ItemDetail(Base):
         nullable=True,
         server_default=None,
     )
+    profession_level_min: Mapped[Decimal | None] = mapped_column(
+        Numeric(),
+        nullable=True,
+        server_default=None,
+    )
     depth: Mapped[Decimal | None] = mapped_column(
         Numeric(),
         nullable=True,
