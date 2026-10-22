@@ -11,6 +11,7 @@ from ..base import Base
 
 if TYPE_CHECKING:
     from .economy import Economy
+    from .item_detail import ItemDetail
 
 
 class Item(Base):
@@ -43,7 +44,7 @@ class Item(Base):
         nullable=True,
         server_default=text("false"),
     )
-    nexus_link: Mapped[str | None] = mapped_column(
+    nexus_url: Mapped[str | None] = mapped_column(
         String(),
         nullable=True,
         server_default=None,
@@ -69,6 +70,10 @@ class Item(Base):
         server_default=None,
     )
     economy: Mapped["Economy | None"] = relationship(
+        back_populates="item",
+        uselist=False,
+    )
+    item_detail: Mapped["ItemDetail | None"] = relationship(
         back_populates="item",
         uselist=False,
     )

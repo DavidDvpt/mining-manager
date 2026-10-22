@@ -73,23 +73,13 @@ def upgrade() -> None:
                 ),
                 "updated_at": None,
             },
-        ],
-    )
-
-    category_with_defaults = sa.table(
-        "category",
-        sa.column("name", sa.String()),
-        sa.column("is_active", sa.Boolean()),
-        sa.column("updated_at", sa.DateTime(timezone=True)),
-    )
-    op.bulk_insert(
-        category_with_defaults,
-        [
             {
+                "id": UUID("4cafc352-08b6-4342-9c84-715a1649e62a"),
                 "name": "Accessory",
                 "is_active": True,
+                "created_at": datetime(2026, 10, 20, tzinfo=timezone.utc),
                 "updated_at": None,
-            }
+            },
         ],
     )
 

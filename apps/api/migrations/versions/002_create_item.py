@@ -38,7 +38,7 @@ def upgrade() -> None:
             server_default=sa.text("false"),
             nullable=True,
         ),
-        sa.Column("nexus_link", sa.String(), nullable=True),
+        sa.Column("nexus_url", sa.String(), nullable=True),
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("type_id", sa.Uuid(), nullable=False),
         sa.Column(

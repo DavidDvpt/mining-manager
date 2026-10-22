@@ -97,7 +97,7 @@ def upgrade() -> None:
             },
             {
                 "id": UUID("155f05ef-29b7-478a-aaa7-7d8db93e8811"),
-                "category_id": UUID("4cafc352-08b6-4342-9c84-715a1649e62a"),
+                "category_id":UUID("4cafc352-08b6-4342-9c84-715a1649e62a"),
                 "created_at": datetime(
                     2026, 10, 11, 23, 44, 31, 710000, tzinfo=UTC
                 ),

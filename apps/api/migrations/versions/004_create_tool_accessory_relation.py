@@ -5,6 +5,8 @@ Revises: 003_create_economy
 Create Date: 2026-10-21
 """
 
+from uuid import UUID
+
 import sqlalchemy as sa
 from alembic import op
 
@@ -31,6 +33,33 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["tool_type_id"], ["type.id"]),
         sa.ForeignKeyConstraint(["accessory_type_id"], ["type.id"]),
         sa.PrimaryKeyConstraint("tool_type_id", "accessory_type_id"),
+    )
+
+    relation_table = sa.table(
+        "tool_accessory_relation",
+        sa.column("tool_type_id", sa.Uuid()),
+        sa.column("accessory_type_id", sa.Uuid()),
+        sa.column("role", tool_compatibility_role),
+    )
+    op.bulk_insert(
+        relation_table,
+        [
+            {
+                "tool_type_id": UUID("3cf59ae8-0a13-4dac-9b9e-e0f6824a082f"),
+                "accessory_type_id": UUID("549a7d53-f04a-4da9-baa8-b6fae2f4966f"),
+                "role": "AMPLIFIER",
+            },
+            {
+                "tool_type_id": UUID("3cf59ae8-0a13-4dac-9b9e-e0f6824a082f"),
+                "accessory_type_id": UUID("155f05ef-29b7-478a-aaa7-7d8db93e8811"),
+                "role": "ENHANCER",
+            },
+            {
+                "tool_type_id": UUID("a81ff2c2-6d26-49bd-9dd7-73c38c64773d"),
+                "accessory_type_id": UUID("155f05ef-29b7-478a-aaa7-7d8db93e8811"),
+                "role": "ENHANCER",
+            },
+        ],
     )
 
 
