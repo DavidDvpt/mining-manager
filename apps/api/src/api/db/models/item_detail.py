@@ -25,6 +25,11 @@ class ItemDetail(Base):
         nullable=True,
         server_default=None,
     )
+    efficiency: Mapped[Decimal | None] = mapped_column(
+        Numeric(),
+        nullable=True,
+        server_default=None,
+    )
     depth: Mapped[Decimal | None] = mapped_column(
         Numeric(),
         nullable=True,
