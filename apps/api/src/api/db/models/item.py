@@ -11,6 +11,7 @@ from ..base import Base
 
 if TYPE_CHECKING:
     from .economy import Economy
+    from .enhancer import Enhancer
     from .excavator import Excavator
     from .finder import Finder
     from .finder_amplifier import FinderAmplifier
@@ -76,6 +77,10 @@ class Item(Base):
         server_default=None,
     )
     economy: Mapped["Economy | None"] = relationship(
+        back_populates="item",
+        uselist=False,
+    )
+    enhancer: Mapped["Enhancer | None"] = relationship(
         back_populates="item",
         uselist=False,
     )
