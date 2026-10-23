@@ -1,15 +1,15 @@
 """create item table
 
-Revision ID: 002_create_item
-Revises: 001_create_type
+Revision ID: 001_create_item
+Revises:
 Create Date: 2026-10-21
 """
 
 import sqlalchemy as sa
 from alembic import op
 
-revision = "002_create_item"
-down_revision = "001_create_type"
+revision = "001_create_item"
+down_revision = None
 branch_labels = None
 depends_on = None
 
@@ -46,7 +46,6 @@ def upgrade() -> None:
         ),
         sa.Column("nexus_url", sa.String(), nullable=True),
         sa.Column("description", sa.Text(), nullable=True),
-        sa.Column("type_id", sa.Uuid(), nullable=False),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
@@ -54,7 +53,6 @@ def upgrade() -> None:
             nullable=True,
         ),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(["type_id"], ["type.id"]),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
     )

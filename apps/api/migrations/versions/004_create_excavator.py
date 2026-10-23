@@ -1,7 +1,7 @@
 """add excavators and efficiency details
 
-Revision ID: 005_create_excavator
-Revises: 004_create_finder
+Revision ID: 004_create_excavator
+Revises: 003_create_finder
 Create Date: 2026-10-22
 """
 
@@ -12,12 +12,10 @@ from uuid import UUID
 import sqlalchemy as sa
 from alembic import op
 
-revision = "005_create_excavator"
-down_revision = "004_create_finder"
+revision = "004_create_excavator"
+down_revision = "003_create_finder"
 branch_labels = None
 depends_on = None
-
-EXCAVATOR_TYPE_ID = UUID("a81ff2c2-6d26-49bd-9dd7-73c38c64773d")
 
 
 def _timestamp(value: str) -> datetime:
@@ -103,7 +101,6 @@ def upgrade() -> None:
         sa.column("description", sa.Text()),
         sa.column("is_rare", sa.Boolean()),
         sa.column("is_untradeable", sa.Boolean()),
-        sa.column("type_id", sa.Uuid()),
         sa.column("created_at", sa.DateTime(timezone=True)),
         sa.column("updated_at", sa.DateTime(timezone=True)),
     )
@@ -133,7 +130,6 @@ def upgrade() -> None:
                 "description": row[6],
                 "is_rare": row[7],
                 "is_untradeable": row[8],
-                "type_id": EXCAVATOR_TYPE_ID,
                 "created_at": row[9],
                 "updated_at": row[10],
             }

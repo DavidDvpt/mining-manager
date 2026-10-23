@@ -1,7 +1,7 @@
 """add finder amplifiers and profession level minimum
 
-Revision ID: 006_create_finder_amplifier
-Revises: 005_create_excavator
+Revision ID: 005_create_finder_amplifier
+Revises: 004_create_excavator
 Create Date: 2026-10-22
 """
 
@@ -12,12 +12,10 @@ from uuid import UUID
 import sqlalchemy as sa
 from alembic import op
 
-revision = "006_create_finder_amplifier"
-down_revision = "005_create_excavator"
+revision = "005_create_finder_amplifier"
+down_revision = "004_create_excavator"
 branch_labels = None
 depends_on = None
-
-FINDER_AMPLIFIER_TYPE_ID = UUID("549a7d53-f04a-4da9-baa8-b6fae2f4966f")
 
 
 def _timestamp(value: str) -> datetime | None:
@@ -106,7 +104,6 @@ def upgrade() -> None:
         sa.column("description", sa.Text()),
         sa.column("is_rare", sa.Boolean()),
         sa.column("is_untradeable", sa.Boolean()),
-        sa.column("type_id", sa.Uuid()),
         sa.column("created_at", sa.DateTime(timezone=True)),
         sa.column("updated_at", sa.DateTime(timezone=True)),
     )
@@ -136,7 +133,6 @@ def upgrade() -> None:
                 "description": row[6],
                 "is_rare": row[7],
                 "is_untradeable": row[8],
-                "type_id": FINDER_AMPLIFIER_TYPE_ID,
                 "created_at": row[9],
                 "updated_at": row[10],
             }

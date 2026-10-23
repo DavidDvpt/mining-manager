@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, Numeric, String, Text, text
+from sqlalchemy import DateTime, Numeric, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -60,11 +60,6 @@ class Item(Base):
         Text(),
         nullable=True,
         server_default=None,
-    )
-    type_id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True),
-        ForeignKey("type.id"),
-        nullable=False,
     )
     created_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),

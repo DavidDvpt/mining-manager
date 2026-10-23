@@ -1,15 +1,15 @@
 """create economy table
 
-Revision ID: 003_create_economy
-Revises: 002_create_item
+Revision ID: 002_create_economy
+Revises: 001_create_item
 Create Date: 2026-10-21
 """
 
 import sqlalchemy as sa
 from alembic import op
 
-revision = "003_create_economy"
-down_revision = "002_create_item"
+revision = "002_create_economy"
+down_revision = "001_create_item"
 branch_labels = None
 depends_on = None
 

@@ -4,7 +4,6 @@ from logging.config import fileConfig
 
 from alembic import context
 from api.db import Base
-from api.db.models import Category, Type  # noqa: F401
 from sqlalchemy import Connection, pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 

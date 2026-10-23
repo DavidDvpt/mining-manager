@@ -1,7 +1,7 @@
 """create finder table and seed finders
 
-Revision ID: 004_create_finder
-Revises: 003_create_economy
+Revision ID: 003_create_finder
+Revises: 002_create_economy
 Create Date: 2026-10-22
 """
 
@@ -12,12 +12,10 @@ from uuid import UUID
 import sqlalchemy as sa
 from alembic import op
 
-revision = "004_create_finder"
-down_revision = "003_create_economy"
+revision = "003_create_finder"
+down_revision = "002_create_economy"
 branch_labels = None
 depends_on = None
-
-FINDER_TYPE_ID = UUID("3cf59ae8-0a13-4dac-9b9e-e0f6824a082f")
 
 
 def _timestamp(value: str) -> datetime:
@@ -163,7 +161,6 @@ def upgrade() -> None:
         sa.column("description", sa.Text()),
         sa.column("is_rare", sa.Boolean()),
         sa.column("is_untradeable", sa.Boolean()),
-        sa.column("type_id", sa.Uuid()),
         sa.column("created_at", sa.DateTime(timezone=True)),
         sa.column("updated_at", sa.DateTime(timezone=True)),
     )
@@ -194,7 +191,6 @@ def upgrade() -> None:
                 "description": row[7],
                 "is_rare": row[8],
                 "is_untradeable": row[9],
-                "type_id": FINDER_TYPE_ID,
                 "created_at": _timestamp(row[10]),
                 "updated_at": _timestamp(row[11]),
             }
