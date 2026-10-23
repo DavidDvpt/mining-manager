@@ -11,7 +11,9 @@ from ..base import Base
 
 if TYPE_CHECKING:
     from .economy import Economy
-    from .item_detail import ItemDetail
+    from .excavator import Excavator
+    from .finder import Finder
+    from .finder_amplifier import FinderAmplifier
 
 
 class Item(Base):
@@ -44,6 +46,10 @@ class Item(Base):
         nullable=True,
         server_default=text("false"),
     )
+    is_active: Mapped[bool | None] = mapped_column(
+        nullable=True,
+        server_default=text("true"),
+    )
     nexus_url: Mapped[str | None] = mapped_column(
         String(),
         nullable=True,
@@ -73,7 +79,15 @@ class Item(Base):
         back_populates="item",
         uselist=False,
     )
-    item_detail: Mapped["ItemDetail | None"] = relationship(
+    finder: Mapped["Finder | None"] = relationship(
+        back_populates="item",
+        uselist=False,
+    )
+    excavator: Mapped["Excavator | None"] = relationship(
+        back_populates="item",
+        uselist=False,
+    )
+    finder_amplifier: Mapped["FinderAmplifier | None"] = relationship(
         back_populates="item",
         uselist=False,
     )

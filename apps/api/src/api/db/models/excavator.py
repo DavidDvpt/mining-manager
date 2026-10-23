@@ -12,8 +12,8 @@ if TYPE_CHECKING:
     from .item import Item
 
 
-class ItemDetail(Base):
-    __tablename__ = "item_detail"
+class Excavator(Base):
+    __tablename__ = "excavator"
 
     item_id: Mapped[UUID] = mapped_column(
         PostgresUUID(as_uuid=True),
@@ -30,25 +30,6 @@ class ItemDetail(Base):
         nullable=True,
         server_default=None,
     )
-    profession_level_min: Mapped[Decimal | None] = mapped_column(
-        Numeric(),
-        nullable=True,
-        server_default=None,
-    )
-    depth: Mapped[Decimal | None] = mapped_column(
-        Numeric(),
-        nullable=True,
-        server_default=None,
-    )
-    range: Mapped[Decimal | None] = mapped_column(
-        Numeric(),
-        nullable=True,
-        server_default=None,
-    )
-    ammo_burn: Mapped[int | None] = mapped_column(
-        nullable=True,
-        server_default=None,
-    )
     item: Mapped["Item"] = relationship(
-        back_populates="item_detail",
+        back_populates="excavator",
     )

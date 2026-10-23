@@ -1,7 +1,7 @@
 """add finder amplifiers and profession level minimum
 
-Revision ID: 007_create_finder_amplifier
-Revises: 006_create_excavator
+Revision ID: 006_create_finder_amplifier
+Revises: 005_create_excavator
 Create Date: 2026-10-22
 """
 
@@ -12,8 +12,8 @@ from uuid import UUID
 import sqlalchemy as sa
 from alembic import op
 
-revision = "007_create_finder_amplifier"
-down_revision = "006_create_excavator"
+revision = "006_create_finder_amplifier"
+down_revision = "005_create_excavator"
 branch_labels = None
 depends_on = None
 
@@ -86,9 +86,13 @@ FINDER_AMPLIFIERS = [
 
 
 def upgrade() -> None:
-    op.add_column(
-        "item_detail",
-        sa.Column("profession_level_min", sa.Numeric(), nullable=True, server_default=None),
+    op.create_table(
+        "finder_amplifier",
+        sa.Column("item_id", sa.Uuid(), nullable=False),
+        sa.Column("efficiency", sa.Numeric(), nullable=True),
+        sa.Column("profession_level_min", sa.Numeric(), nullable=True), 
+        sa.ForeignKeyConstraint(["item_id"], ["item.id"]),
+        sa.PrimaryKeyConstraint("item_id"),
     )
 
     item_table = sa.table(
@@ -97,6 +101,7 @@ def upgrade() -> None:
         sa.column("name", sa.String()),
         sa.column("img_id", sa.Integer()),
         sa.column("weight", sa.Numeric()),
+        sa.column("is_active", sa.Boolean()),
         sa.column("nexus_url", sa.String()),
         sa.column("description", sa.Text()),
         sa.column("is_rare", sa.Boolean()),
@@ -105,8 +110,8 @@ def upgrade() -> None:
         sa.column("created_at", sa.DateTime(timezone=True)),
         sa.column("updated_at", sa.DateTime(timezone=True)),
     )
-    item_detail_table = sa.table(
-        "item_detail",
+    finder_amplifier_table = sa.table(
+        "finder_amplifier",
         sa.column("item_id", sa.Uuid()),
         sa.column("efficiency", sa.Numeric()),
         sa.column("profession_level_min", sa.Numeric()),
@@ -126,6 +131,7 @@ def upgrade() -> None:
                 "name": row[1],
                 "img_id": row[2],
                 "weight": row[11],
+                "is_active": True,
                 "nexus_url": row[3],
                 "description": row[6],
                 "is_rare": row[7],
@@ -138,7 +144,7 @@ def upgrade() -> None:
         ],
     )
     op.bulk_insert(
-        item_detail_table,
+        finder_amplifier_table,
         [
             {
                 "item_id": UUID(row[0]),
@@ -166,9 +172,15 @@ def downgrade() -> None:
     item_ids = [UUID(row[0]) for row in FINDER_AMPLIFIERS]
 
     economy_table = sa.table("economy", sa.column("item_id", sa.Uuid()))
-    item_detail_table = sa.table("item_detail", sa.column("item_id", sa.Uuid()))
+    finder_amplifier_table = sa.table(
+        "finder_amplifier", sa.column("item_id", sa.Uuid())
+    )
     item_table = sa.table("item", sa.column("id", sa.Uuid()))
     bind.execute(economy_table.delete().where(economy_table.c.item_id.in_(item_ids)))
-    bind.execute(item_detail_table.delete().where(item_detail_table.c.item_id.in_(item_ids)))
+    bind.execute(
+        finder_amplifier_table.delete().where(
+            finder_amplifier_table.c.item_id.in_(item_ids)
+        )
+    )
     bind.execute(item_table.delete().where(item_table.c.id.in_(item_ids)))
-    op.drop_column("item_detail", "profession_level_min")
+    op.drop_table("finder_amplifier")

@@ -1,7 +1,7 @@
-"""create item detail table and seed finders
+"""create finder table and seed finders
 
-Revision ID: 005_create_item_detail
-Revises: 004_tool_accessory_relation
+Revision ID: 004_create_finder
+Revises: 003_create_economy
 Create Date: 2026-10-22
 """
 
@@ -12,8 +12,8 @@ from uuid import UUID
 import sqlalchemy as sa
 from alembic import op
 
-revision = "005_create_item_detail"
-down_revision = "004_tool_accessory_relation"
+revision = "004_create_finder"
+down_revision = "003_create_economy"
 branch_labels = None
 depends_on = None
 
@@ -141,7 +141,7 @@ FINDERS = [
 
 def upgrade() -> None:
     op.create_table(
-        "item_detail",
+        "finder",
         sa.Column("item_id", sa.Uuid(), nullable=False),
         sa.Column("use_per_minute", sa.Integer(), nullable=True),
         sa.Column("depth", sa.Numeric(), nullable=True),
@@ -158,6 +158,7 @@ def upgrade() -> None:
         sa.column("name", sa.String()),
         sa.column("img_id", sa.Integer()),
         sa.column("weight", sa.Numeric()),
+        sa.column("is_active", sa.Boolean()),
         sa.column("nexus_url", sa.String()),
         sa.column("description", sa.Text()),
         sa.column("is_rare", sa.Boolean()),
@@ -166,8 +167,8 @@ def upgrade() -> None:
         sa.column("created_at", sa.DateTime(timezone=True)),
         sa.column("updated_at", sa.DateTime(timezone=True)),
     )
-    item_detail_table = sa.table(
-        "item_detail",
+    finder_table = sa.table(
+        "finder",
         sa.column("item_id", sa.Uuid()),
         sa.column("use_per_minute", sa.Integer()),
         sa.column("depth", sa.Numeric()),
@@ -188,6 +189,7 @@ def upgrade() -> None:
                 "name": row[1],
                 "img_id": row[2],
                 "weight": row[12],
+                "is_active": True,
                 "nexus_url": row[3],
                 "description": row[7],
                 "is_rare": row[8],
@@ -200,7 +202,7 @@ def upgrade() -> None:
         ],
     )
     op.bulk_insert(
-        item_detail_table,
+        finder_table,
         [
             {
                 "item_id": UUID(row[0]),
@@ -229,9 +231,9 @@ def downgrade() -> None:
     item_ids = [UUID(row[0]) for row in FINDERS]
 
     economy_table = sa.table("economy", sa.column("item_id", sa.Uuid()))
-    item_detail_table = sa.table("item_detail", sa.column("item_id", sa.Uuid()))
+    finder_table = sa.table("finder", sa.column("item_id", sa.Uuid()))
     item_table = sa.table("item", sa.column("id", sa.Uuid()))
     bind.execute(economy_table.delete().where(economy_table.c.item_id.in_(item_ids)))
-    bind.execute(item_detail_table.delete().where(item_detail_table.c.item_id.in_(item_ids)))
+    bind.execute(finder_table.delete().where(finder_table.c.item_id.in_(item_ids)))
     bind.execute(item_table.delete().where(item_table.c.id.in_(item_ids)))
-    op.drop_table("item_detail")
+    op.drop_table("finder")
