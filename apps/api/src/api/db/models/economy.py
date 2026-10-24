@@ -2,7 +2,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import ForeignKey, Numeric, text
+from sqlalchemy import ForeignKey, Numeric
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -22,7 +22,7 @@ class Economy(Base):
         nullable=False,
     )
     tt: Mapped[Decimal | None] = mapped_column(
-        Numeric(),
+        Numeric(precision=20, scale=5),
         nullable=True,
         server_default=None,
     )

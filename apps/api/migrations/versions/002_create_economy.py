@@ -18,7 +18,7 @@ def upgrade() -> None:
     op.create_table(
         "economy",
         sa.Column("item_id", sa.Uuid(), nullable=False),
-        sa.Column("tt", sa.Numeric(), nullable=True),
+        sa.Column("tt", sa.Numeric(precision=20, scale=5), nullable=True),
         sa.Column("decay", sa.Numeric(), nullable=True),
         sa.Column("avg_mu_percent", sa.Numeric(), nullable=True),
         sa.Column("avg_mu_plus", sa.Numeric(), nullable=True),

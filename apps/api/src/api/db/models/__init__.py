@@ -6,6 +6,7 @@ from .excavator import Excavator
 from .finder import Finder
 from .finder_amplifier import FinderAmplifier
 from .item import Item
+from .material import Material
 from .material_type import MaterialType
 
 __all__ = [
@@ -16,6 +17,7 @@ __all__ = [
     "Finder",
     "FinderAmplifier",
     "Item",
+    "Material",
     "MaterialType",
     "Tool",
 ]
