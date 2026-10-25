@@ -9,6 +9,7 @@ from ..base import Base
 
 if TYPE_CHECKING:
     from .item import Item
+    from .resource_lot import ResourceLot
 
 
 class Material(Base):
@@ -26,5 +27,8 @@ class Material(Base):
         nullable=False,
     )
     item: Mapped["Item"] = relationship(
+        back_populates="material",
+    )
+    resource_lots: Mapped[list["ResourceLot"]] = relationship(
         back_populates="material",
     )

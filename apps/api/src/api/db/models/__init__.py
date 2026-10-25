@@ -10,6 +10,9 @@ from .material import Material
 from .material_type import MaterialType
 from .refiner import Refiner
 from .profile import Profile
+from .resource_lot import ResourceLot, ResourceLotOrigin, ResourceLotOriginType
+from .transaction import Transaction, TransactionStatus, TransactionType
+from .transaction_lot import TransactionLot, TransactionLotType
 from .user import Role, User
 
 __all__ = [
@@ -24,6 +27,14 @@ __all__ = [
     "MaterialType",
     "Refiner",
     "Profile",
+    "ResourceLot",
+    "ResourceLotOrigin",
+    "ResourceLotOriginType",
+    "Transaction",
+    "TransactionStatus",
+    "TransactionType",
+    "TransactionLot",
+    "TransactionLotType",
     "Role",
     "User",
     "Tool",
