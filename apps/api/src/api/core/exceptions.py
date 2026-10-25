@@ -102,8 +102,12 @@ async def _no_result_found_handler(
     return _message_response("Resource not found", 404)
 
 
-async def _generic_error_handler(_request: Request, exc: Exception) -> JSONResponse:
-    logger.exception("Unhandled error: %s", exc)
+async def _generic_error_handler(request: Request, _exc: Exception) -> JSONResponse:
+    logger.exception(
+        "Unhandled error method=%s path=%s",
+        request.method,
+        request.url.path,
+    )
     return _message_response("Internal server error", 500)
 
 

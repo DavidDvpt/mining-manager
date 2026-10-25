@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.api.internal_router import internal_router
 from api.api.v1.router import api_v1_router
 from api.core.config import get_settings
+from api.core.exceptions import register_exception_handlers
 from api.core.logging import get_logger, setup_logging
 
 logger = get_logger(__name__)
@@ -29,6 +30,7 @@ def build_app() -> FastAPI:
         redoc_url=f"{settings.api_v1_prefix}/redoc",
         lifespan=_lifespan,
     )
+    register_exception_handlers(app)
 
     configured_origins = [
         origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()
