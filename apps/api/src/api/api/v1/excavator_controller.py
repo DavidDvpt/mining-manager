@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.core.exceptions import AppError
 from api.db import get_session
 from api.db.repositories import ExcavatorRepository
+from api.schemas import ExcavatorResponse
 from api.services import ExcavatorService
 
 router = APIRouter(tags=["excavators"])
@@ -20,14 +21,14 @@ def get_excavator_service(
     return ExcavatorService(ExcavatorRepository(session))
 
 
-@router.get("")
+@router.get("", response_model=list[ExcavatorResponse])
 async def get_all_excavators(
     service: Annotated[ExcavatorService, Depends(get_excavator_service)],
 ):
     return await service.get_all()
 
 
-@router.get("/{item_id}")
+@router.get("/{item_id}", response_model=ExcavatorResponse)
 async def get_excavator_by_id(
     item_id: UUID,
     service: Annotated[ExcavatorService, Depends(get_excavator_service)],

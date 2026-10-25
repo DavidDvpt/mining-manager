@@ -22,6 +22,10 @@ class Refiner(Base):
         primary_key=True,
         nullable=False,
     )
+    use_per_minute: Mapped[int | None] = mapped_column(
+        nullable=True,
+        server_default=None,
+    )
     item: Mapped["Item"] = relationship(
         back_populates="refiner",
     )

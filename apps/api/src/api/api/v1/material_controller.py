@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.core.exceptions import AppError
 from api.db import get_session
 from api.db.repositories import MaterialRepository
+from api.schemas import MaterialResponse
 from api.services import MaterialService
 
 router = APIRouter(tags=["materials"])
@@ -20,14 +21,14 @@ def get_material_service(
     return MaterialService(MaterialRepository(session))
 
 
-@router.get("")
+@router.get("", response_model=list[MaterialResponse])
 async def get_all_materials(
     service: Annotated[MaterialService, Depends(get_material_service)],
 ):
     return await service.get_all()
 
 
-@router.get("/{item_id}")
+@router.get("/{item_id}", response_model=MaterialResponse)
 async def get_material_by_id(
     item_id: UUID,
     service: Annotated[MaterialService, Depends(get_material_service)],

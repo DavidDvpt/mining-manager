@@ -83,6 +83,8 @@ services:
       PORT: '8040'
       DATABASE_URL: postgresql+asyncpg://mining_manager:mining_manager@postgres:5432/mining_manager
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+      API_V1_PREFIX: ${API_V1_PREFIX:-/api/v1}
+      INTERNAL_V1_PREFIX: ${INTERNAL_V1_PREFIX:-/internal/v1}
     ports:
       - '127.0.0.1:${API_PORT:-8040}:8040'
     volumes:

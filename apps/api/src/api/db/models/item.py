@@ -36,6 +36,10 @@ class Item(Base):
         nullable=True,
         server_default=None,
     )
+    nexus_id: Mapped[int | None] = mapped_column(
+        nullable=True,
+        server_default=None,
+    )
     weight: Mapped[Decimal | None] = mapped_column(
         Numeric(),
         nullable=True,

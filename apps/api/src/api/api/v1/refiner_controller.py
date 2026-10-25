@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.core.exceptions import AppError
 from api.db import get_session
 from api.db.repositories import RefinerRepository
+from api.schemas import RefinerResponse
 from api.services import RefinerService
 
 router = APIRouter(tags=["refiners"])
@@ -20,14 +21,14 @@ def get_refiner_service(
     return RefinerService(RefinerRepository(session))
 
 
-@router.get("")
+@router.get("", response_model=list[RefinerResponse])
 async def get_all_refiners(
     service: Annotated[RefinerService, Depends(get_refiner_service)],
 ):
     return await service.get_all()
 
 
-@router.get("/{item_id}")
+@router.get("/{item_id}", response_model=RefinerResponse)
 async def get_refiner_by_id(
     item_id: UUID,
     service: Annotated[RefinerService, Depends(get_refiner_service)],

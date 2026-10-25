@@ -25,6 +25,7 @@ def upgrade() -> None:
         ),
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("img_id", sa.Integer(), nullable=True),
+        sa.Column("nexus_id", sa.Integer(), nullable=True, server_default=None),
         sa.Column("weight", sa.Numeric(), nullable=True),
         sa.Column(
             "is_untradeable",

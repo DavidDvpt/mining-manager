@@ -19,6 +19,7 @@ def build_item_entity(item: Item, details: TDetails | None) -> ItemEntity[TDetai
         id=item.id,
         name=item.name,
         img_id=item.img_id,
+        nexus_id=item.nexus_id,
         weight=item.weight,
         is_untradeable=item.is_untradeable,
         is_rare=item.is_rare,

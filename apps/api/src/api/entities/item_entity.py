@@ -18,6 +18,7 @@ class ItemEntity(Generic[TDetails]):
     id: UUID
     name: str
     img_id: int | None
+    nexus_id: int | None
     weight: Decimal | None
     is_untradeable: bool | None
     is_rare: bool | None
