@@ -46,8 +46,7 @@ def _set_auth_cookies(response: Response, user) -> None:
 @router.post("/signup", status_code=201)
 async def signup(body: SignUpRequest, session: DbSession) -> dict[str, str]:
     await auth_service.signup(
-        session, pseudo=body.pseudo, email=str(body.email), password=body.password,
-        firstname=body.firstname, lastname=body.lastname,
+        session, pseudo=body.pseudo, password=body.password,
     )
     return {"message": "User created"}
 
@@ -60,7 +59,7 @@ async def signin(body: SignInRequest, session: DbSession) -> Response:
     return response
 
 
-@router.post("/auth/logout")
+@router.post("/logout")
 async def logout() -> Response:
     response = JSONResponse(content={"message": "Logged out"})
     response.delete_cookie(ACCESS_TOKEN_COOKIE, path="/")
@@ -68,7 +67,7 @@ async def logout() -> Response:
     return response
 
 
-@router.get("/auth/me", response_model=UserResponse)
+@router.get("/me", response_model=UserResponse)
 async def me(current_user: CurrentUser, session: DbSession) -> dict:
     user = await auth_service.me(session, current_user["id"])
     if user is None:

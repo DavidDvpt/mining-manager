@@ -1,6 +1,6 @@
 """Authentication request and response schemas."""
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class SignInRequest(BaseModel):
@@ -12,9 +12,6 @@ class SignUpRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
     pseudo: str = Field(min_length=1, max_length=50)
     password: str = Field(min_length=8, max_length=50)
-    email: EmailStr
-    firstname: str | None = Field(default=None, validation_alias=AliasChoices("firstname", "firstName"))
-    lastname: str | None = Field(default=None, validation_alias=AliasChoices("lastname", "lastName"))
 
 
 class UserResponse(BaseModel):

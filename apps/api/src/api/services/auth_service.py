@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.core.exceptions import AppError
 from api.db.models import User
-from api.db.repositories import ProfileRepository, UserRepository
+from api.db.repositories import UserRepository
 from api.services.password_service import hash_password, verify_password
 
 
@@ -18,16 +18,12 @@ def serialize_user(user: User) -> dict:
     }
 
 
-async def signup(session: AsyncSession, *, pseudo: str, email: str, password: str,
-                 firstname: str | None, lastname: str | None) -> None:
+async def signup(session: AsyncSession, *, pseudo: str, password: str) -> None:
     user_repo = UserRepository(session)
-    profile_repo = ProfileRepository(session)
     if await user_repo.get_by_pseudo(pseudo):
         raise AppError(409, "Pseudo already in use")
-    user = await user_repo.create(pseudo=pseudo, password_hash=hash_password(password))
-    await profile_repo.create(
-        user_id=user.id, email=email, firstname=firstname, lastname=lastname
-    )
+    await user_repo.create(pseudo=pseudo, password_hash=hash_password(password))
+    await session.commit()
 
 
 async def signin(session: AsyncSession, *, pseudo: str, password: str) -> User:

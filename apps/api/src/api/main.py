@@ -1,10 +1,13 @@
 import re
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from copy import deepcopy
 from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
+from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 
 from api.api.internal_router import internal_router
@@ -25,6 +28,18 @@ def generate_operation_id(route: APIRoute) -> str:
     return f"{methods}_{path}"
 
 
+def public_openapi_schema(app: FastAPI) -> dict[str, Any]:
+    """Return the catalogue-only schema used by the interactive docs."""
+
+    schema = deepcopy(app.openapi())
+    schema["paths"] = {
+        path: operations
+        for path, operations in schema["paths"].items()
+        if not any(tag in {"auth", "profile"} for operation in operations.values() for tag in operation.get("tags", []))
+    }
+    return schema
+
+
 def build_app() -> FastAPI:
     """Create and configure the FastAPI application."""
 
@@ -37,9 +52,9 @@ def build_app() -> FastAPI:
         version="0.1.0",
         description="Main API for the Mining Manager backend.",
         debug=settings.debug,
-        docs_url=f"{settings.api_v1_prefix}/docs" if docs_enabled else None,
+        docs_url=None,
         openapi_url=f"{settings.api_v1_prefix}/openapi.json" if docs_enabled else None,
-        redoc_url=f"{settings.api_v1_prefix}/redoc" if docs_enabled else None,
+        redoc_url=None,
         generate_unique_id_function=generate_operation_id,
         lifespan=_lifespan,
     )
@@ -64,6 +79,27 @@ def build_app() -> FastAPI:
     app.include_router(api_v1_router, prefix=settings.api_v1_prefix)
     app.include_router(internal_router, prefix=settings.internal_v1_prefix)
 
+    if docs_enabled:
+        docs_openapi_url = f"{settings.api_v1_prefix}/docs/openapi.json"
+
+        @app.get(docs_openapi_url, include_in_schema=False)
+        async def docs_openapi() -> JSONResponse:
+            return JSONResponse(public_openapi_schema(app))
+
+        @app.get(f"{settings.api_v1_prefix}/docs", include_in_schema=False)
+        async def docs() -> Any:
+            return get_swagger_ui_html(
+                openapi_url=docs_openapi_url,
+                title="Mining Manager API - Swagger UI",
+            )
+
+        @app.get(f"{settings.api_v1_prefix}/redoc", include_in_schema=False)
+        async def redoc() -> Any:
+            return get_redoc_html(
+                openapi_url=docs_openapi_url,
+                title="Mining Manager API - ReDoc",
+            )
+
     @app.get("/health", tags=["health"])
     async def health() -> dict[str, Any]:
         return {"status": "ok"}
@@ -83,8 +119,3 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = build_app()
-
-
-@app.get("/")
-async def hello_world() -> dict[str, str]:
-    return {"message": "Hello, World!"}
