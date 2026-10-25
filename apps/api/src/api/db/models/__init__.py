@@ -9,6 +9,8 @@ from .item import Item
 from .material import Material
 from .material_type import MaterialType
 from .refiner import Refiner
+from .profile import Profile
+from .user import Role, User
 
 __all__ = [
     "Economy",
@@ -21,5 +23,8 @@ __all__ = [
     "Material",
     "MaterialType",
     "Refiner",
+    "Profile",
+    "Role",
+    "User",
     "Tool",
 ]
