@@ -3,6 +3,13 @@
   "projectType": "application",
   "sourceRoot": "apps/api/src",
   "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run pytest",
+        "cwd": "{projectRoot}"
+      }
+    },
     "alembic": {
       "executor": "nx:run-commands",
       "options": {

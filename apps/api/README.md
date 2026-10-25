@@ -22,4 +22,48 @@ Main FastAPI application for the Entropia Manager backend.
 uv sync --dev
 ```
 
+Synchronise les dépendances de l’API, y compris les dépendances de développement
+comme pytest et Ruff.
+
 The project requires Python `>=3.12` and uses `uv_build` for packaging.
+
+## Commandes
+
+Les commandes Nx suivantes se lancent depuis la racine du repository :
+
+```bash
+npm exec nx run api:test
+```
+
+Lance tous les tests de l’API avec pytest. La cible exécute `uv run pytest`
+depuis le dossier `apps/api`.
+
+```bash
+npm exec nx run api:alembic:upgrade
+```
+
+Applique toutes les migrations Alembic jusqu’à la dernière version (`head`).
+Cette commande met à jour le schéma PostgreSQL configuré dans
+`apps/api/.env`.
+
+Depuis le dossier `apps/api`, les commandes équivalentes sont :
+
+```bash
+uv run pytest
+```
+
+Exécute directement la suite de tests Python définie dans `tests/`.
+
+```bash
+uv run ruff check src tests
+```
+
+Vérifie le style et les erreurs statiques dans le code source et les tests.
+
+```bash
+uv run alembic upgrade head
+```
+
+Exécute directement les migrations de base de données jusqu’à la révision la
+plus récente. La cible Nx `api:alembic:upgrade` est recommandée depuis la
+racine du repository.
