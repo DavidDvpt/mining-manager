@@ -1,10 +1,14 @@
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..base import Base
+
+if TYPE_CHECKING:
+    from .item import Item
 
 
 class Material(Base):
@@ -20,4 +24,7 @@ class Material(Base):
         PostgresUUID(as_uuid=True),
         ForeignKey("material_type.id"),
         nullable=False,
+    )
+    item: Mapped["Item"] = relationship(
+        back_populates="material",
     )

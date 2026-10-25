@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from .excavator import Excavator
     from .finder import Finder
     from .finder_amplifier import FinderAmplifier
+    from .material import Material
 
 
 class Item(Base):
@@ -88,6 +89,10 @@ class Item(Base):
         uselist=False,
     )
     finder_amplifier: Mapped["FinderAmplifier | None"] = relationship(
+        back_populates="item",
+        uselist=False,
+    )
+    material: Mapped["Material | None"] = relationship(
         back_populates="item",
         uselist=False,
     )
