@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from .finder import Finder
     from .finder_amplifier import FinderAmplifier
     from .material import Material
+    from .refiner import Refiner
 
 
 class Item(Base):
@@ -93,6 +94,10 @@ class Item(Base):
         uselist=False,
     )
     material: Mapped["Material | None"] = relationship(
+        back_populates="item",
+        uselist=False,
+    )
+    refiner: Mapped["Refiner | None"] = relationship(
         back_populates="item",
         uselist=False,
     )

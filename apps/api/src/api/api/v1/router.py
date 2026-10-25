@@ -7,6 +7,7 @@ from .excavator_controller import router as excavator_router
 from .finder_amplifier_controller import router as finder_amplifier_router
 from .finder_controller import router as finder_router
 from .material_controller import router as material_router
+from .refiner_controller import router as refiner_router
 
 api_v1_router = APIRouter()
 api_v1_router.include_router(excavator_router, prefix="/excavators")
@@ -14,3 +15,4 @@ api_v1_router.include_router(finder_router, prefix="/finders")
 api_v1_router.include_router(finder_amplifier_router, prefix="/finder-amplifiers")
 api_v1_router.include_router(enhancer_router, prefix="/enhancers")
 api_v1_router.include_router(material_router, prefix="/materials")
+api_v1_router.include_router(refiner_router, prefix="/refiners")

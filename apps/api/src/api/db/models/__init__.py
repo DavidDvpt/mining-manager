@@ -8,6 +8,7 @@ from .finder_amplifier import FinderAmplifier
 from .item import Item
 from .material import Material
 from .material_type import MaterialType
+from .refiner import Refiner
 
 __all__ = [
     "Economy",
@@ -19,5 +20,6 @@ __all__ = [
     "Item",
     "Material",
     "MaterialType",
+    "Refiner",
     "Tool",
 ]

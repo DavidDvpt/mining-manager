@@ -27,12 +27,12 @@ class Economy(Base):
         server_default=None,
     )
     decay: Mapped[Decimal | None] = mapped_column(
-        Numeric(),
+        Numeric(precision=20, scale=5),
         nullable=True,
         server_default=None,
     )
     avg_mu_percent: Mapped[Decimal | None] = mapped_column(
-        Numeric(),
+        Numeric(precision=20, scale=5),
         nullable=True,
         server_default=None,
     )
