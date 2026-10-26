@@ -8,6 +8,7 @@ from .finder_amplifier import FinderAmplifier
 from .item import Item
 from .material import Material
 from .material_type import MaterialType
+from .deposit_size import DepositSize
 from .refiner import Refiner
 from .profile import Profile
 from .resource_lot import ResourceLot, ResourceLotOrigin, ResourceLotOriginType
@@ -25,6 +26,7 @@ __all__ = [
     "Item",
     "Material",
     "MaterialType",
+    "DepositSize",
     "Refiner",
     "Profile",
     "ResourceLot",
