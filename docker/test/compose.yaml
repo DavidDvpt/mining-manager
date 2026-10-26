@@ -1,0 +1,22 @@
+# Ephemeral PostgreSQL stack for API integration tests.
+# This file intentionally has no persistent volumes.
+
+name: mining-manager-test
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mining-manager-postgres-test
+    environment:
+      POSTGRES_USER: entropia_test
+      POSTGRES_PASSWORD: entropia_test
+      POSTGRES_DB: entropia_test
+    ports:
+      - '127.0.0.1:${PG_TEST_PORT:-5540}:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U entropia_test -d entropia_test']
+      interval: 2s
+      timeout: 3s
+      retries: 30

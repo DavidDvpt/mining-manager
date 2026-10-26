@@ -39,6 +39,16 @@ Lance tous les tests de l’API avec pytest. La cible exécute `uv run pytest`
 depuis le dossier `apps/api`.
 
 ```bash
+npm exec nx run api:test-integration
+```
+
+Lance les tests d’intégration avec un PostgreSQL dédié et éphémère. La commande
+démarre le container PostgreSQL en `tmpfs`, attend son healthcheck, applique les
+migrations Alembic sur une base vide, exécute les tests, puis arrête et supprime
+le container et le réseau de test. Elle doit être lancée depuis la racine du
+repository et ne touche pas à la base de développement.
+
+```bash
 npm exec nx run api:alembic:upgrade
 ```
 
