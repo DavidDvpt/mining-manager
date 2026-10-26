@@ -6,6 +6,11 @@ from .excavator import Excavator
 from .finder import Finder
 from .finder_amplifier import FinderAmplifier
 from .item import Item
+from .lot import Lot
+from .lot_and_session import LotAndSessionType
+from .material_lot import MaterialLot
+from .tool_lot import ToolLot
+from .enhancer_lot import EnhancerLot
 from .material import Material
 from .material_type import MaterialType
 from .deposit_size import DepositSize
@@ -24,6 +29,11 @@ __all__ = [
     "Finder",
     "FinderAmplifier",
     "Item",
+    "Lot",
+    "LotAndSessionType",
+    "MaterialLot",
+    "ToolLot",
+    "EnhancerLot",
     "Material",
     "MaterialType",
     "DepositSize",
