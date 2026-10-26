@@ -1,9 +1,9 @@
-"""Common values shared by lots and sessions."""
+"""Types of lots."""
 
 from enum import Enum
 
 
-class LotAndSessionType(str, Enum):
+class LotType(str, Enum):
     MINING = "MINING"
     REFINING = "REFINING"
     TRADE = "TRADE"

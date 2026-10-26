@@ -15,7 +15,7 @@ def upgrade() -> None:
         "REFINING",
         "TRADE",
         "CRAFTING",
-        name="lot_and_session_type",
+        name="lot_type",
     )
     op.create_table(
         "lot",
@@ -25,6 +25,7 @@ def upgrade() -> None:
             server_default=sa.text("gen_random_uuid()"),
             nullable=False,
         ),
+        sa.Column("user_id", sa.Uuid(), nullable=False),
         sa.Column("type", lot_and_session_type, nullable=False),
         sa.Column("origin_id", sa.String(), nullable=False),
         sa.Column("qty", sa.Integer(), nullable=False),
@@ -42,6 +43,9 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.CheckConstraint("qty >= 0", name="ck_lot_qty_non_negative"),
+        sa.ForeignKeyConstraint(
+            ["user_id"], ["user.id"], ondelete="CASCADE"
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
@@ -119,4 +123,4 @@ def downgrade() -> None:
     for table_name in ("enhancer_lot", "tool_lot", "material_lot"):
         op.drop_table(table_name)
     op.drop_table("lot")
-    sa.Enum(name="lot_and_session_type").drop(op.get_bind(), checkfirst=True)
+    sa.Enum(name="lot_type").drop(op.get_bind(), checkfirst=True)

@@ -4,17 +4,26 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, DateTime, Enum as SqlEnum, Integer, String, text
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    text,
+)
+from sqlalchemy import Enum as SqlEnum
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..base import Base
-from .lot_and_session import LotAndSessionType
+from .lot_type import LotType
 
 if TYPE_CHECKING:
     from .enhancer_lot import EnhancerLot
     from .material_lot import MaterialLot
     from .tool_lot import ToolLot
+    from .user import User
 
 
 class Lot(Base):
@@ -28,8 +37,13 @@ class Lot(Base):
         primary_key=True,
         server_default=text("gen_random_uuid()"),
     )
-    type: Mapped[LotAndSessionType] = mapped_column(
-        SqlEnum(LotAndSessionType, name="lot_and_session_type"),
+    user_id: Mapped[UUID] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("user.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    type: Mapped[LotType] = mapped_column(
+        SqlEnum(LotType, name="lot_type"),
         nullable=False,
     )
     origin_id: Mapped[str] = mapped_column(String(), nullable=False)
@@ -55,3 +69,4 @@ class Lot(Base):
     enhancer_lot: Mapped["EnhancerLot | None"] = relationship(
         back_populates="lot", uselist=False
     )
+    user: Mapped["User"] = relationship()
