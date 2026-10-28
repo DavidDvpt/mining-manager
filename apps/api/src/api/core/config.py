@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     jwt_access_secret: str = "change_me_dev_access_secret"
     jwt_refresh_secret: str = "change_me_dev_refresh_secret"
     jwt_access_expires_in: str = "24h"
+    jwt_refresh_access_expires_in: str = "1h"
     jwt_refresh_expires_in: str = "7d"
     internal_api_token: str = ""
 

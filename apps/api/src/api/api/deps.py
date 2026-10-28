@@ -11,6 +11,7 @@ from api.core.exceptions import AppError
 from api.services.jwt_service import decode_token
 
 ACCESS_TOKEN_COOKIE = "access_token"
+REFRESH_TOKEN_COOKIE = "refresh_token"
 
 
 def _bearer(request: Request) -> str | None:
