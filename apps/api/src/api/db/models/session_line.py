@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from .lot import Lot
     from .session import Session
     from .session_line_decay import SessionLineDecay
-    from .session_line_trade import SessionLineTrade
+    from .session_line_transaction import SessionLineTransaction
 
 
 class SessionLine(Base):
@@ -48,7 +48,7 @@ class SessionLine(Base):
 
     session: Mapped["Session"] = relationship(back_populates="lines")
     lot: Mapped["Lot | None"] = relationship()
-    trade: Mapped["SessionLineTrade | None"] = relationship(
+    transaction: Mapped["SessionLineTransaction | None"] = relationship(
         back_populates="session_line", uselist=False
     )
     decay: Mapped["SessionLineDecay | None"] = relationship(

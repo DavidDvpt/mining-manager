@@ -1,4 +1,4 @@
-"""Mining, refining, trade, or crafting session."""
+"""Mining, refining, transaction, or crafting session."""
 
 from datetime import date
 from typing import TYPE_CHECKING
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from .session_line import SessionLine
     from .session_mining import SessionMining
     from .session_refinage import SessionRefinage
-    from .session_trade import SessionTrade
+    from .session_transaction import SessionTransaction
     from .user import User
 
 
@@ -43,7 +43,7 @@ class Session(Base):
     refinage: Mapped["SessionRefinage | None"] = relationship(
         back_populates="session", uselist=False
     )
-    trade: Mapped["SessionTrade | None"] = relationship(
+    transaction: Mapped["SessionTransaction | None"] = relationship(
         back_populates="session", uselist=False
     )
     lines: Mapped[list["SessionLine"]] = relationship(

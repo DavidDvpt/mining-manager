@@ -13,7 +13,7 @@ def upgrade() -> None:
     lot_and_session_type = sa.Enum(
         "MINING",
         "REFINING",
-        "TRADE",
+        "TRANSACTION",
         "CRAFTING",
         name="lot_type",
     )

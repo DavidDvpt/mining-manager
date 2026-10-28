@@ -1,4 +1,4 @@
-"""Lots of resources produced, refined, or traded."""
+"""Lots of resources produced, refined, or acquired through transactions."""
 
 from datetime import datetime
 from decimal import Decimal
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 class ResourceLotOrigin(str, Enum):
     MINING = "MINING"
     REFINING = "REFINING"
-    TRADE = "TRADE"
+    TRANSACTION = "TRANSACTION"
 
 
 class ResourceLotOriginType(str, Enum):

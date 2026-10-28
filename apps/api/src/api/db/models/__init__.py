@@ -24,11 +24,16 @@ from .resource_lot import ResourceLot, ResourceLotOrigin, ResourceLotOriginType
 from .session import Session
 from .session_line import SessionLine
 from .session_line_decay import SessionLineDecay
-from .session_line_trade import SessionLineTrade
+from .session_line_transaction import SessionLineTransaction
 from .session_line_type import SessionLineType
 from .session_mining import SessionMining
 from .session_refinage import SessionRefinage
-from .session_trade import SessionTrade
+from .session_transaction import (
+    SessionTransaction,
+    SessionTransactionStatus,
+    SessionTransactionType,
+    SessionTransactionTypeDetail,
+)
 from .tool_lot import ToolLot
 from .transaction import Transaction, TransactionStatus, TransactionType
 from .transaction_lot import TransactionLot, TransactionLotType
@@ -63,11 +68,14 @@ __all__ = [
     "Session",
     "SessionLine",
     "SessionLineDecay",
-    "SessionLineTrade",
+    "SessionLineTransaction",
     "SessionLineType",
     "SessionMining",
     "SessionRefinage",
-    "SessionTrade",
+    "SessionTransaction",
+    "SessionTransactionStatus",
+    "SessionTransactionType",
+    "SessionTransactionTypeDetail",
     "Tool",
     "ToolLot",
     "Transaction",

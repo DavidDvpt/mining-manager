@@ -1,4 +1,4 @@
-"""Trade values attached to a session line."""
+"""Transaction values attached to a session line."""
 
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -14,8 +14,8 @@ if TYPE_CHECKING:
     from .session_line import SessionLine
 
 
-class SessionLineTrade(Base):
-    __tablename__ = "session_line_trade"
+class SessionLineTransaction(Base):
+    __tablename__ = "session_line_transaction"
 
     session_line_id: Mapped[UUID] = mapped_column(
         PostgresUUID(as_uuid=True),
@@ -32,4 +32,6 @@ class SessionLineTrade(Base):
         Numeric(precision=5, scale=2), nullable=False
     )
 
-    session_line: Mapped["SessionLine"] = relationship(back_populates="trade")
+    session_line: Mapped["SessionLine"] = relationship(
+        back_populates="transaction"
+    )

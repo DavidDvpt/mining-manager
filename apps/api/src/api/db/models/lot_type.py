@@ -6,5 +6,5 @@ from enum import Enum
 class LotType(str, Enum):
     MINING = "MINING"
     REFINING = "REFINING"
-    TRADE = "TRADE"
+    TRANSACTION = "TRANSACTION"
     CRAFTING = "CRAFTING"

@@ -57,8 +57,41 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("session_id"),
     )
     op.create_table(
-        "session_trade",
+        "session_transaction",
         sa.Column("session_id", sa.Uuid(), nullable=False),
+        sa.Column(
+            "type",
+            sa.Enum("BUY", "SELL", name="session_transaction_type"),
+            nullable=False,
+        ),
+        sa.Column(
+            "status",
+            sa.Enum(
+                "RUNNING",
+                "RETURNED",
+                "SOLDED",
+                "CANCELLED",
+                name="session_transaction_status",
+            ),
+            nullable=False,
+        ),
+        sa.Column(
+            "type_detail",
+            sa.Enum(
+                "BUY",
+                "SELL",
+                "FOUND",
+                "GIFT",
+                "EXISTING_STOCK",
+                "GIVEN",
+                name="session_transaction_type_detail",
+            ),
+            nullable=True,
+        ),
+        sa.CheckConstraint(
+            "type = 'BUY' OR type_detail IS NULL",
+            name="ck_session_transaction_type_detail_buy_only",
+        ),
         sa.ForeignKeyConstraint(
             ["session_id"], ["session.id"], ondelete="CASCADE"
         ),
@@ -85,7 +118,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
-        "session_line_trade",
+        "session_line_transaction",
         sa.Column("session_line_id", sa.Uuid(), nullable=False),
         sa.Column("tt", sa.Numeric(precision=12, scale=5), nullable=False),
         sa.Column("ttc", sa.Numeric(precision=12, scale=5), nullable=False),
@@ -108,10 +141,19 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_table("session_line_decay")
-    op.drop_table("session_line_trade")
+    op.drop_table("session_line_transaction")
     op.drop_table("session_line")
-    op.drop_table("session_trade")
+    op.drop_table("session_transaction")
     op.drop_table("session_refinage")
     op.drop_table("session_mining")
     op.drop_table("session")
+    sa.Enum(name="session_transaction_type_detail").drop(
+        op.get_bind(), checkfirst=True
+    )
+    sa.Enum(name="session_transaction_status").drop(
+        op.get_bind(), checkfirst=True
+    )
+    sa.Enum(name="session_transaction_type").drop(
+        op.get_bind(), checkfirst=True
+    )
     sa.Enum(name="session_line_type").drop(op.get_bind(), checkfirst=True)
