@@ -58,6 +58,7 @@ def upgrade() -> None:
         "tool_lot",
         sa.Column("lot_id", sa.Uuid(), nullable=False),
         sa.Column("tier", sa.Integer(), nullable=True),
+        sa.Column("tt", sa.Numeric(precision=20, scale=5), nullable=True),
         sa.CheckConstraint(
             "tier >= 0 AND tier <= 10",
             name="ck_tool_lot_tier_between_0_and_10",

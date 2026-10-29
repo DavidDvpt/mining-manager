@@ -31,6 +31,11 @@ class SessionLine(Base):
         ForeignKey("session.id", ondelete="CASCADE"),
         nullable=False,
     )
+    item_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("item.id", ondelete="RESTRICT"),
+        nullable=True,
+    )
     type: Mapped[SessionLineType] = mapped_column(
         SqlEnum(SessionLineType, name="session_line_type"),
         nullable=False,

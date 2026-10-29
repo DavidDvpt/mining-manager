@@ -10,6 +10,7 @@ from .finder import Finder
 from .finder_amplifier import FinderAmplifier
 from .item import Item
 from .lot import Lot
+from .lot_kind import LotKind
 from .lot_type import LotType
 from .material import Material
 from .material_lot import MaterialLot
@@ -51,6 +52,7 @@ __all__ = [
     "FinderAmplifier",
     "Item",
     "Lot",
+    "LotKind",
     "LotType",
     "Material",
     "MaterialLot",

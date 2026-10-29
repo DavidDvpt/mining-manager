@@ -106,6 +106,7 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("session_id", sa.Uuid(), nullable=False),
+        sa.Column("item_id", sa.Uuid(), nullable=True),
         sa.Column("type", session_line_type, nullable=False),
         sa.Column("lot_id", sa.Uuid(), nullable=True, server_default=sa.text("NULL")),
         sa.Column("qty", sa.Integer(), nullable=True, server_default=sa.text("NULL")),
@@ -113,9 +114,43 @@ def upgrade() -> None:
             ["session_id"], ["session.id"], ondelete="CASCADE"
         ),
         sa.ForeignKeyConstraint(
+            ["item_id"], ["item.id"], ondelete="RESTRICT"
+        ),
+        sa.ForeignKeyConstraint(
             ["lot_id"], ["lot.id"], ondelete="RESTRICT"
         ),
         sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index("ix_session_line_item_id", "session_line", ["item_id"])
+    op.execute(
+        """
+        CREATE FUNCTION enforce_session_line_item_lot()
+        RETURNS trigger
+        LANGUAGE plpgsql
+        AS $$
+        BEGIN
+            IF NEW.type = 'PRODUCED' THEN
+                IF NEW.item_id IS NULL OR NEW.lot_id IS NOT NULL THEN
+                    RAISE EXCEPTION
+                        'A produced session line requires item_id and no lot_id';
+                END IF;
+            ELSIF NEW.type = 'CONSUMED' THEN
+                IF NEW.item_id IS NOT NULL THEN
+                    RAISE EXCEPTION
+                        'A consumed session line cannot have item_id';
+                END IF;
+            END IF;
+            RETURN NEW;
+        END;
+        $$;
+        """
+    )
+    op.execute(
+        """
+        CREATE TRIGGER enforce_session_line_item_lot_trigger
+        BEFORE INSERT OR UPDATE OF type, item_id, lot_id ON session_line
+        FOR EACH ROW EXECUTE FUNCTION enforce_session_line_item_lot();
+        """
     )
     op.create_table(
         "session_line_transaction",
@@ -142,6 +177,11 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_table("session_line_decay")
     op.drop_table("session_line_transaction")
+    op.execute(
+        "DROP TRIGGER IF EXISTS enforce_session_line_item_lot_trigger ON session_line"
+    )
+    op.execute("DROP FUNCTION IF EXISTS enforce_session_line_item_lot()")
+    op.drop_index("ix_session_line_item_id", table_name="session_line")
     op.drop_table("session_line")
     op.drop_table("session_transaction")
     op.drop_table("session_refinage")

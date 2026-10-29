@@ -20,6 +20,11 @@
 - DON'T USE for: basic generator syntax (`nx g @nx/react:app`), standard commands, things you already know
 - The `nx-generate` skill handles generator discovery internally - don't call nx_docs just to look up generator syntax
 
+# Code documentation
+
+- Every new or modified function and method must have a concise docstring describing its responsibility, important inputs and validation rules, side effects, and return value when applicable.
+- Keep the documentation close to the implementation and update it whenever the function's behavior changes.
+
 <!-- nx configuration end-->
 
 # Repository Architecture

@@ -1,10 +1,11 @@
 import os
 from types import SimpleNamespace
-from uuid import uuid4
 from urllib.parse import urlsplit
+from uuid import uuid4
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 
 # Keep collection independent from a developer shell that may define DEBUG to a
 # non-boolean value (the application settings are imported by the ORM package).
@@ -39,7 +40,9 @@ def _test_database_url() -> str:
 
 @pytest.fixture(scope="session")
 async def test_engine():
-    engine = create_async_engine(_test_database_url(), pool_pre_ping=True)
+    engine = create_async_engine(
+        _test_database_url(), pool_pre_ping=True, poolclass=NullPool
+    )
     try:
         yield engine
     finally:

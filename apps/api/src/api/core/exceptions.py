@@ -34,6 +34,15 @@ class AppError(Exception):
         super().__init__(message)
 
 
+class UnprocessingError(AppError):
+    """Conflict raised when a requested operation cannot be processed."""
+
+    def __init__(self, message: str) -> None:
+        """Create a conflict error with the supplied client-facing message."""
+
+        super().__init__(status_code=409, message=message)
+
+
 def is_unique_violation(exc: IntegrityError) -> bool:
     """Return whether an integrity error is a PostgreSQL unique violation."""
 
@@ -123,6 +132,7 @@ def register_exception_handlers(app: FastAPI) -> None:
 
 __all__ = [
     "AppError",
+    "UnprocessingError",
     "is_unique_violation",
     "register_exception_handlers",
 ]
