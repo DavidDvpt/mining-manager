@@ -127,6 +127,7 @@ async def test_bdd_lot_service_returns_only_usable_owned_lots_in_fifo_order(
             type=LotType.TRANSACTION,
             origin_id=str(new_line.id),
             qty=5,
+            reserved=2,
             created_at=base_time.replace(day=2),
             is_active=True,
         ),
@@ -172,7 +173,7 @@ async def test_bdd_lot_service_returns_only_usable_owned_lots_in_fifo_order(
         old_line.id,
         new_line.id,
     ]
-    assert total_quantity == 15
+    assert total_quantity == 13
     first_origin = result_lots[0].origin
     assert first_origin is not None
     assert first_origin.session.user_id == owner.id

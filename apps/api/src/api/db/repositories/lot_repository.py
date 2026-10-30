@@ -62,7 +62,7 @@ class LotRepository:
     async def get_fifo_lots_for_item(
         self, *, user_id: UUID, item_id: UUID
     ) -> tuple[Item | None, list[Lot], int]:
-        """Load an item, its usable FIFO lots, and their total quantity."""
+        """Load an item, FIFO lots with unreserved stock, and available quantity."""
 
         item = await self._session.scalar(select(Item).where(Item.id == item_id))
         if item is None:
@@ -81,10 +81,10 @@ class LotRepository:
                 Lot.user_id == user_id,
                 Item.id == item_id,
                 Lot.is_active.is_(True),
-                Lot.qty > 0,
+                Lot.qty - Lot.reserved > 0,
             )
             .order_by(Lot.created_at.asc(), Lot.id.asc())
         )
         result = await self._session.scalars(statement)
         lots = list(result.unique().all())
-        return item, lots, sum(lot.qty for lot in lots)
+        return item, lots, sum(lot.qty - lot.reserved for lot in lots)

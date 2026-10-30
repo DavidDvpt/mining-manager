@@ -30,6 +30,12 @@ def upgrade() -> None:
         sa.Column("origin_id", sa.String(), nullable=False),
         sa.Column("qty", sa.Integer(), nullable=False),
         sa.Column(
+            "reserved",
+            sa.Integer(),
+            server_default=sa.text("0"),
+            nullable=False,
+        ),
+        sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
             server_default=sa.text("now()"),
@@ -43,6 +49,10 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.CheckConstraint("qty >= 0", name="ck_lot_qty_non_negative"),
+        sa.CheckConstraint(
+            "reserved >= 0 AND reserved <= qty",
+            name="ck_lot_reserved_between_zero_and_qty",
+        ),
         sa.ForeignKeyConstraint(
             ["user_id"], ["user.id"], ondelete="CASCADE"
         ),

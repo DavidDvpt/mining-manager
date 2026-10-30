@@ -19,6 +19,7 @@ class LotResponse(BaseModel):
     type: str
     origin: SessionLineResponse
     qty: int
+    reserved: int
     created_at: datetime
     updated_at: datetime | None
     is_active: bool

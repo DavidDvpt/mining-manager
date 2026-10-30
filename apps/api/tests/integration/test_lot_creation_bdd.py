@@ -66,6 +66,7 @@ async def test_bdd_material_lot_creation_is_atomic_and_owned(test_db_session):
     assert stored_lot.user_id == user.id
     assert stored_lot.origin_id == str(line.id)
     assert stored_lot.qty == 25
+    assert stored_lot.reserved == 0
     assert specialized_lot is not None
     assert refreshed_line.lot_id is None
     assert item.id == line.item_id

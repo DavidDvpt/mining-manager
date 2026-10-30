@@ -32,6 +32,10 @@ class Lot(Base):
     __tablename__ = "lot"
     __table_args__ = (
         CheckConstraint("qty >= 0", name="ck_lot_qty_non_negative"),
+        CheckConstraint(
+            "reserved >= 0 AND reserved <= qty",
+            name="ck_lot_reserved_between_zero_and_qty",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(
@@ -50,6 +54,12 @@ class Lot(Base):
     )
     origin_id: Mapped[str] = mapped_column(String(), nullable=False)
     qty: Mapped[int] = mapped_column(Integer, nullable=False)
+    reserved: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default=text("0"),
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
