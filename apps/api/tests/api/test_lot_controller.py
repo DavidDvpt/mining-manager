@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -123,3 +124,48 @@ def test_get_lots_accepts_item_id_in_path(client, monkeypatch):
     assert response.json()["lots"] == []
     assert response.json()["total_quantity"] == 0
     assert calls == {"user_id": user_id, "item_id": item_id}
+
+
+def test_get_unstackable_lot_returns_item_and_tool_attributes(client, monkeypatch):
+    """Expose an owned unstackable lot with its tool tier and TT."""
+
+    test_client, user_id = client
+    lot_id = uuid4()
+    item_id = uuid4()
+    item = item_response_data(item_id)
+    lot = SimpleNamespace(
+        id=lot_id,
+        user_id=user_id,
+        type=SimpleNamespace(value="TRANSACTION"),
+        origin=SimpleNamespace(item=item),
+        qty=1,
+        reserved=0,
+        tool_lot=SimpleNamespace(tier=7, tt="12.34500"),
+        created_at=datetime.now(timezone.utc),
+        updated_at=None,
+        is_active=True,
+    )
+    calls = {}
+
+    async def fake_get_unstackable_lot(**kwargs):
+        """Capture unstackable-lot lookup arguments and return the test lot."""
+
+        calls.update(kwargs)
+        return lot
+
+    monkeypatch.setattr(
+        lot_controller,
+        "get_lot_service",
+        lambda _session: SimpleNamespace(
+            get_unstackable_lot=fake_get_unstackable_lot
+        ),
+    )
+
+    response = test_client.get(endpoint(f"/lots/unstackable/{lot_id}"))
+
+    assert response.status_code == 200
+    assert response.json()["id"] == str(lot_id)
+    assert response.json()["item"]["id"] == str(item_id)
+    assert response.json()["tier"] == 7
+    assert response.json()["tt"] == "12.34500"
+    assert calls == {"user_id": user_id, "lot_id": lot_id}

@@ -87,6 +87,28 @@ class LotService:
             raise AppError(404, "Item not found")
         return item, lots, total_quantity
 
+    async def get_unstackable_lot(self, *, user_id: UUID, lot_id: UUID) -> Lot:
+        """Return an owned unstackable lot with its item-specific details."""
+
+        lot = await self._repository.get_unstackable_lot(
+            user_id=user_id,
+            lot_id=lot_id,
+        )
+        if lot is None:
+            raise AppError(404, "Lot not found")
+        if lot.origin is None or lot.origin.item is None:
+            raise AppError(404, "Item not found")
+        stackable = await self._item_service.is_item_stackable(
+            item_id=lot.origin.item.id
+        )
+        if stackable is True:
+            raise UnprocessingError("Only unstackable items have lots")
+        if stackable is None:
+            raise AppError(404, "Item not found")
+        if lot.tool_lot is None:
+            raise UnprocessingError("Lot is not an unstackable tool lot")
+        return lot
+
     async def _get_stackable_lot(
         self, *, user_id: UUID, lot_id: UUID
     ) -> Lot:

@@ -79,6 +79,24 @@ class LotRepository:
         )
         return await self._session.scalar(statement)
 
+    async def get_unstackable_lot(
+        self, *, user_id: UUID, lot_id: UUID
+    ) -> Lot | None:
+        """Load an owned unstackable lot with specialized item details."""
+
+        statement = (
+            select(Lot)
+            .join(SessionLine, cast(SessionLine.id, String) == Lot.origin_id)
+            .options(
+                joinedload(Lot.origin).joinedload(SessionLine.item),
+                joinedload(Lot.tool_lot),
+                joinedload(Lot.material_lot),
+                joinedload(Lot.enhancer_lot),
+            )
+            .where(Lot.id == lot_id, Lot.user_id == user_id)
+        )
+        return await self._session.scalar(statement)
+
     async def update_quantities(
         self, *, lot: Lot, quantity: int, reserved: int, is_active: bool
     ) -> Lot:

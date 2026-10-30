@@ -6,7 +6,7 @@ from .excavator_schema import ExcavatorResponse
 from .finder_amplifier_schema import FinderAmplifierResponse
 from .finder_schema import FinderResponse
 from .item_schema import ItemSummaryResponse
-from .lot_schema import LotCollectionResponse, LotResponse
+from .lot_schema import LotCollectionResponse, LotResponse, UnstackableLotResponse
 from .material_schema import MaterialResponse
 from .refiner_schema import RefinerResponse
 from .session_line_schema import SessionLineResponse
@@ -19,6 +19,7 @@ __all__ = [
     "FinderAmplifierResponse",
     "FinderResponse",
     "LotResponse",
+    "UnstackableLotResponse",
     "LotCollectionResponse",
     "ItemSummaryResponse",
     "MaterialResponse",

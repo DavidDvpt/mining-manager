@@ -1,6 +1,7 @@
 """Schemas for FIFO lot responses."""
 
 from datetime import datetime
+from decimal import Decimal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -31,3 +32,21 @@ class LotCollectionResponse(BaseModel):
     item: ItemSummaryResponse
     lots: list[LotResponse]
     total_quantity: int
+
+
+class UnstackableLotResponse(BaseModel):
+    """Serialized unstackable lot with specialized item attributes."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    user_id: UUID
+    type: str
+    item: ItemSummaryResponse
+    qty: int
+    reserved: int
+    tier: int | None
+    tt: Decimal | None
+    created_at: datetime
+    updated_at: datetime | None
+    is_active: bool

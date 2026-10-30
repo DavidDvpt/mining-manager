@@ -262,6 +262,61 @@ def _lot_with_origin_item(*, quantity=10, reserved=0, stackable_item_id=None):
     )
 
 
+async def test_get_unstackable_lot_returns_owned_tool_lot(session):
+    """Return an owned unstackable lot linked to a tool lot."""
+
+    repository = AsyncMock()
+    item_service = AsyncMock()
+    lot = _lot_with_origin_item()
+    lot.tool_lot = SimpleNamespace(tier=7, tt=12)
+    repository.get_unstackable_lot.return_value = lot
+    item_service.is_item_stackable.return_value = False
+
+    result = await lot_service.LotService(
+        session, repository, item_service, AsyncMock()
+    ).get_unstackable_lot(user_id=uuid4(), lot_id=lot.id)
+
+    assert result is lot
+    item_service.is_item_stackable.assert_awaited_once_with(
+        item_id=lot.origin.item.id
+    )
+
+
+async def test_get_unstackable_lot_rejects_stackable_items(session):
+    """Reject an unstackable-lot request for a stackable item with HTTP 409."""
+
+    repository = AsyncMock()
+    item_service = AsyncMock()
+    lot = _lot_with_origin_item()
+    repository.get_unstackable_lot.return_value = lot
+    item_service.is_item_stackable.return_value = True
+
+    with pytest.raises(UnprocessingError, match="unstackable") as error:
+        await lot_service.LotService(
+            session, repository, item_service, AsyncMock()
+        ).get_unstackable_lot(user_id=uuid4(), lot_id=lot.id)
+
+    assert error.value.status_code == 409
+
+
+async def test_get_unstackable_lot_rejects_lots_without_tool_lot(session):
+    """Reject unstackable lots that are not linked to a tool lot."""
+
+    repository = AsyncMock()
+    item_service = AsyncMock()
+    lot = _lot_with_origin_item()
+    lot.tool_lot = None
+    repository.get_unstackable_lot.return_value = lot
+    item_service.is_item_stackable.return_value = False
+
+    with pytest.raises(UnprocessingError, match="unstackable tool lot") as error:
+        await lot_service.LotService(
+            session, repository, item_service, AsyncMock()
+        ).get_unstackable_lot(user_id=uuid4(), lot_id=lot.id)
+
+    assert error.value.status_code == 409
+
+
 async def test_reserve_quantity_increases_reserved_without_decreasing_stock(session):
     """Reserve available stock while keeping the total quantity unchanged."""
 
