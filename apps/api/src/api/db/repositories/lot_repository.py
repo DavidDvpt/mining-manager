@@ -3,8 +3,9 @@
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import String, cast, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from api.db.models import (
     EnhancerLot,
@@ -14,7 +15,6 @@ from api.db.models import (
     MaterialLot,
     Session,
     SessionLine,
-    SessionLineType,
     ToolLot,
 )
 
@@ -22,27 +22,6 @@ from api.db.models import (
 class LotRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
-
-    async def get_session_line_for_user(
-        self, *, session_line_id: UUID, user_id: UUID
-    ) -> SessionLine | None:
-        """Return a session line only when its parent session belongs to the user.
-
-        The item join also guarantees that the produced line references an
-        existing catalogue item. Authorization remains in the repository
-        query so callers cannot accidentally load another user's line.
-        """
-
-        statement = (
-            select(SessionLine)
-            .join(Session, Session.id == SessionLine.session_id)
-            .join(Item, Item.id == SessionLine.item_id)
-            .where(
-                SessionLine.id == session_line_id,
-                Session.user_id == user_id,
-            )
-        )
-        return await self._session.scalar(statement)
 
     async def create(
         self,
@@ -79,3 +58,33 @@ class LotRepository:
 
         await self._session.flush()
         return lot
+
+    async def get_fifo_lots_for_item(
+        self, *, user_id: UUID, item_id: UUID
+    ) -> tuple[Item | None, list[Lot], int]:
+        """Load an item, its usable FIFO lots, and their total quantity."""
+
+        item = await self._session.scalar(select(Item).where(Item.id == item_id))
+        if item is None:
+            return None, [], 0
+
+        statement = (
+            select(Lot)
+            .join(SessionLine, cast(SessionLine.id, String) == Lot.origin_id)
+            .join(Session, Session.id == SessionLine.session_id)
+            .join(Item, Item.id == SessionLine.item_id)
+            .options(
+                joinedload(Lot.origin).joinedload(SessionLine.session),
+                joinedload(Lot.origin).joinedload(SessionLine.item),
+            )
+            .where(
+                Lot.user_id == user_id,
+                Item.id == item_id,
+                Lot.is_active.is_(True),
+                Lot.qty > 0,
+            )
+            .order_by(Lot.created_at.asc(), Lot.id.asc())
+        )
+        result = await self._session.scalars(statement)
+        lots = list(result.unique().all())
+        return item, lots, sum(lot.qty for lot in lots)

@@ -12,6 +12,7 @@ from ..base import Base
 from .session_line_type import SessionLineType
 
 if TYPE_CHECKING:
+    from .item import Item
     from .lot import Lot
     from .session import Session
     from .session_line_decay import SessionLineDecay
@@ -52,6 +53,7 @@ class SessionLine(Base):
     )
 
     session: Mapped["Session"] = relationship(back_populates="lines")
+    item: Mapped["Item | None"] = relationship()
     lot: Mapped["Lot | None"] = relationship()
     transaction: Mapped["SessionLineTransaction | None"] = relationship(
         back_populates="session_line", uselist=False

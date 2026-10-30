@@ -10,13 +10,15 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
+    cast,
     text,
 )
 from sqlalchemy import Enum as SqlEnum
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, foreign, mapped_column, relationship
 
 from ..base import Base
+from .session_line import SessionLine
 from .lot_type import LotType
 
 if TYPE_CHECKING:
@@ -70,3 +72,8 @@ class Lot(Base):
         back_populates="lot", uselist=False
     )
     user: Mapped["User"] = relationship()
+    origin: Mapped["SessionLine | None"] = relationship(
+        primaryjoin=lambda: foreign(Lot.origin_id) == cast(SessionLine.id, String),
+        viewonly=True,
+        uselist=False,
+    )

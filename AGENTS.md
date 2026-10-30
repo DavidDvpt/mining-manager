@@ -45,6 +45,12 @@ controller -> service -> repository -> PostgreSQL
 
 Do not reverse these dependencies. Controllers should not access the database directly, repositories should not decide business behavior, and services should remain independent from HTTP concerns. A cross-domain workflow must use the service responsible for each domain and must never bypass it by calling its repository directly.
 
+## Service and repository ownership
+
+- Services and repositories must always be implemented as classes. Do not add domain services or repositories as standalone functions.
+- A repository may only be used by its dedicated service. For example, `LotRepository` is used exclusively by `LotService`; another service must go through `LotService` instead of importing or calling `LotRepository` directly.
+- Every service method and repository method must belong to the domain that owns the behavior or query. Lot-related business rules and persistence queries belong in the lot service/repository; session-line behavior belongs in the session-line service/repository. Do not place a lot query or service operation in the session-line domain, or vice versa.
+
 ## Database models
 
 Database models live under `apps/api/src/api/db/models` with one model per file.

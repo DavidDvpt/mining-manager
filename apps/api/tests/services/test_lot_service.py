@@ -50,9 +50,11 @@ async def test_create_lot_delegates_owned_produced_material_creation(
     repository.get_session_line_for_user.return_value = line
     repository.create.return_value = expected_lot
     monkeypatch.setattr(lot_service, "LotRepository", lambda _session: repository)
+    monkeypatch.setattr(lot_service, "get_session_line_service", lambda _session: repository)
 
-    result = await lot_service.create_lot(
-        session,
+    result = await lot_service.LotService(
+        session, repository, repository, repository
+    ).create_lot(
         user_id=uuid4(),
         kind=LotKind.MATERIAL,
         session_line_id=line.id,
@@ -87,10 +89,12 @@ async def test_create_lot_rejects_invalid_tool_payload(
     line = _session_line()
     repository.get_session_line_for_user.return_value = line
     monkeypatch.setattr(lot_service, "LotRepository", lambda _session: repository)
+    monkeypatch.setattr(lot_service, "get_session_line_service", lambda _session: repository)
 
     with pytest.raises(UnprocessingError, match=message) as error:
-        await lot_service.create_lot(
-            session,
+        await lot_service.LotService(
+            session, repository, repository, repository
+        ).create_lot(
             user_id=uuid4(),
             kind=kind,
             session_line_id=line.id,
@@ -111,10 +115,12 @@ async def test_create_lot_delegates_tool_tt(session, monkeypatch):
     repository.get_session_line_for_user.return_value = line
     repository.create.return_value = expected_lot
     monkeypatch.setattr(lot_service, "LotRepository", lambda _session: repository)
+    monkeypatch.setattr(lot_service, "get_session_line_service", lambda _session: repository)
     tt = Decimal("12.34500")
 
-    result = await lot_service.create_lot(
-        session,
+    result = await lot_service.LotService(
+        session, repository, repository, repository
+    ).create_lot(
         user_id=uuid4(),
         kind=LotKind.TOOL,
         session_line_id=line.id,
@@ -134,10 +140,12 @@ async def test_create_lot_rejects_unknown_session_line(session, monkeypatch):
     repository = AsyncMock()
     repository.get_session_line_for_user.return_value = None
     monkeypatch.setattr(lot_service, "LotRepository", lambda _session: repository)
+    monkeypatch.setattr(lot_service, "get_session_line_service", lambda _session: repository)
 
     with pytest.raises(AppError) as error:
-        await lot_service.create_lot(
-            session,
+        await lot_service.LotService(
+            session, repository, repository, repository
+        ).create_lot(
             user_id=uuid4(),
             kind=LotKind.MATERIAL,
             session_line_id=uuid4(),
@@ -156,10 +164,12 @@ async def test_create_lot_rejects_consumed_session_lines(session, monkeypatch):
     line = _session_line(line_type=SessionLineType.CONSUMED)
     repository.get_session_line_for_user.return_value = line
     monkeypatch.setattr(lot_service, "LotRepository", lambda _session: repository)
+    monkeypatch.setattr(lot_service, "get_session_line_service", lambda _session: repository)
 
     with pytest.raises(UnprocessingError, match="Only produced"):
-        await lot_service.create_lot(
-            session,
+        await lot_service.LotService(
+            session, repository, repository, repository
+        ).create_lot(
             user_id=uuid4(),
             kind=LotKind.ENHANCER,
             session_line_id=line.id,
@@ -168,3 +178,71 @@ async def test_create_lot_rejects_consumed_session_lines(session, monkeypatch):
         )
 
     repository.create.assert_not_awaited()
+
+
+async def test_get_fifo_lots_returns_oldest_first_and_scopes_to_user(
+    monkeypatch,
+):
+    """Delegate FIFO loading with the authenticated user and item ids."""
+
+    repository = AsyncMock()
+    item_id = uuid4()
+    expected_lots = [SimpleNamespace(id=uuid4()), SimpleNamespace(id=uuid4())]
+    expected_item = SimpleNamespace(id=item_id)
+    repository.is_item_stackable.return_value = True
+    repository.get_fifo_lots_for_item.return_value = (
+        expected_item,
+        expected_lots,
+        15,
+    )
+    monkeypatch.setattr(lot_service, "LotRepository", lambda _session: repository)
+    monkeypatch.setattr(lot_service, "get_item_service", lambda _session: repository)
+    user_id = uuid4()
+
+    result = await lot_service.LotService(
+        object(), repository, repository, repository
+    ).get_fifo_lots(
+        user_id=user_id, item_id=item_id
+    )
+
+    assert result == (expected_item, expected_lots, 15)
+    repository.is_item_stackable.assert_awaited_once_with(item_id=item_id)
+    repository.get_fifo_lots_for_item.assert_awaited_once_with(
+        user_id=user_id, item_id=item_id
+    )
+
+
+async def test_get_fifo_lots_rejects_non_stackable_items(monkeypatch):
+    """Reject a known non-stackable item with HTTP 409."""
+
+    repository = AsyncMock()
+    repository.is_item_stackable.return_value = False
+    monkeypatch.setattr(lot_service, "LotRepository", lambda _session: repository)
+    monkeypatch.setattr(lot_service, "get_item_service", lambda _session: repository)
+
+    with pytest.raises(UnprocessingError, match="not stackable") as error:
+        await lot_service.LotService(
+            object(), repository, repository, repository
+        ).get_fifo_lots(
+            user_id=uuid4(), item_id=uuid4()
+        )
+
+    assert error.value.status_code == 409
+    repository.get_fifo_lots_for_item.assert_not_awaited()
+
+
+async def test_get_fifo_lots_rejects_unknown_items(monkeypatch):
+    """Reject an unknown item because the response always contains an item."""
+
+    repository = AsyncMock()
+    repository.is_item_stackable.return_value = None
+    monkeypatch.setattr(lot_service, "LotRepository", lambda _session: repository)
+    monkeypatch.setattr(lot_service, "get_item_service", lambda _session: repository)
+
+    with pytest.raises(AppError) as error:
+        await lot_service.LotService(
+            object(), repository, repository, repository
+        ).get_fifo_lots(user_id=uuid4(), item_id=uuid4())
+
+    assert error.value.status_code == 404
+    repository.get_fifo_lots_for_item.assert_not_awaited()

@@ -5,9 +5,12 @@ from .enhancer_schema import EnhancerResponse
 from .excavator_schema import ExcavatorResponse
 from .finder_amplifier_schema import FinderAmplifierResponse
 from .finder_schema import FinderResponse
-from .lot_schema import LotCreateRequest, LotIdResponse
+from .item_schema import ItemSummaryResponse
+from .lot_schema import LotCollectionResponse, LotResponse
 from .material_schema import MaterialResponse
 from .refiner_schema import RefinerResponse
+from .session_line_schema import SessionLineResponse
+from .session_schema import SessionResponse
 
 __all__ = [
     "DepositSizeResponse",
@@ -15,8 +18,11 @@ __all__ = [
     "ExcavatorResponse",
     "FinderAmplifierResponse",
     "FinderResponse",
-    "LotCreateRequest",
-    "LotIdResponse",
+    "LotResponse",
+    "LotCollectionResponse",
+    "ItemSummaryResponse",
     "MaterialResponse",
     "RefinerResponse",
+    "SessionLineResponse",
+    "SessionResponse",
 ]

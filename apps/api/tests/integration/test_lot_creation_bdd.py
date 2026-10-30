@@ -17,7 +17,7 @@ from api.db.models import (
     ToolLot,
     User,
 )
-from api.services.lot_service import create_lot
+from api.services.lot_service import get_lot_service
 
 
 async def given_user_with_produced_line(test_db_session):
@@ -46,8 +46,7 @@ async def test_bdd_material_lot_creation_is_atomic_and_owned(test_db_session):
 
     user, item, line = await given_user_with_produced_line(test_db_session)
 
-    lot = await create_lot(
-        test_db_session,
+    lot = await get_lot_service(test_db_session).create_lot(
         user_id=user.id,
         kind=LotKind.MATERIAL,
         session_line_id=line.id,
@@ -77,8 +76,7 @@ async def test_bdd_tool_lot_persists_tt(test_db_session):
 
     user, _item, line = await given_user_with_produced_line(test_db_session)
 
-    lot = await create_lot(
-        test_db_session,
+    lot = await get_lot_service(test_db_session).create_lot(
         user_id=user.id,
         kind=LotKind.TOOL,
         session_line_id=line.id,
@@ -106,8 +104,7 @@ async def test_bdd_other_user_cannot_create_from_the_line(test_db_session):
     await test_db_session.commit()
 
     with pytest.raises(AppError) as error:
-        await create_lot(
-            test_db_session,
+        await get_lot_service(test_db_session).create_lot(
             user_id=other_user_id,
             kind=LotKind.MATERIAL,
             session_line_id=line.id,

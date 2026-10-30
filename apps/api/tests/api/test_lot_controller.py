@@ -8,7 +8,6 @@ from api.api.deps import get_current_user
 from api.api.v1 import lot_controller
 from api.core.config import get_settings
 from api.db import get_session
-from api.db.models import LotKind
 from api.main import app
 
 
@@ -41,50 +40,86 @@ def endpoint(path: str) -> str:
     return f"{get_settings().api_v1_prefix}{path}"
 
 
-def test_create_lot_returns_only_the_created_id(client, monkeypatch):
-    """Return the minimal lot response and pass the connected user id."""
+def item_response_data(item_id):
+    """Build the item attributes required by the lot collection response."""
 
-    test_client, user_id = client
-    line_id = uuid4()
-    lot_id = uuid4()
-    calls = {}
-
-    async def fake_create_lot(session, **kwargs):
-        """Capture service arguments and return a fake created lot."""
-
-        calls.update(kwargs)
-        return SimpleNamespace(id=lot_id)
-
-    monkeypatch.setattr(lot_controller, "create_lot", fake_create_lot)
-
-    response = test_client.post(
-        endpoint("/lots"),
-        json={
-            "kind": LotKind.MATERIAL.value,
-            "session_line_id": str(line_id),
-            "quantity": 4,
-        },
+    return SimpleNamespace(
+        id=item_id,
+        name="Test item",
+        img_id=None,
+        nexus_id=None,
+        weight=None,
+        is_untradeable=False,
+        is_rare=False,
+        is_active=True,
+        nexus_url=None,
+        description=None,
+        created_at=None,
+        updated_at=None,
     )
 
-    assert response.status_code == 201
-    assert response.json() == {"id": str(lot_id)}
-    assert calls["user_id"] == user_id
-    assert calls["session_line_id"] == line_id
 
-
-def test_create_lot_rejects_unknown_payload_fields(client):
-    """Reject fields outside the create-lot contract."""
+def test_create_lot_route_is_not_exposed(client):
+    """Keep lot creation internal to session-line workflows."""
 
     test_client, _user_id = client
 
-    response = test_client.post(
-        endpoint("/lots"),
-        json={
-            "kind": "MATERIAL",
-            "session_line_id": str(uuid4()),
-            "quantity": 1,
-            "status": "ACTIVE",
-        },
+    response = test_client.post(endpoint("/lots"), json={})
+
+    assert response.status_code == 405
+
+
+def test_get_lots_passes_item_and_connected_user_to_service(client, monkeypatch):
+    """Expose the FIFO read endpoint with the authenticated user scope."""
+
+    test_client, user_id = client
+    item_id = uuid4()
+    calls = {}
+
+    async def fake_get_fifo_lots(**kwargs):
+        """Capture GET arguments and return the empty FIFO result."""
+
+        calls.update(kwargs)
+        return item_response_data(item_id), [], 0
+
+    monkeypatch.setattr(
+        lot_controller,
+        "get_lot_service",
+        lambda _session: SimpleNamespace(get_fifo_lots=fake_get_fifo_lots),
     )
 
-    assert response.status_code == 422
+    response = test_client.get(endpoint("/lots"), params={"item_id": str(item_id)})
+
+    assert response.status_code == 200
+    assert response.json()["item"]["id"] == str(item_id)
+    assert response.json()["lots"] == []
+    assert response.json()["total_quantity"] == 0
+    assert calls == {"user_id": user_id, "item_id": item_id}
+
+
+def test_get_lots_accepts_item_id_in_path(client, monkeypatch):
+    """Support the resource-style route used by catalogue read endpoints."""
+
+    test_client, user_id = client
+    item_id = uuid4()
+    calls = {}
+
+    async def fake_get_fifo_lots(**kwargs):
+        """Capture path-route arguments and return the empty FIFO result."""
+
+        calls.update(kwargs)
+        return item_response_data(item_id), [], 0
+
+    monkeypatch.setattr(
+        lot_controller,
+        "get_lot_service",
+        lambda _session: SimpleNamespace(get_fifo_lots=fake_get_fifo_lots),
+    )
+
+    response = test_client.get(endpoint(f"/lots/{item_id}"))
+
+    assert response.status_code == 200
+    assert response.json()["item"]["id"] == str(item_id)
+    assert response.json()["lots"] == []
+    assert response.json()["total_quantity"] == 0
+    assert calls == {"user_id": user_id, "item_id": item_id}

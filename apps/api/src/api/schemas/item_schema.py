@@ -19,6 +19,25 @@ class EconomyResponse(BaseModel):
     avg_mu_plus: Decimal | None
 
 
+class ItemSummaryResponse(BaseModel):
+    """Serialized catalogue item summary for nested responses."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    name: str
+    img_id: int | None
+    nexus_id: int | None
+    weight: Decimal | None
+    is_untradeable: bool | None
+    is_rare: bool | None
+    is_active: bool | None
+    nexus_url: str | None
+    description: str | None
+    created_at: datetime | None
+    updated_at: datetime | None
+
+
 TDetails = TypeVar("TDetails", bound=BaseModel)
 
 
