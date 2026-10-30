@@ -20,6 +20,8 @@ from api.db.models import (
 
 
 class LotRepository:
+    """Persist inventory lots and their database-specific relationships."""
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
@@ -56,6 +58,40 @@ class LotRepository:
         else:
             self._session.add(MaterialLot(lot_id=lot.id))
 
+        await self._session.flush()
+        return lot
+
+    async def get_origin_with_item(
+        self, *, user_id: UUID, lot_id: UUID
+    ) -> Lot | None:
+        """Load an owned lot with its origin item while locking the lot row.
+
+        The row lock makes the quantity and reservation checks performed by the
+        service safe when concurrent operations target the same lot.
+        """
+
+        statement = (
+            select(Lot)
+            .join(SessionLine, cast(SessionLine.id, String) == Lot.origin_id)
+            .options(joinedload(Lot.origin).joinedload(SessionLine.item))
+            .where(Lot.id == lot_id, Lot.user_id == user_id)
+            .with_for_update()
+        )
+        return await self._session.scalar(statement)
+
+    async def update_quantities(
+        self, *, lot: Lot, quantity: int, reserved: int, is_active: bool
+    ) -> Lot:
+        """Persist validated lot quantities and active state.
+
+        The service supplies the validated values; this method only applies
+        them to the tracked entity and flushes the change in the caller's
+        transaction.
+        """
+
+        lot.qty = quantity
+        lot.reserved = reserved
+        lot.is_active = is_active
         await self._session.flush()
         return lot
 

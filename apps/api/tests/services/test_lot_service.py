@@ -181,7 +181,7 @@ async def test_create_lot_rejects_consumed_session_lines(session, monkeypatch):
 
 
 async def test_get_fifo_lots_returns_oldest_first_and_scopes_to_user(
-    monkeypatch,
+    session, monkeypatch
 ):
     """Delegate FIFO loading with the authenticated user and item ids."""
 
@@ -200,7 +200,7 @@ async def test_get_fifo_lots_returns_oldest_first_and_scopes_to_user(
     user_id = uuid4()
 
     result = await lot_service.LotService(
-        object(), repository, repository, repository
+        session, repository, repository, repository
     ).get_fifo_lots(
         user_id=user_id, item_id=item_id
     )
@@ -212,7 +212,7 @@ async def test_get_fifo_lots_returns_oldest_first_and_scopes_to_user(
     )
 
 
-async def test_get_fifo_lots_rejects_non_stackable_items(monkeypatch):
+async def test_get_fifo_lots_rejects_non_stackable_items(session, monkeypatch):
     """Reject a known non-stackable item with HTTP 409."""
 
     repository = AsyncMock()
@@ -222,7 +222,7 @@ async def test_get_fifo_lots_rejects_non_stackable_items(monkeypatch):
 
     with pytest.raises(UnprocessingError, match="not stackable") as error:
         await lot_service.LotService(
-            object(), repository, repository, repository
+            session, repository, repository, repository
         ).get_fifo_lots(
             user_id=uuid4(), item_id=uuid4()
         )
@@ -231,7 +231,7 @@ async def test_get_fifo_lots_rejects_non_stackable_items(monkeypatch):
     repository.get_fifo_lots_for_item.assert_not_awaited()
 
 
-async def test_get_fifo_lots_rejects_unknown_items(monkeypatch):
+async def test_get_fifo_lots_rejects_unknown_items(session, monkeypatch):
     """Reject an unknown item because the response always contains an item."""
 
     repository = AsyncMock()
@@ -241,8 +241,172 @@ async def test_get_fifo_lots_rejects_unknown_items(monkeypatch):
 
     with pytest.raises(AppError) as error:
         await lot_service.LotService(
-            object(), repository, repository, repository
+            session, repository, repository, repository
         ).get_fifo_lots(user_id=uuid4(), item_id=uuid4())
 
     assert error.value.status_code == 404
     repository.get_fifo_lots_for_item.assert_not_awaited()
+
+
+def _lot_with_origin_item(*, quantity=10, reserved=0, stackable_item_id=None):
+    """Build a lot double with the source item required for deduction."""
+
+    item = SimpleNamespace(id=stackable_item_id or uuid4())
+    origin = SimpleNamespace(item=item)
+    return SimpleNamespace(
+        id=uuid4(),
+        qty=quantity,
+        reserved=reserved,
+        is_active=True,
+        origin=origin,
+    )
+
+
+async def test_reserve_quantity_increases_reserved_without_decreasing_stock(session):
+    """Reserve available stock while keeping the total quantity unchanged."""
+
+    repository = AsyncMock()
+    item_service = AsyncMock()
+    lot = _lot_with_origin_item(quantity=10, reserved=2)
+    repository.get_origin_with_item.return_value = lot
+    item_service.is_item_stackable.return_value = True
+    repository.update_quantities.return_value = lot
+
+    result = await lot_service.LotService(
+        session, repository, item_service, AsyncMock()
+    ).reserve_quantity(
+        user_id=uuid4(), lot_id=lot.id, quantity=5
+    )
+
+    assert result is lot
+    item_service.is_item_stackable.assert_awaited_once_with(
+        item_id=lot.origin.item.id
+    )
+    repository.update_quantities.assert_awaited_once_with(
+        lot=lot, quantity=10, reserved=7, is_active=True
+    )
+
+
+async def test_consume_reserved_quantity_decreases_stock_and_reservation(session):
+    """Consume a reservation from both total and reserved quantities."""
+
+    repository = AsyncMock()
+    item_service = AsyncMock()
+    lot = _lot_with_origin_item(quantity=10, reserved=2)
+    repository.get_origin_with_item.return_value = lot
+    item_service.is_item_stackable.return_value = True
+    repository.update_quantities.return_value = lot
+
+    await lot_service.LotService(
+        session, repository, item_service, AsyncMock()
+    ).consume_reserved_quantity(
+        user_id=uuid4(), lot_id=lot.id, quantity=2
+    )
+
+    repository.update_quantities.assert_awaited_once_with(
+        lot=lot, quantity=8, reserved=0, is_active=True
+    )
+
+
+async def test_reserve_quantity_rejects_quantity_over_available_stock(
+    session,
+):
+    """Reject a reservation that would exceed available stock with HTTP 409."""
+
+    repository = AsyncMock()
+    item_service = AsyncMock()
+    lot = _lot_with_origin_item(quantity=10, reserved=4)
+    repository.get_origin_with_item.return_value = lot
+    item_service.is_item_stackable.return_value = True
+
+    with pytest.raises(UnprocessingError, match="available") as error:
+        await lot_service.LotService(
+            session, repository, item_service, AsyncMock()
+        ).reserve_quantity(
+            user_id=uuid4(), lot_id=lot.id, quantity=7
+        )
+
+    assert error.value.status_code == 409
+    repository.update_quantities.assert_not_awaited()
+
+
+async def test_consume_reserved_quantity_rejects_unreserved_quantity(
+    session,
+):
+    """Reject consumption when the lot has insufficient reservation."""
+
+    repository = AsyncMock()
+    item_service = AsyncMock()
+    lot = _lot_with_origin_item(reserved=2)
+    repository.get_origin_with_item.return_value = lot
+    item_service.is_item_stackable.return_value = True
+
+    with pytest.raises(UnprocessingError, match="reserved") as error:
+        await lot_service.LotService(
+            session, repository, item_service, AsyncMock()
+        ).consume_reserved_quantity(
+            user_id=uuid4(), lot_id=lot.id, quantity=3
+        )
+
+    assert error.value.status_code == 409
+    repository.update_quantities.assert_not_awaited()
+
+
+async def test_reserve_quantity_returns_lot_without_updating_for_zero_quantity(
+    session,
+):
+    """Treat zero reservation as a no-op and avoid the quantity update."""
+
+    repository = AsyncMock()
+    lot = _lot_with_origin_item()
+    repository.get_origin_with_item.return_value = lot
+
+    result = await lot_service.LotService(
+        session, repository, AsyncMock(), AsyncMock()
+    ).reserve_quantity(
+        user_id=uuid4(), lot_id=lot.id, quantity=0
+    )
+
+    assert result is lot
+    repository.update_quantities.assert_not_awaited()
+
+
+async def test_consume_reserved_quantity_deactivates_empty_lot(session):
+    """Deactivate a lot after consuming its final unreserved quantity."""
+
+    repository = AsyncMock()
+    item_service = AsyncMock()
+    lot = _lot_with_origin_item(quantity=10, reserved=10)
+    repository.get_origin_with_item.return_value = lot
+    item_service.is_item_stackable.return_value = True
+    repository.update_quantities.return_value = lot
+
+    await lot_service.LotService(
+        session, repository, item_service, AsyncMock()
+    ).consume_reserved_quantity(
+        user_id=uuid4(), lot_id=lot.id, quantity=10
+    )
+
+    repository.update_quantities.assert_awaited_once_with(
+        lot=lot, quantity=0, reserved=0, is_active=False
+    )
+
+
+async def test_reserve_quantity_rejects_non_stackable_item(session):
+    """Reject reservation for a known non-stackable item with HTTP 409."""
+
+    repository = AsyncMock()
+    item_service = AsyncMock()
+    lot = _lot_with_origin_item()
+    repository.get_origin_with_item.return_value = lot
+    item_service.is_item_stackable.return_value = False
+
+    with pytest.raises(UnprocessingError, match="not stackable") as error:
+        await lot_service.LotService(
+            session, repository, item_service, AsyncMock()
+        ).reserve_quantity(
+            user_id=uuid4(), lot_id=lot.id, quantity=1
+        )
+
+    assert error.value.status_code == 409
+    repository.update_quantities.assert_not_awaited()

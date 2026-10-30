@@ -87,6 +87,92 @@ class LotService:
             raise AppError(404, "Item not found")
         return item, lots, total_quantity
 
+    async def _get_stackable_lot(
+        self, *, user_id: UUID, lot_id: UUID
+    ) -> Lot:
+        """Load an owned lot and verify that its item is stackable."""
+
+        lot = await self._repository.get_origin_with_item(
+            user_id=user_id,
+            lot_id=lot_id,
+        )
+        if lot is None:
+            raise AppError(404, "Lot not found")
+        if lot.origin is None or lot.origin.item is None:
+            raise AppError(404, "Item not found")
+
+        stackable = await self._item_service.is_item_stackable(
+            item_id=lot.origin.item.id
+        )
+        if stackable is False:
+            raise UnprocessingError("Item is not stackable")
+        if stackable is None:
+            raise AppError(404, "Item not found")
+        return lot
+
+    async def reserve_quantity(
+        self, *, user_id: UUID, lot_id: UUID, quantity: int
+    ) -> Lot:
+        """Reserve available quantity from an owned stackable lot.
+
+        ``qty`` is unchanged and ``reserved`` increases by ``quantity``.
+        Quantity cannot exceed the currently available stock. A zero quantity
+        is a no-op and returns the lot without updating it.
+        """
+
+        if quantity < 0:
+            raise UnprocessingError("Reservation quantity cannot be negative")
+
+        async with self._session.begin():
+            lot = await self._get_stackable_lot(
+                user_id=user_id,
+                lot_id=lot_id,
+            )
+            if quantity == 0:
+                return lot
+            available_quantity = lot.qty - lot.reserved
+            if available_quantity < quantity:
+                raise UnprocessingError("Insufficient quantity available to reserve")
+
+            return await self._repository.update_quantities(
+                lot=lot,
+                quantity=lot.qty,
+                reserved=lot.reserved + quantity,
+                is_active=lot.is_active,
+            )
+
+    async def consume_reserved_quantity(
+        self, *, user_id: UUID, lot_id: UUID, quantity: int
+    ) -> Lot:
+        """Consume reserved quantity from an owned stackable lot.
+
+        Both ``qty`` and ``reserved`` decrease by ``quantity``. The requested
+        quantity cannot exceed the lot's reservation. A zero quantity is a
+        no-op and returns the lot without updating it.
+        """
+
+        if quantity < 0:
+            raise UnprocessingError("Consumption quantity cannot be negative")
+
+        async with self._session.begin():
+            lot = await self._get_stackable_lot(
+                user_id=user_id,
+                lot_id=lot_id,
+            )
+            if quantity == 0:
+                return lot
+            if lot.reserved < quantity:
+                raise UnprocessingError("Insufficient reserved quantity")
+
+            remaining_quantity = lot.qty - quantity
+            remaining_reserved = lot.reserved - quantity
+            return await self._repository.update_quantities(
+                lot=lot,
+                quantity=remaining_quantity,
+                reserved=remaining_reserved,
+                is_active=not (remaining_quantity == 0 and remaining_reserved == 0),
+            )
+
 
 def get_lot_service(session: AsyncSession) -> LotService:
     """Build a lot service with its domain service dependencies."""
