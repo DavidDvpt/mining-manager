@@ -6,7 +6,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.core.exceptions import AppError, UnprocessingError
-from api.db.models import Item, Lot, LotKind, SessionLineType
+from api.db.models import Item, Lot, LotKind, SessionLine, SessionLineType
 from api.db.repositories import LotRepository
 
 from .item_service import ItemService, get_item_service
@@ -108,6 +108,30 @@ class LotService:
         if lot.tool_lot is None:
             raise UnprocessingError("Lot is not an unstackable tool lot")
         return lot
+
+    async def create_transaction_lot(
+        self,
+        *,
+        user_id: UUID,
+        session_line: SessionLine,
+        kind: LotKind,
+        quantity: int,
+        tt: Decimal | None,
+    ) -> Lot:
+        """Create the lot produced by a BUY session line in its open transaction."""
+
+        if kind is LotKind.TOOL and quantity != 1:
+            raise UnprocessingError("Tool quantity must be 1")
+        if kind is LotKind.TOOL and tt is None:
+            raise UnprocessingError("tt is required for tools")
+        return await self._repository.create(
+            user_id=user_id,
+            session_line=session_line,
+            kind=kind.value,
+            quantity=quantity,
+            tt=tt if kind is LotKind.TOOL else None,
+        )
+
 
     async def _get_stackable_lot(
         self, *, user_id: UUID, lot_id: UUID

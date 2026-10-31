@@ -4,6 +4,7 @@ from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from api.db.models import Item, Material
 
@@ -26,3 +27,13 @@ class ItemRepository:
         if row is None:
             return None
         return row[1] is not None
+
+    async def get_item_with_economy(self, *, item_id: UUID) -> Item | None:
+        """Load an item with its catalogue TT value for transaction pricing."""
+
+        statement = (
+            select(Item)
+            .options(joinedload(Item.economy))
+            .where(Item.id == item_id)
+        )
+        return await self._session.scalar(statement)

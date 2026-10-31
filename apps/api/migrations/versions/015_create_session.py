@@ -78,8 +78,9 @@ def upgrade() -> None:
         sa.Column(
             "type_detail",
             sa.Enum(
-                "BUY",
-                "SELL",
+                "TT",
+                "AUCTION",
+                "HAND_TO_HAND",
                 "FOUND",
                 "GIFT",
                 "EXISTING_STOCK",
@@ -157,7 +158,7 @@ def upgrade() -> None:
         sa.Column("session_line_id", sa.Uuid(), nullable=False),
         sa.Column("tt", sa.Numeric(precision=12, scale=5), nullable=False),
         sa.Column("ttc", sa.Numeric(precision=12, scale=5), nullable=False),
-        sa.Column("fee", sa.Numeric(precision=5, scale=2), nullable=False),
+        sa.Column("fee", sa.Numeric(precision=5, scale=2), nullable=True),
         sa.ForeignKeyConstraint(
             ["session_line_id"], ["session_line.id"], ondelete="CASCADE"
         ),

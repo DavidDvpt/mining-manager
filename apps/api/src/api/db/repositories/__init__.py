@@ -11,6 +11,7 @@ from .material_repository import MaterialRepository
 from .profile_repository import ProfileRepository
 from .refiner_repository import RefinerRepository
 from .session_line_repository import SessionLineRepository
+from .session_transaction_repository import SessionTransactionRepository
 from .user_repository import UserRepository
 
 __all__ = [
@@ -25,5 +26,6 @@ __all__ = [
     "ProfileRepository",
     "RefinerRepository",
     "SessionLineRepository",
+    "SessionTransactionRepository",
     "UserRepository",
 ]

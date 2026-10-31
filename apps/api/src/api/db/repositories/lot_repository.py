@@ -97,6 +97,8 @@ class LotRepository:
         )
         return await self._session.scalar(statement)
 
+
+
     async def update_quantities(
         self, *, lot: Lot, quantity: int, reserved: int, is_active: bool
     ) -> Lot:

@@ -56,6 +56,15 @@ Applique toutes les migrations Alembic jusqu’à la dernière version (`head`).
 Cette commande met à jour le schéma PostgreSQL configuré dans
 `apps/api/.env`.
 
+Pour annuler la dernière migration :
+
+```bash
+npm exec nx run api:alembic:downgrade
+```
+
+Cette commande recule toutes les révisions Alembic jusqu’à `base` sur la base configurée dans
+`apps/api/.env`.
+
 Depuis le dossier `apps/api`, les commandes équivalentes sont :
 
 ```bash

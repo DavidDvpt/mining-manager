@@ -1,0 +1,116 @@
+"""Business operations for named transaction sessions."""
+
+from decimal import Decimal
+from uuid import UUID
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from api.core.exceptions import AppError, UnprocessingError
+from api.db.models import LotKind, Session, SessionTransactionTypeDetail
+from api.db.repositories import SessionTransactionRepository
+
+from .item_service import ItemService, get_item_service
+from .lot_service import LotService, get_lot_service
+
+
+class SessionTransactionService:
+    """Create validated BUY transaction sessions without exposing session IDs."""
+
+    def __init__(
+        self,
+        session: AsyncSession,
+        repository: SessionTransactionRepository,
+        item_service: ItemService,
+        lot_service: LotService,
+    ) -> None:
+        self._session = session
+        self._repository = repository
+        self._item_service = item_service
+        self._lot_service = lot_service
+
+    async def create_buy_stackable(
+        self,
+        *,
+        user_id: UUID,
+        quantity: int,
+        item_id: UUID,
+        kind: str,
+        fee: Decimal | None,
+        ttc: Decimal,
+        type_detail: SessionTransactionTypeDetail,
+    ) -> Session:
+        """Create a stackable BUY line with quantity and no lot reference."""
+
+        if quantity < 1:
+            raise UnprocessingError("Quantity must be at least 1")
+        stackable = await self._item_service.is_item_stackable(item_id=item_id)
+        if stackable is None:
+            raise AppError(404, "Item not found")
+        if not stackable:
+            raise UnprocessingError("Item is not stackable")
+        
+        item = await self._item_service.get_item_with_economy(item_id=item_id)
+        if item is None:
+            raise AppError(404, "Item not found")
+        if item.economy is None or item.economy.tt is None:
+            raise UnprocessingError("Item has no TT value")
+        
+        tt = item.economy.tt * quantity
+        
+        async with self._session.begin():
+            transaction_session, line = await self._repository.create_buy(
+                user_id=user_id, item_id=item_id, lot_id=None, quantity=quantity,
+                tt=tt, fee=fee, ttc=ttc, type_detail=type_detail,
+            )
+            await self._lot_service.create_transaction_lot(
+                user_id=user_id,
+                session_line=line,
+                kind=LotKind(kind.upper()),
+                quantity=quantity,
+                tt=tt,
+            )
+            return transaction_session
+
+    async def create_buy_unstackable(
+        self,
+        *,
+        user_id: UUID,
+        item_id: UUID,
+        kind: str,
+        tt: Decimal | None,
+        fee: Decimal | None,
+        ttc: Decimal,
+        type_detail: SessionTransactionTypeDetail,
+    ) -> Session:
+        """Create a non-stackable BUY line with a lot and null quantity."""
+
+        stackable = await self._item_service.is_item_stackable(item_id=item_id)
+        if stackable is None:
+            raise AppError(404, "Item not found")
+        if stackable:
+            raise UnprocessingError("Item is stackable")
+        
+        async with self._session.begin():
+            transaction_session, line = await self._repository.create_buy(
+                user_id=user_id, item_id=item_id, lot_id=None, quantity=1,
+                tt=tt, fee=fee, ttc=ttc, type_detail=type_detail,
+            )
+            await self._lot_service.create_transaction_lot(
+                user_id=user_id,
+                session_line=line,
+                kind=LotKind(kind.upper()),
+                quantity=1,
+                tt=tt,
+            )
+            return transaction_session
+
+
+def get_session_transaction_service(session: AsyncSession) -> SessionTransactionService:
+    """Build a transaction-session service with its domain dependencies."""
+
+    return SessionTransactionService(
+        session=session,
+        repository=SessionTransactionRepository(session),
+        item_service=get_item_service(session),
+        lot_service=get_lot_service(session),
+    )

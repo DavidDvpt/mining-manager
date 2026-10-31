@@ -11,6 +11,11 @@ from .material_schema import MaterialResponse
 from .refiner_schema import RefinerResponse
 from .session_line_schema import SessionLineResponse
 from .session_schema import SessionResponse
+from .session_transaction_schema import (
+    CreateStackableBuyRequest,
+    CreateUnstackableBuyRequest,
+    SessionTransactionResponse,
+)
 
 __all__ = [
     "DepositSizeResponse",
@@ -26,4 +31,7 @@ __all__ = [
     "RefinerResponse",
     "SessionLineResponse",
     "SessionResponse",
+    "CreateStackableBuyRequest",
+    "CreateUnstackableBuyRequest",
+    "SessionTransactionResponse",
 ]

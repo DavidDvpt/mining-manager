@@ -25,6 +25,9 @@
       "configurations": {
         "upgrade": {
           "command": "uv run alembic upgrade head"
+        },
+        "downgrade": {
+          "command": "uv run alembic downgrade base"
         }
       }
     }

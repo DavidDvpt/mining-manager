@@ -28,8 +28,8 @@ class SessionLineTransaction(Base):
     ttc: Mapped[Decimal] = mapped_column(
         Numeric(precision=12, scale=5), nullable=False
     )
-    fee: Mapped[Decimal] = mapped_column(
-        Numeric(precision=5, scale=2), nullable=False
+    fee: Mapped[Decimal | None] = mapped_column(
+        Numeric(precision=5, scale=2), nullable=True
     )
 
     session_line: Mapped["SessionLine"] = relationship(

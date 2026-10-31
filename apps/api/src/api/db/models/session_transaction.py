@@ -27,8 +27,9 @@ class SessionTransactionStatus(str, Enum):
 
 
 class SessionTransactionTypeDetail(str, Enum):
-    BUY = "BUY"
-    SELL = "SELL"
+    TT = "TT"
+    AUCTION = "AUCTION"
+    HAND_TO_HAND = "HAND_TO_HAND"
     FOUND = "FOUND"
     GIFT = "GIFT"
     EXISTING_STOCK = "EXISTING_STOCK"
