@@ -6,7 +6,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.core.exceptions import AppError, UnprocessingError
-from api.db.models import LotKind, Session, SessionTransactionTypeDetail
+from api.db.models import Lot, LotKind, Session, SessionTransactionTypeDetail
 from api.db.repositories import SessionTransactionRepository
 
 from .item_service import ItemService, get_item_service
@@ -101,6 +101,98 @@ class SessionTransactionService:
                 kind=LotKind(kind.upper()),
                 quantity=1,
                 tt=tt,
+            )
+            return transaction_session
+
+    async def create_sell_stackable(
+        self,
+        *,
+        user_id: UUID,
+        item_id: UUID,
+        quantity: int,
+        tt: Decimal,
+        ttc: Decimal,
+    ) -> Session:
+        """Create a stackable SELL from active owned lots in FIFO order.
+
+        The sale is accepted only when active available lots for the item have
+        a strictly greater total quantity than the requested quantity. One
+        consumed session line is persisted per source lot so every lot used by
+        the sale remains identifiable.
+        """
+
+        if quantity < 1:
+            raise UnprocessingError("Quantity must be at least 1")
+        stackable = await self._item_service.is_item_stackable(item_id=item_id)
+        if stackable is None:
+            raise AppError(404, "Item not found")
+        if not stackable:
+            raise UnprocessingError("Item is not stackable")
+
+        async with self._session.begin():
+            _item, lots, total_quantity = await self._lot_service.get_fifo_lots(
+                user_id=user_id, item_id=item_id
+            )
+            if total_quantity <= quantity:
+                raise UnprocessingError("Insufficient active quantity available to sell")
+
+            remaining = quantity
+            lines: list[dict[str, object]] = []
+            reservations: list[tuple[Lot, int]] = []
+            for lot in lots:
+                available_quantity = lot.qty - lot.reserved
+                reserved_quantity = min(remaining, available_quantity)
+                if reserved_quantity <= 0:
+                    continue
+                lines.append(
+                    {
+                        "lot_id": lot.id,
+                        "quantity": reserved_quantity,
+                        "tt": tt * Decimal(reserved_quantity) / Decimal(quantity),
+                        "ttc": ttc,
+                    }
+                )
+                reservations.append((lot, reserved_quantity))
+                remaining -= reserved_quantity
+                if remaining == 0:
+                    break
+
+            if remaining != 0:
+                raise UnprocessingError("Unable to allocate the requested sale quantity")
+            await self._lot_service.reserve_for_sale(lots=reservations)
+            transaction_session, _lines = await self._repository.create_sell(
+                user_id=user_id, lines=lines
+            )
+            return transaction_session
+
+    async def create_sell_unstackable(
+        self,
+        *,
+        user_id: UUID,
+        lot_id: UUID,
+        tt: Decimal,
+        ttc: Decimal,
+    ) -> Session:
+        """Create a SELL for one owned active unstackable lot.
+
+        The lot must represent exactly one item. A positive TT is required for
+        limited tools; non-limited values are accepted as the caller-provided
+        TT/TTC pair because pricing representation is a front-end concern.
+        """
+
+        async with self._session.begin():
+            lot = await self._lot_service.get_unstackable_lot(
+                user_id=user_id, lot_id=lot_id
+            )
+            if not lot.is_active or lot.qty != 1:
+                raise UnprocessingError("Only one active unstackable lot can be sold")
+            if lot.tool_lot is not None and lot.tool_lot.tt is not None and tt <= 0:
+                raise UnprocessingError("TT must be greater than 0 for a limited lot")
+            
+            await self._lot_service.reserve_unstackable_for_sale(lot=lot)
+            transaction_session, _lines = await self._repository.create_sell(
+                user_id=user_id,
+                lines=[{"lot_id": lot_id, "quantity": 1, "tt": tt, "ttc": ttc}],
             )
             return transaction_session
 

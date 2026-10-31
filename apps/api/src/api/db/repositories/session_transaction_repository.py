@@ -54,3 +54,40 @@ class SessionTransactionRepository:
         self._session.add(transaction_session)
         await self._session.flush()
         return transaction_session, line
+
+    async def create_sell(
+        self,
+        *,
+        user_id: UUID,
+        lines: list[dict[str, object]],
+    ) -> tuple[Session, list[SessionLine]]:
+        """Persist a SELL session and its consumed lines atomically.
+
+        Each input dictionary must contain ``lot_id``, ``quantity``, ``tt``
+        and ``ttc``. The repository only maps validated values to persistence
+        models; ownership and inventory rules remain in the service.
+        """
+
+        transaction_session = Session(user_id=user_id)
+        transaction_session.transaction = SessionTransaction(
+            type=SessionTransactionType.SELL,
+            status=SessionTransactionStatus.RUNNING,
+        )
+        created_lines: list[SessionLine] = []
+        for values in lines:
+            line = SessionLine(
+                item_id=None,
+                lot_id=values["lot_id"],
+                type=SessionLineType.CONSUMED,
+                qty=values["quantity"],
+            )
+            line.transaction = SessionLineTransaction(
+                tt=values["tt"],
+                fee=None,
+                ttc=values["ttc"],
+            )
+            transaction_session.lines.append(line)
+            created_lines.append(line)
+        self._session.add(transaction_session)
+        await self._session.flush()
+        return transaction_session, created_lines

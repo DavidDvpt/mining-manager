@@ -94,6 +94,7 @@ class LotRepository:
                 joinedload(Lot.enhancer_lot),
             )
             .where(Lot.id == lot_id, Lot.user_id == user_id)
+            .with_for_update()
         )
         return await self._session.scalar(statement)
 
@@ -140,6 +141,7 @@ class LotRepository:
                 Lot.qty - Lot.reserved > 0,
             )
             .order_by(Lot.created_at.asc(), Lot.id.asc())
+            .with_for_update()
         )
         result = await self._session.scalars(statement)
         lots = list(result.unique().all())

@@ -187,6 +187,42 @@ class LotService:
                 is_active=lot.is_active,
             )
 
+    async def reserve_for_sale(
+        self, *, lots: list[tuple[Lot, int]]
+    ) -> None:
+        """Reserve sale quantities without changing lot stock.
+
+        The caller must already own the surrounding database transaction and
+        provide lots locked for update. Each reservation increases ``reserved``
+        while preserving ``qty`` and ``is_active``.
+        """
+
+        for lot, quantity in lots:
+            if quantity < 1:
+                raise UnprocessingError("Reservation quantity must be positive")
+            if lot.qty - lot.reserved < quantity:
+                raise UnprocessingError("Insufficient quantity available to reserve")
+            
+            await self._repository.update_quantities(
+                lot=lot,
+                quantity=lot.qty,
+                reserved=lot.reserved + quantity,
+                is_active=lot.is_active,
+            )
+
+    async def reserve_unstackable_for_sale(self, *, lot: Lot) -> None:
+        """Reserve one unstackable lot without consuming its stock quantity."""
+
+        if lot.qty != 1 or lot.reserved != 0:
+            raise UnprocessingError("Unstackable lot is not available to reserve")
+        
+        await self._repository.update_quantities(
+            lot=lot,
+            quantity=lot.qty,
+            reserved=1,
+            is_active=lot.is_active,
+        )
+
     async def consume_reserved_quantity(
         self, *, user_id: UUID, lot_id: UUID, quantity: int
     ) -> Lot:

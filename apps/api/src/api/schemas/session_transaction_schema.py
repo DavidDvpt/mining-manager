@@ -34,6 +34,24 @@ class CreateUnstackableBuyRequest(BaseModel):
     ttc: Decimal
 
 
+class CreateStackableSellRequest(BaseModel):
+    """Payload for a stackable SELL transaction session."""
+
+    quantity: int = Field(ge=1)
+    item_id: UUID
+    tt: Decimal = Field(ge=0)
+    ttc: Decimal = Field(ge=0)
+
+
+class CreateUnstackableSellRequest(BaseModel):
+    """Payload for a non-stackable SELL transaction session."""
+
+    quantity: Literal[1] = 1
+    lot_id: UUID
+    tt: Decimal = Field(ge=0)
+    ttc: Decimal = Field(ge=0)
+
+
 class SessionTransactionResponse(BaseModel):
     """Identifier and state of a newly created transaction session."""
 

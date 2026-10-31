@@ -13,7 +13,9 @@ from .session_line_schema import SessionLineResponse
 from .session_schema import SessionResponse
 from .session_transaction_schema import (
     CreateStackableBuyRequest,
+    CreateStackableSellRequest,
     CreateUnstackableBuyRequest,
+    CreateUnstackableSellRequest,
     SessionTransactionResponse,
 )
 
@@ -32,6 +34,8 @@ __all__ = [
     "SessionLineResponse",
     "SessionResponse",
     "CreateStackableBuyRequest",
+    "CreateStackableSellRequest",
     "CreateUnstackableBuyRequest",
+    "CreateUnstackableSellRequest",
     "SessionTransactionResponse",
 ]

@@ -10,7 +10,9 @@ from api.db import get_session
 from api.db.models import SessionTransactionTypeDetail
 from api.schemas import (
     CreateStackableBuyRequest,
+    CreateStackableSellRequest,
     CreateUnstackableBuyRequest,
+    CreateUnstackableSellRequest,
     SessionTransactionResponse,
 )
 from api.services import get_session_transaction_service
@@ -36,6 +38,8 @@ async def create_buy_stackable(
         ttc=payload.ttc,
     )
     transaction = transaction_session.transaction
+    if transaction is None:
+        raise RuntimeError("Created transaction session has no transaction")
     return SessionTransactionResponse(
         session_id=transaction_session.id,
         type=transaction.type.value,
@@ -61,6 +65,57 @@ async def create_buy_unstackable(
         ttc=payload.ttc,
     )
     transaction = transaction_session.transaction
+    if transaction is None:
+        raise RuntimeError("Created transaction session has no transaction")
+    return SessionTransactionResponse(
+        session_id=transaction_session.id,
+        type=transaction.type.value,
+        status=transaction.status.value,
+    )
+
+
+@router.post("/sell/stackable", response_model=SessionTransactionResponse, status_code=201)
+async def create_sell_stackable(
+    payload: CreateStackableSellRequest,
+    current_user: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> SessionTransactionResponse:
+    """Create a SELL session for a stackable item."""
+
+    transaction_session = await get_session_transaction_service(session).create_sell_stackable(
+        user_id=current_user["id"],
+        item_id=payload.item_id,
+        quantity=payload.quantity,
+        tt=payload.tt,
+        ttc=payload.ttc,
+    )
+    transaction = transaction_session.transaction
+    if transaction is None:
+        raise RuntimeError("Created transaction session has no transaction")
+    return SessionTransactionResponse(
+        session_id=transaction_session.id,
+        type=transaction.type.value,
+        status=transaction.status.value,
+    )
+
+
+@router.post("/sell/unstackable", response_model=SessionTransactionResponse, status_code=201)
+async def create_sell_unstackable(
+    payload: CreateUnstackableSellRequest,
+    current_user: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> SessionTransactionResponse:
+    """Create a SELL session for one owned unstackable lot."""
+
+    transaction_session = await get_session_transaction_service(session).create_sell_unstackable(
+        user_id=current_user["id"],
+        lot_id=payload.lot_id,
+        tt=payload.tt,
+        ttc=payload.ttc,
+    )
+    transaction = transaction_session.transaction
+    if transaction is None:
+        raise RuntimeError("Created transaction session has no transaction")
     return SessionTransactionResponse(
         session_id=transaction_session.id,
         type=transaction.type.value,
