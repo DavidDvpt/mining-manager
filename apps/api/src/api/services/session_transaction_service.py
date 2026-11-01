@@ -1,5 +1,6 @@
 """Business operations for named transaction sessions."""
 
+from contextlib import asynccontextmanager
 from decimal import Decimal
 from uuid import UUID
 
@@ -19,6 +20,15 @@ from api.db.repositories import SessionTransactionRepository
 
 from .item_service import ItemService, get_item_service
 from .lot_service import LotService, get_lot_service
+
+
+@asynccontextmanager
+async def _transaction_scope(session: AsyncSession):
+    """Open an isolated transaction or savepoint for the supplied session."""
+
+    transaction = session.begin_nested() if session.in_transaction() else session.begin()
+    async with transaction:
+        yield
 
 
 class SessionTransactionService:
@@ -65,7 +75,7 @@ class SessionTransactionService:
         
         tt = item.economy.tt * quantity
         
-        async with self._session.begin():
+        async with _transaction_scope(self._session):
             transaction_session, line = await self._repository.create_buy(
                 user_id=user_id, item_id=item_id, lot_id=None, quantity=quantity,
                 tt=tt, fee=fee, ttc=ttc, type_detail=type_detail,
@@ -98,7 +108,7 @@ class SessionTransactionService:
         if stackable:
             raise UnprocessingError("Item is stackable")
         
-        async with self._session.begin():
+        async with _transaction_scope(self._session):
             transaction_session, line = await self._repository.create_buy(
                 user_id=user_id, item_id=item_id, lot_id=None, quantity=1,
                 tt=tt, fee=fee, ttc=ttc, type_detail=type_detail,
@@ -137,7 +147,7 @@ class SessionTransactionService:
         if not stackable:
             raise UnprocessingError("Item is not stackable")
 
-        async with self._session.begin():
+        async with _transaction_scope(self._session):
             _item, lots, total_quantity = await self._lot_service.get_fifo_lots(
                 user_id=user_id, item_id=item_id
             )
@@ -188,7 +198,7 @@ class SessionTransactionService:
         TT/TTC pair because pricing representation is a front-end concern.
         """
 
-        async with self._session.begin():
+        async with _transaction_scope(self._session):
             lot = await self._lot_service.get_unstackable_lot(
                 user_id=user_id, lot_id=lot_id
             )
@@ -230,7 +240,7 @@ class SessionTransactionService:
         identifiable for exclusion from future fee and price statistics.
         """
 
-        async with self._session.begin():
+        async with _transaction_scope(self._session):
             transaction = await self.get_transaction_by_id(
                 user_id=user_id, session_id=session_id
             )

@@ -109,7 +109,7 @@ class SessionTransactionRepository:
                 SessionTransaction.session_id == session_id,
                 Session.user_id == user_id,
             )
-            .with_for_update()
+            .with_for_update(of=SessionTransaction)
         )
         return await self._session.scalar(statement)
 
