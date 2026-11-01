@@ -15,6 +15,16 @@ def upgrade() -> None:
         "PRODUCED",
         name="session_line_type",
     )
+    session_mining_search_type = sa.Enum(
+        "E",
+        "O",
+        "T",
+        "EO",
+        "ET",
+        "OT",
+        "EOT",
+        name="session_mining_search_type",
+    )
     op.create_table(
         "session",
         sa.Column(
@@ -40,6 +50,7 @@ def upgrade() -> None:
         "session_mining",
         sa.Column("session_id", sa.Uuid(), nullable=False),
         sa.Column("session_sone_id", sa.Uuid(), nullable=True),
+        sa.Column("search_type", session_mining_search_type, nullable=False),
         sa.Column("clic", sa.Integer(), nullable=False),
         sa.CheckConstraint("clic > 0", name="ck_session_mining_clic_positive"),
         sa.ForeignKeyConstraint(
@@ -204,3 +215,6 @@ def downgrade() -> None:
         op.get_bind(), checkfirst=True
     )
     sa.Enum(name="session_line_type").drop(op.get_bind(), checkfirst=True)
+    sa.Enum(name="session_mining_search_type").drop(
+        op.get_bind(), checkfirst=True
+    )

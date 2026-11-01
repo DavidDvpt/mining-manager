@@ -28,6 +28,7 @@ from .session_line_decay import SessionLineDecay
 from .session_line_transaction import SessionLineTransaction
 from .session_line_type import SessionLineType
 from .session_mining import SessionMining
+from .session_mining_search_type import SessionMiningSearchType
 from .session_refinage import SessionRefinage
 from .session_transaction import (
     SessionTransaction,
@@ -74,6 +75,7 @@ __all__ = [
     "SessionLineTransaction",
     "SessionLineType",
     "SessionMining",
+    "SessionMiningSearchType",
     "SessionRefinage",
     "SessionTransaction",
     "SessionTransactionStatus",

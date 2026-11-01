@@ -3,11 +3,12 @@
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, ForeignKey, Integer
+from sqlalchemy import CheckConstraint, Enum as SqlEnum, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..base import Base
+from .session_mining_search_type import SessionMiningSearchType
 
 if TYPE_CHECKING:
     from .session import Session
@@ -28,6 +29,10 @@ class SessionMining(Base):
         PostgresUUID(as_uuid=True),
         ForeignKey("session_zone.id", ondelete="CASCADE"),
         nullable=True,
+    )
+    search_type: Mapped[SessionMiningSearchType] = mapped_column(
+        SqlEnum(SessionMiningSearchType, name="session_mining_search_type"),
+        nullable=False,
     )
     clic: Mapped[int] = mapped_column(Integer, nullable=False)
 
