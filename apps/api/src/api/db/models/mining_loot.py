@@ -1,9 +1,10 @@
 """Resources that can be obtained while mining."""
 
+from datetime import date
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import Enum as SqlEnum
+from sqlalchemy import Date, Enum as SqlEnum, text
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -29,6 +30,10 @@ class MiningLoot(Base):
     resource_id: Mapped[UUID] = mapped_column(
         PostgresUUID(as_uuid=True), nullable=False
     )
+    created_at: Mapped[date] = mapped_column(
+        Date, nullable=False, server_default=text("now()")
+    )
+    updated_at: Mapped[date | None] = mapped_column(Date, nullable=True)
 
     planet_links: Mapped[list["MiningLootPlanet"]] = relationship(
         back_populates="mining_loot", cascade="all, delete-orphan"

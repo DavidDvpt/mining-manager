@@ -35,6 +35,7 @@ from .session_transaction import (
     SessionTransactionType,
     SessionTransactionTypeDetail,
 )
+from .session_zone import SessionZone
 from .tool_lot import ToolLot
 from .transaction import Transaction, TransactionStatus, TransactionType
 from .transaction_lot import TransactionLot, TransactionLotType
@@ -78,6 +79,7 @@ __all__ = [
     "SessionTransactionStatus",
     "SessionTransactionType",
     "SessionTransactionTypeDetail",
+    "SessionZone",
     "Tool",
     "ToolLot",
     "Transaction",
