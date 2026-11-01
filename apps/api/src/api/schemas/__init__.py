@@ -12,6 +12,7 @@ from .refiner_schema import RefinerResponse
 from .session_line_schema import SessionLineResponse
 from .session_schema import SessionResponse
 from .session_transaction_schema import (
+    CreateConsumedMaterialRequest,
     CreateStackableBuyRequest,
     CreateStackableSellRequest,
     CreateUnstackableBuyRequest,
@@ -35,6 +36,7 @@ __all__ = [
     "SessionLineResponse",
     "SessionResponse",
     "CreateStackableBuyRequest",
+    "CreateConsumedMaterialRequest",
     "CreateStackableSellRequest",
     "CreateUnstackableBuyRequest",
     "CreateUnstackableSellRequest",

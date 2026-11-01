@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 class SessionTransactionType(str, Enum):
     BUY = "BUY"
     SELL = "SELL"
+    CONSUMED = "CONSUMED"
 
 
 class SessionTransactionStatus(str, Enum):

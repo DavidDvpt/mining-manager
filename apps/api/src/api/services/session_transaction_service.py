@@ -154,14 +154,11 @@ class SessionTransactionService:
             if total_quantity <= quantity:
                 raise UnprocessingError("Insufficient active quantity available to sell")
 
-            remaining = quantity
+            allocations = await self._lot_service.allocate_fifo_quantity(
+                lots=lots, quantity=quantity
+            )
             lines: list[dict[str, object]] = []
-            reservations: list[tuple[Lot, int]] = []
-            for lot in lots:
-                available_quantity = lot.qty - lot.reserved
-                reserved_quantity = min(remaining, available_quantity)
-                if reserved_quantity <= 0:
-                    continue
+            for lot, reserved_quantity in allocations:
                 lines.append(
                     {
                         "lot_id": lot.id,
@@ -170,14 +167,7 @@ class SessionTransactionService:
                         "ttc": ttc,
                     }
                 )
-                reservations.append((lot, reserved_quantity))
-                remaining -= reserved_quantity
-                if remaining == 0:
-                    break
-
-            if remaining != 0:
-                raise UnprocessingError("Unable to allocate the requested sale quantity")
-            await self._lot_service.reserve_for_sale(lots=reservations)
+            await self._lot_service.reserve_for_sale(lots=allocations)
             transaction_session, _lines = await self._repository.create_sell(
                 user_id=user_id, lines=lines
             )
@@ -211,6 +201,57 @@ class SessionTransactionService:
             transaction_session, _lines = await self._repository.create_sell(
                 user_id=user_id,
                 lines=[{"lot_id": lot_id, "quantity": 1, "tt": tt, "ttc": ttc}],
+            )
+            return transaction_session
+
+    async def create_consumed_material(
+        self,
+        *,
+        user_id: UUID,
+        item_id: UUID,
+        quantity: int,
+    ) -> Session:
+        """Consume FIFO material stock with zero fee and TTC equal to TT."""
+
+        if quantity < 1:
+            raise UnprocessingError("Quantity must be at least 1")
+        material = await self._item_service.is_item_material(item_id=item_id)
+        if material is None:
+            raise AppError(404, "Item not found")
+        if not material:
+            raise UnprocessingError("Only material items can be consumed")
+
+        item = await self._item_service.get_item_with_economy(item_id=item_id)
+        if item is None:
+            raise AppError(404, "Item not found")
+        if item.economy is None or item.economy.tt is None:
+            raise UnprocessingError("Item has no TT value")
+        tt = item.economy.tt * quantity
+
+        async with _transaction_scope(self._session):
+            _item, lots, total_quantity = await self._lot_service.get_fifo_lots(
+                user_id=user_id, item_id=item_id
+            )
+            if total_quantity < quantity:
+                raise UnprocessingError("Insufficient active quantity available to consume")
+
+            lines: list[dict[str, object]] = []
+            allocations = await self._lot_service.allocate_fifo_quantity(
+                lots=lots, quantity=quantity
+            )
+            for lot, consumed_quantity in allocations:
+                line_tt = item.economy.tt * consumed_quantity
+                lines.append(
+                    {
+                        "lot_id": lot.id,
+                        "quantity": consumed_quantity,
+                        "tt": line_tt,
+                        "ttc": line_tt,
+                    }
+                )
+            await self._lot_service.consume_for_consumption(lots=allocations)
+            transaction_session, _lines = await self._repository.create_consumed(
+                user_id=user_id, lines=lines
             )
             return transaction_session
 

@@ -206,3 +206,49 @@ async def test_bdd_unstackable_tool_buy_sell_and_cancel_restores_lot(test_db_ses
     assert lot.qty == 1
     assert lot.reserved == 0
     assert lot.is_active is True
+
+
+async def test_bdd_consumed_material_consumes_stock_and_records_zero_fee(
+    test_db_session,
+):
+    """Consume material stock and persist matching TT/TTC with a zero fee."""
+
+    user, item = await given_user_and_stackable_item(test_db_session)
+    service = get_session_transaction_service(test_db_session)
+    await service.create_buy_stackable(
+        user_id=user.id,
+        quantity=5,
+        item_id=item.id,
+        kind="material",
+        fee=None,
+        ttc=Decimal("6.25"),
+        type_detail=SessionTransactionTypeDetail.EXISTING_STOCK,
+    )
+
+    consumed = await service.create_consumed_material(
+        user_id=user.id, item_id=item.id, quantity=4
+    )
+
+    transaction = await test_db_session.scalar(
+        select(SessionTransaction).where(SessionTransaction.session_id == consumed.id)
+    )
+    line = await test_db_session.scalar(
+        select(SessionLine).where(SessionLine.session_id == consumed.id)
+    )
+    assert line is not None
+    line_transaction = await test_db_session.scalar(
+        select(SessionLineTransaction).where(SessionLineTransaction.session_line_id == line.id)
+    )
+    lot = await test_db_session.scalar(select(Lot).where(Lot.user_id == user.id))
+
+    assert transaction is not None
+    assert transaction.type is SessionTransactionType.CONSUMED
+    assert transaction.status is SessionTransactionStatus.SOLDED
+    assert line.qty == 4
+    assert line_transaction is not None
+    assert line_transaction.tt == Decimal("5.00000")
+    assert line_transaction.ttc == Decimal("5.00000")
+    assert line_transaction.fee == Decimal("0.00")
+    assert lot is not None
+    assert lot.qty == 1
+    assert lot.reserved == 0

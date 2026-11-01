@@ -94,6 +94,38 @@ class SessionTransactionRepository:
         await self._session.flush()
         return transaction_session, created_lines
 
+    async def create_consumed(
+        self,
+        *,
+        user_id: UUID,
+        lines: list[dict[str, object]],
+    ) -> tuple[Session, list[SessionLine]]:
+        """Persist a completed CONSUMED session and its material lines."""
+
+        transaction_session = Session(user_id=user_id)
+        transaction_session.transaction = SessionTransaction(
+            type=SessionTransactionType.CONSUMED,
+            status=SessionTransactionStatus.SOLDED,
+        )
+        created_lines: list[SessionLine] = []
+        for values in lines:
+            line = SessionLine(
+                item_id=None,
+                lot_id=values["lot_id"],
+                type=SessionLineType.CONSUMED,
+                qty=values["quantity"],
+            )
+            line.transaction = SessionLineTransaction(
+                tt=values["tt"],
+                fee=Decimal("0"),
+                ttc=values["ttc"],
+            )
+            transaction_session.lines.append(line)
+            created_lines.append(line)
+        self._session.add(transaction_session)
+        await self._session.flush()
+        return transaction_session, created_lines
+
     async def get_transaction_by_id(
         self, *, session_id: UUID, user_id: UUID
     ) -> SessionTransaction | None:

@@ -87,6 +87,30 @@ class LotService:
             raise AppError(404, "Item not found")
         return item, lots, total_quantity
 
+    async def allocate_fifo_quantity(
+        self, *, lots: list[Lot], quantity: int
+    ) -> list[tuple[Lot, int]]:
+        """Allocate a quantity across already locked lots in FIFO order."""
+
+        if quantity < 1:
+            raise UnprocessingError("Quantity must be at least 1")
+
+        remaining = quantity
+        allocations: list[tuple[Lot, int]] = []
+        for lot in lots:
+            available_quantity = lot.qty - lot.reserved
+            allocated_quantity = min(remaining, available_quantity)
+            if allocated_quantity <= 0:
+                continue
+            allocations.append((lot, allocated_quantity))
+            remaining -= allocated_quantity
+            if remaining == 0:
+                break
+
+        if remaining != 0:
+            raise UnprocessingError("Unable to allocate the requested quantity")
+        return allocations
+
     async def get_unstackable_lot(self, *, user_id: UUID, lot_id: UUID) -> Lot:
         """Return an owned unstackable lot with its item-specific details."""
 
@@ -222,6 +246,24 @@ class LotService:
             reserved=1,
             is_active=lot.is_active,
         )
+
+    async def consume_for_consumption(
+        self, *, lots: list[tuple[Lot, int]]
+    ) -> None:
+        """Consume available material quantities from locked FIFO lots."""
+
+        for lot, quantity in lots:
+            if quantity < 1:
+                raise UnprocessingError("Consumption quantity must be positive")
+            if lot.qty - lot.reserved < quantity:
+                raise UnprocessingError("Insufficient quantity available to consume")
+            remaining_quantity = lot.qty - quantity
+            await self._repository.update_quantities(
+                lot=lot,
+                quantity=remaining_quantity,
+                reserved=lot.reserved,
+                is_active=remaining_quantity > 0,
+            )
 
     async def get_lot_by_id(
         self, *, user_id: UUID, lot_id: UUID

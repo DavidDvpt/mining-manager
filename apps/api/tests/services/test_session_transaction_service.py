@@ -193,6 +193,7 @@ async def test_create_sell_stackable_allocates_fifo_lots(service):
     service._lot_service.get_fifo_lots.return_value = (
         SimpleNamespace(id=item_id), [first, second], 7
     )
+    service._lot_service.allocate_fifo_quantity.return_value = [(first, 3), (second, 3)]
     service._repository.create_sell.return_value = (expected, [])
 
     result = await service.create_sell_stackable(
@@ -268,6 +269,69 @@ async def test_create_sell_unstackable_rejects_limited_lot_with_zero_tt(service)
         )
 
     service._lot_service.reserve_unstackable_for_sale.assert_not_awaited()
+
+
+async def test_create_consumed_material_consumes_fifo_with_zero_fee(service):
+    """Consume material FIFO and persist TTC equal to TT with no fee."""
+
+    user_id = uuid4()
+    item_id = uuid4()
+    first = SimpleNamespace(id=uuid4(), qty=3, reserved=0)
+    second = SimpleNamespace(id=uuid4(), qty=5, reserved=0)
+    expected = transaction_session(
+        SessionTransactionType.CONSUMED, SessionTransactionStatus.SOLDED
+    )
+    service._item_service.is_item_material.return_value = True
+    service._item_service.get_item_with_economy.return_value = SimpleNamespace(
+        economy=SimpleNamespace(tt=Decimal("1.25"))
+    )
+    service._lot_service.get_fifo_lots.return_value = (
+        SimpleNamespace(id=item_id), [first, second], 8
+    )
+    service._lot_service.allocate_fifo_quantity.return_value = [(first, 3), (second, 1)]
+    service._repository.create_consumed.return_value = (expected, [])
+
+    result = await service.create_consumed_material(
+        user_id=user_id, item_id=item_id, quantity=4
+    )
+
+    assert result is expected
+    service._lot_service.consume_for_consumption.assert_awaited_once_with(
+        lots=[(first, 3), (second, 1)]
+    )
+    service._repository.create_consumed.assert_awaited_once_with(
+        user_id=user_id,
+        lines=[
+            {"lot_id": first.id, "quantity": 3, "tt": Decimal("3.75"), "ttc": Decimal("3.75")},
+            {"lot_id": second.id, "quantity": 1, "tt": Decimal("1.25"), "ttc": Decimal("1.25")},
+        ],
+    )
+
+
+@pytest.mark.parametrize(
+    ("material", "total_quantity", "message"),
+    [
+        (False, 10, "Only material"),
+        (True, 2, "Insufficient"),
+    ],
+)
+async def test_create_consumed_material_rejects_non_material_or_insufficient_stock(
+    service, material, total_quantity, message
+):
+    """Reject consumption for non-material items or unavailable stock."""
+
+    service._item_service.is_item_material.return_value = material
+    service._item_service.get_item_with_economy.return_value = SimpleNamespace(
+        economy=SimpleNamespace(tt=Decimal("1"))
+    )
+    service._lot_service.get_fifo_lots.return_value = (SimpleNamespace(), [], total_quantity)
+
+    with pytest.raises(UnprocessingError, match=message):
+        await service.create_consumed_material(
+            user_id=uuid4(), item_id=uuid4(), quantity=3
+        )
+
+    service._repository.create_consumed.assert_not_awaited()
 
 
 async def test_patch_status_settles_each_line_and_persists_status(service):

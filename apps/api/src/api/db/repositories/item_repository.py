@@ -28,6 +28,19 @@ class ItemRepository:
             return None
         return row[1] is not None
 
+    async def is_item_material(self, *, item_id: UUID) -> bool | None:
+        """Return whether an item exists and has a material catalogue row."""
+
+        statement = (
+            select(Item.id, Material.item_id)
+            .outerjoin(Material, Material.item_id == Item.id)
+            .where(Item.id == item_id)
+        )
+        row = (await self._session.execute(statement)).first()
+        if row is None:
+            return None
+        return row[1] is not None
+
     async def get_item_with_economy(self, *, item_id: UUID) -> Item | None:
         """Load an item with its catalogue TT value for transaction pricing."""
 

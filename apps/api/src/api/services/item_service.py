@@ -24,6 +24,11 @@ class ItemService:
 
         return await self._repository.get_item_with_economy(item_id=item_id)
 
+    async def is_item_material(self, *, item_id: UUID) -> bool | None:
+        """Return whether an item exists and belongs to the material catalogue."""
+
+        return await self._repository.is_item_material(item_id=item_id)
+
 
 def get_item_service(session: AsyncSession) -> ItemService:
     """Build an item service for the current database session."""

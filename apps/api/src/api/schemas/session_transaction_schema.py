@@ -43,6 +43,13 @@ class CreateStackableSellRequest(BaseModel):
     ttc: Decimal = Field(ge=0)
 
 
+class CreateConsumedMaterialRequest(BaseModel):
+    """Payload for consuming stackable material inventory."""
+
+    quantity: int = Field(ge=1)
+    item_id: UUID
+
+
 class CreateUnstackableSellRequest(BaseModel):
     """Payload for a non-stackable SELL transaction session."""
 

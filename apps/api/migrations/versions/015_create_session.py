@@ -61,7 +61,12 @@ def upgrade() -> None:
         sa.Column("session_id", sa.Uuid(), nullable=False),
         sa.Column(
             "type",
-            sa.Enum("BUY", "SELL", name="session_transaction_type"),
+            sa.Enum(
+                "BUY",
+                "SELL",
+                "CONSUMED",
+                name="session_transaction_type",
+            ),
             nullable=False,
         ),
         sa.Column(
