@@ -1,19 +1,21 @@
 """HTTP endpoints for named transaction sessions."""
 
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.api.deps import CurrentUser
 from api.db import get_session
-from api.db.models import SessionTransactionTypeDetail
+from api.db.models import SessionTransactionStatus, SessionTransactionTypeDetail
 from api.schemas import (
     CreateStackableBuyRequest,
     CreateStackableSellRequest,
     CreateUnstackableBuyRequest,
     CreateUnstackableSellRequest,
     SessionTransactionResponse,
+    UpdateTransactionStatusRequest,
 )
 from api.services import get_session_transaction_service
 
@@ -118,6 +120,27 @@ async def create_sell_unstackable(
         raise RuntimeError("Created transaction session has no transaction")
     return SessionTransactionResponse(
         session_id=transaction_session.id,
+        type=transaction.type.value,
+        status=transaction.status.value,
+    )
+
+
+@router.patch("/{session_id}/status", response_model=SessionTransactionResponse)
+async def update_transaction_status(
+    session_id: UUID,
+    payload: UpdateTransactionStatusRequest,
+    current_user: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> SessionTransactionResponse:
+    """Set the status of an owned running SELL transaction session."""
+
+    transaction = await get_session_transaction_service(session).patch_status(
+        user_id=current_user["id"],
+        session_id=session_id,
+        status=SessionTransactionStatus(payload.status),
+    )
+    return SessionTransactionResponse(
+        session_id=transaction.session_id,
         type=transaction.type.value,
         status=transaction.status.value,
     )

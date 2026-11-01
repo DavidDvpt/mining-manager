@@ -6,7 +6,15 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.core.exceptions import AppError, UnprocessingError
-from api.db.models import Lot, LotKind, Session, SessionTransactionTypeDetail
+from api.db.models import (
+    Lot,
+    LotKind,
+    Session,
+    SessionTransaction,
+    SessionTransactionStatus,
+    SessionTransactionType,
+    SessionTransactionTypeDetail,
+)
 from api.db.repositories import SessionTransactionRepository
 
 from .item_service import ItemService, get_item_service
@@ -195,6 +203,58 @@ class SessionTransactionService:
                 lines=[{"lot_id": lot_id, "quantity": 1, "tt": tt, "ttc": ttc}],
             )
             return transaction_session
+
+    async def get_transaction_by_id(
+        self, *, user_id: UUID, session_id: UUID
+    ) -> SessionTransaction:
+        """Return an owned transaction by its session identifier."""
+
+        transaction = await self._repository.get_transaction_by_id(
+            session_id=session_id, user_id=user_id
+        )
+        if transaction is None:
+            raise AppError(404, "Transaction not found")
+        return transaction
+
+    async def patch_status(
+        self,
+        *,
+        user_id: UUID,
+        session_id: UUID,
+        status: SessionTransactionStatus,
+    ) -> SessionTransaction:
+        """Patch the status of an owned RUNNING SELL transaction.
+
+        SOLD consumes each line's reserved quantity. RETURNED releases it
+        without changing stock, while CANCELLED does the same and remains
+        identifiable for exclusion from future fee and price statistics.
+        """
+
+        async with self._session.begin():
+            transaction = await self.get_transaction_by_id(
+                user_id=user_id, session_id=session_id
+            )
+            if transaction.type is not SessionTransactionType.SELL:
+                raise UnprocessingError("Only SELL transactions can change status")
+            if transaction.status is not SessionTransactionStatus.RUNNING:
+                raise UnprocessingError("Only RUNNING transactions can change status")
+
+            for line in transaction.session.lines:
+                if line.lot_id is None or line.qty is None:
+                    raise UnprocessingError("SELL transaction line has no lot reservation")
+                lot = await self._lot_service.get_lot_by_id(
+                    user_id=user_id, lot_id=line.lot_id
+                )
+                await self._lot_service.settle_sale_lot(
+                    lot=lot,
+                    quantity=line.qty,
+                    sold=status is SessionTransactionStatus.SOLDED,
+                )
+
+            await self._repository.patch_status(
+                transaction=transaction, status=status
+            )
+            return transaction
 
 
 def get_session_transaction_service(session: AsyncSession) -> SessionTransactionService:

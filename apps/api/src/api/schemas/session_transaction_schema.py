@@ -52,6 +52,12 @@ class CreateUnstackableSellRequest(BaseModel):
     ttc: Decimal = Field(ge=0)
 
 
+class UpdateTransactionStatusRequest(BaseModel):
+    """Payload for closing or cancelling a running transaction session."""
+
+    status: Literal["SOLDED", "RETURNED", "CANCELLED"]
+
+
 class SessionTransactionResponse(BaseModel):
     """Identifier and state of a newly created transaction session."""
 

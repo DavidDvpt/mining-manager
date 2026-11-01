@@ -16,6 +16,7 @@ from .session_transaction_schema import (
     CreateStackableSellRequest,
     CreateUnstackableBuyRequest,
     CreateUnstackableSellRequest,
+    UpdateTransactionStatusRequest,
     SessionTransactionResponse,
 )
 
@@ -37,5 +38,6 @@ __all__ = [
     "CreateStackableSellRequest",
     "CreateUnstackableBuyRequest",
     "CreateUnstackableSellRequest",
+    "UpdateTransactionStatusRequest",
     "SessionTransactionResponse",
 ]

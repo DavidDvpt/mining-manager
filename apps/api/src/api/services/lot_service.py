@@ -223,6 +223,38 @@ class LotService:
             is_active=lot.is_active,
         )
 
+    async def get_lot_by_id(
+        self, *, user_id: UUID, lot_id: UUID
+    ) -> Lot:
+        """Load an owned lot by ID with a row lock for settlement."""
+
+        lot = await self._repository.get_origin_with_item(
+            user_id=user_id, lot_id=lot_id
+        )
+        if lot is None:
+            raise AppError(404, "Lot not found")
+        return lot
+
+    async def settle_sale_lot(
+        self, *, lot: Lot, quantity: int, sold: bool
+    ) -> None:
+        """Settle or release a sale reservation on one locked lot.
+
+        SOLD reduces ``qty`` by the reserved line quantity. RETURNED and
+        CANCELLED leave ``qty`` untouched. All transitions release only this
+        transaction's reservation so concurrent reservations remain intact.
+        """
+
+        if quantity < 1 or lot.reserved < quantity:
+            raise UnprocessingError("Lot reservation is no longer available")
+        remaining_quantity = lot.qty - quantity if sold else lot.qty
+        await self._repository.update_quantities(
+            lot=lot,
+            quantity=remaining_quantity,
+            reserved=lot.reserved - quantity,
+            is_active=lot.is_active if not sold else remaining_quantity > 0,
+        )
+
     async def consume_reserved_quantity(
         self, *, user_id: UUID, lot_id: UUID, quantity: int
     ) -> Lot:

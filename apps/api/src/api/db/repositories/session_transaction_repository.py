@@ -4,6 +4,8 @@ from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload, selectinload
 
 from api.db.models import (
     Session,
@@ -91,3 +93,31 @@ class SessionTransactionRepository:
         self._session.add(transaction_session)
         await self._session.flush()
         return transaction_session, created_lines
+
+    async def get_transaction_by_id(
+        self, *, session_id: UUID, user_id: UUID
+    ) -> SessionTransaction | None:
+        """Load an owned transaction with its lines and lock it for updates."""
+
+        statement = (
+            select(SessionTransaction)
+            .join(Session, Session.id == SessionTransaction.session_id)
+            .options(
+                joinedload(SessionTransaction.session).selectinload(Session.lines),
+            )
+            .where(
+                SessionTransaction.session_id == session_id,
+                Session.user_id == user_id,
+            )
+            .with_for_update()
+        )
+        return await self._session.scalar(statement)
+
+    async def patch_status(
+        self, *, transaction: SessionTransaction, status: SessionTransactionStatus
+    ) -> SessionTransaction:
+        """Persist a validated transaction status patch."""
+
+        transaction.status = status
+        await self._session.flush()
+        return transaction
