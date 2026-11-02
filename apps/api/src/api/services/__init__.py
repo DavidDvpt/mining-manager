@@ -10,6 +10,11 @@ from .lot_service import LotService, get_lot_service
 from .material_service import MaterialService
 from .refiner_service import RefinerService
 from .session_line_service import SessionLineService
+from .session_mining_service import (
+    MiningSessionCreation,
+    SessionMiningService,
+    get_session_mining_service,
+)
 from .session_transaction_service import (
     SessionTransactionService,
     get_session_transaction_service,
@@ -25,8 +30,11 @@ __all__ = [
     "MaterialService",
     "RefinerService",
     "SessionLineService",
+    "SessionMiningService",
+    "MiningSessionCreation",
     "SessionTransactionService",
-    "get_session_transaction_service",
     "LotService",
     "get_lot_service",
+    "get_session_mining_service",
+    "get_session_transaction_service",
 ]

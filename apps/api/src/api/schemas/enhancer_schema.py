@@ -16,6 +16,7 @@ class EnhancerDetailsResponse(BaseModel):
 
     bonus: Decimal
     decay_improvement: Decimal | None
+    socket: int
     tool: Tool
     type: EnhancerType
 

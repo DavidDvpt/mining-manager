@@ -153,9 +153,10 @@ def upgrade() -> None:
                         'A produced session line requires item_id and no lot_id';
                 END IF;
             ELSIF NEW.type = 'CONSUMED' THEN
-                IF NEW.item_id IS NOT NULL THEN
+                IF (NEW.lot_id IS NULL AND NEW.item_id IS NULL)
+                    OR (NEW.lot_id IS NOT NULL AND NEW.item_id IS NOT NULL) THEN
                     RAISE EXCEPTION
-                        'A consumed session line cannot have item_id';
+                        'A consumed session line requires either lot_id or item_id';
                 END IF;
             END IF;
             RETURN NEW;

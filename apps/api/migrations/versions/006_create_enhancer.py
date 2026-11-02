@@ -5,6 +5,7 @@ Revises: 005_create_finder_amplifier
 Create Date: 2026-10-23
 """
 
+import re
 from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
@@ -76,6 +77,15 @@ def _attributes(name: str) -> tuple[Decimal, Decimal | None, str, str]:
     return Decimal("0.2"), None, "EXCAVATOR", "SPEED"
 
 
+def _socket(name: str) -> int:
+    """Extract the enhancer socket number from its ``T<number>`` prefix."""
+
+    match = re.match(r"^T(\d+)\b", name)
+    if match is None:
+        raise ValueError(f"Enhancer name has no socket prefix: {name}")
+    return int(match.group(1))
+
+
 def upgrade() -> None:
     bind = op.get_bind()
     tool_enum = sa.Enum("FINDER", "EXCAVATOR", name="enhancer_tool", create_type=False)
@@ -90,6 +100,7 @@ def upgrade() -> None:
         sa.Column("item_id", sa.Uuid(), nullable=False),
         sa.Column("bonus", sa.Numeric(), nullable=False),
         sa.Column("decay_improvement", sa.Numeric(), nullable=True),
+        sa.Column("socket", sa.Integer(), nullable=False),
         sa.Column("tool", tool_enum, nullable=False),
         sa.Column("type", enhancer_type_enum, nullable=False),
         sa.ForeignKeyConstraint(["item_id"], ["item.id"]),
@@ -115,6 +126,7 @@ def upgrade() -> None:
         sa.column("item_id", sa.Uuid()),
         sa.column("bonus", sa.Numeric()),
         sa.column("decay_improvement", sa.Numeric()),
+        sa.column("socket", sa.Integer()),
         sa.column("tool", tool_enum),
         sa.column("type", enhancer_type_enum),
     )
@@ -151,6 +163,7 @@ def upgrade() -> None:
                 "item_id": UUID(row[0]),
                 "bonus": _attributes(row[1])[0],
                 "decay_improvement": _attributes(row[1])[1],
+                "socket": _socket(row[1]),
                 "tool": _attributes(row[1])[2],
                 "type": _attributes(row[1])[3],
             }

@@ -51,7 +51,6 @@ class SessionLine(Base):
     qty: Mapped[int | None] = mapped_column(
         Integer, nullable=True, default=None, server_default=None
     )
-
     session: Mapped["Session"] = relationship(back_populates="lines")
     item: Mapped["Item | None"] = relationship()
     lot: Mapped["Lot | None"] = relationship()
