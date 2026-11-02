@@ -14,6 +14,7 @@ from api.db.models import (
     SessionMining,
     SessionMiningSearchType,
     SessionZone,
+    User,
 )
 
 
@@ -28,6 +29,22 @@ class SessionMiningRepository:
 
         return await self._session.scalar(
             select(SessionZone).where(SessionZone.id == zone_id)
+        )
+
+    async def lock_user(self, *, user_id: UUID) -> None:
+        """Lock an existing user row for serialized session creation."""
+
+        await self._session.scalar(
+            select(User).where(User.id == user_id).with_for_update()
+        )
+
+    async def get_open_session(self, *, user_id: UUID) -> Session | None:
+        """Return the user's open mining session, if one exists."""
+
+        return await self._session.scalar(
+            select(Session)
+            .join(SessionMining, SessionMining.session_id == Session.id)
+            .where(Session.user_id == user_id, Session.ended_at.is_(None))
         )
 
     async def create(

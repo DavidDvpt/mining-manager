@@ -39,7 +39,7 @@ def _serialize_tool_lot(lot: Lot) -> UnstackableLotResponse:
         id=lot.id,
         user_id=lot.user_id,
         type=lot.type.value,
-        item=lot.origin.item,
+        item=ItemSummaryResponse.model_validate(lot.origin.item),
         qty=lot.qty,
         reserved=lot.reserved,
         tier=lot.tool_lot.tier,
