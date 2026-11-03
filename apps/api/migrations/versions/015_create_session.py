@@ -15,16 +15,6 @@ def upgrade() -> None:
         "PRODUCED",
         name="session_line_type",
     )
-    session_mining_search_type = sa.Enum(
-        "E",
-        "O",
-        "T",
-        "EO",
-        "ET",
-        "OT",
-        "EOT",
-        name="session_mining_search_type",
-    )
     op.create_table(
         "session",
         sa.Column(
@@ -45,18 +35,6 @@ def upgrade() -> None:
             ["user_id"], ["user.id"], ondelete="CASCADE"
         ),
         sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_table(
-        "session_mining",
-        sa.Column("session_id", sa.Uuid(), nullable=False),
-        sa.Column("session_sone_id", sa.Uuid(), nullable=True),
-        sa.Column("search_type", session_mining_search_type, nullable=False),
-        sa.Column("clic", sa.Integer(), nullable=False),
-        sa.CheckConstraint("clic > 0", name="ck_session_mining_clic_positive"),
-        sa.ForeignKeyConstraint(
-            ["session_id"], ["session.id"], ondelete="CASCADE"
-        ),
-        sa.PrimaryKeyConstraint("session_id"),
     )
     op.create_table(
         "session_refinage",
@@ -128,6 +106,10 @@ def upgrade() -> None:
         sa.Column("type", session_line_type, nullable=False),
         sa.Column("lot_id", sa.Uuid(), nullable=True, server_default=sa.text("NULL")),
         sa.Column("qty", sa.Integer(), nullable=True, server_default=sa.text("NULL")),
+        sa.CheckConstraint(
+            "qty IS NULL OR qty >= 0",
+            name="ck_session_line_qty_non_negative",
+        ),
         sa.ForeignKeyConstraint(
             ["session_id"], ["session.id"], ondelete="CASCADE"
         ),
@@ -186,14 +168,189 @@ def upgrade() -> None:
         "session_line_decay",
         sa.Column("session_line_id", sa.Uuid(), nullable=False),
         sa.Column("decay_ttc", sa.Numeric(precision=12, scale=5), nullable=False),
+        sa.CheckConstraint(
+            "decay_ttc >= 0",
+            name="ck_session_line_decay_non_negative",
+        ),
         sa.ForeignKeyConstraint(
             ["session_line_id"], ["session_line.id"], ondelete="CASCADE"
         ),
         sa.PrimaryKeyConstraint("session_line_id"),
     )
+    op.execute(
+        """
+        CREATE FUNCTION enforce_session_immutability()
+        RETURNS trigger
+        LANGUAGE plpgsql
+        AS $$
+        BEGIN
+            IF NEW.id IS DISTINCT FROM OLD.id
+                OR NEW.user_id IS DISTINCT FROM OLD.user_id
+                OR NEW.started_at IS DISTINCT FROM OLD.started_at
+                OR (
+                    OLD.ended_at IS NOT NULL
+                    AND NEW.ended_at IS DISTINCT FROM OLD.ended_at
+                )
+            THEN
+                RAISE EXCEPTION
+                    'Session data is immutable; ended_at can only be set once';
+            END IF;
+            RETURN NEW;
+        END;
+        $$;
+        """
+    )
+    op.execute(
+        """
+        CREATE TRIGGER enforce_session_immutability_trigger
+        BEFORE UPDATE ON session
+        FOR EACH ROW EXECUTE FUNCTION enforce_session_immutability();
+        """
+    )
+    op.execute(
+        """
+        CREATE FUNCTION enforce_session_line_update()
+        RETURNS trigger
+        LANGUAGE plpgsql
+        AS $$
+        DECLARE
+            update_mode text := current_setting(
+                'app.session_line_update_mode', true
+            );
+            available_quantity integer;
+            session_owner uuid;
+        BEGIN
+            IF NEW.id IS DISTINCT FROM OLD.id
+                OR NEW.session_id IS DISTINCT FROM OLD.session_id
+                OR NEW.item_id IS DISTINCT FROM OLD.item_id
+                OR NEW.type IS DISTINCT FROM OLD.type
+                OR NEW.lot_id IS DISTINCT FROM OLD.lot_id
+            THEN
+                RAISE EXCEPTION 'Session line identity and type are immutable';
+            END IF;
 
+            IF NEW.qty IS NOT DISTINCT FROM OLD.qty THEN
+                RETURN NEW;
+            END IF;
+
+            IF update_mode NOT IN ('enhancer_qty', 'close')
+                OR NEW.item_id IS NULL
+                OR NEW.lot_id IS NOT NULL
+                OR NOT EXISTS (
+                    SELECT 1
+                    FROM enhancer
+                    WHERE enhancer.item_id = NEW.item_id
+                )
+            THEN
+                RAISE EXCEPTION 'Session line quantity cannot be changed here';
+            END IF;
+
+            IF NOT EXISTS (
+                SELECT 1
+                FROM session
+                WHERE session.id = NEW.session_id
+                    AND session.ended_at IS NULL
+            )
+            THEN
+                RAISE EXCEPTION 'Only an open session can change enhancer quantity';
+            END IF;
+
+            IF update_mode = 'enhancer_qty'
+                AND abs(NEW.qty - OLD.qty) <> 1
+            THEN
+                RAISE EXCEPTION
+                    'Enhancer quantity can only change by one per action';
+            END IF;
+
+            IF NEW.qty < 0 THEN
+                RAISE EXCEPTION 'Enhancer quantity cannot be negative';
+            END IF;
+
+            SELECT session.user_id
+            INTO session_owner
+            FROM session
+            WHERE session.id = NEW.session_id;
+
+            SELECT coalesce(sum(lot.qty - lot.reserved), 0)
+            INTO available_quantity
+            FROM lot
+            JOIN session_line origin_line
+                ON origin_line.id::text = lot.origin_id
+            JOIN session origin_session
+                ON origin_session.id = origin_line.session_id
+            WHERE lot.user_id = session_owner
+                AND origin_session.user_id = session_owner
+                AND origin_line.item_id = NEW.item_id
+                AND lot.is_active;
+
+            IF NEW.qty > available_quantity THEN
+                RAISE EXCEPTION 'Enhancer quantity exceeds available stock';
+            END IF;
+
+            RETURN NEW;
+        END;
+        $$;
+        """
+    )
+    op.execute(
+        """
+        CREATE TRIGGER enforce_session_line_update_trigger
+        BEFORE UPDATE ON session_line
+        FOR EACH ROW EXECUTE FUNCTION enforce_session_line_update();
+        """
+    )
+    op.execute(
+        """
+        CREATE FUNCTION enforce_session_line_decay_update()
+        RETURNS trigger
+        LANGUAGE plpgsql
+        AS $$
+        BEGIN
+            IF NEW.session_line_id IS DISTINCT FROM OLD.session_line_id THEN
+                RAISE EXCEPTION 'Session line decay identity is immutable';
+            END IF;
+
+            IF current_setting('app.session_line_update_mode', true) <> 'close'
+                OR NOT EXISTS (
+                    SELECT 1
+                    FROM session_line
+                    JOIN item ON item.id = session_line.item_id
+                    JOIN excavator ON excavator.item_id = item.id
+                    WHERE session_line.id = NEW.session_line_id
+                )
+            THEN
+                RAISE EXCEPTION 'Only closing may update excavator decay';
+            END IF;
+
+            RETURN NEW;
+        END;
+        $$;
+        """
+    )
+    op.execute(
+        """
+        CREATE TRIGGER enforce_session_line_decay_update_trigger
+        BEFORE UPDATE ON session_line_decay
+        FOR EACH ROW EXECUTE FUNCTION enforce_session_line_decay_update();
+        """
+    )
 
 def downgrade() -> None:
+    op.execute(
+        """
+        DROP TRIGGER IF EXISTS enforce_session_line_decay_update_trigger
+        ON session_line_decay
+        """
+    )
+    op.execute("DROP FUNCTION IF EXISTS enforce_session_line_decay_update()")
+    op.execute(
+        "DROP TRIGGER IF EXISTS enforce_session_line_update_trigger ON session_line"
+    )
+    op.execute("DROP FUNCTION IF EXISTS enforce_session_line_update()")
+    op.execute(
+        "DROP TRIGGER IF EXISTS enforce_session_immutability_trigger ON session"
+    )
+    op.execute("DROP FUNCTION IF EXISTS enforce_session_immutability()")
     op.drop_table("session_line_decay")
     op.drop_table("session_line_transaction")
     op.execute(
@@ -204,7 +361,6 @@ def downgrade() -> None:
     op.drop_table("session_line")
     op.drop_table("session_transaction")
     op.drop_table("session_refinage")
-    op.drop_table("session_mining")
     op.drop_table("session")
     sa.Enum(name="session_transaction_type_detail").drop(
         op.get_bind(), checkfirst=True
@@ -216,6 +372,3 @@ def downgrade() -> None:
         op.get_bind(), checkfirst=True
     )
     sa.Enum(name="session_line_type").drop(op.get_bind(), checkfirst=True)
-    sa.Enum(name="session_mining_search_type").drop(
-        op.get_bind(), checkfirst=True
-    )

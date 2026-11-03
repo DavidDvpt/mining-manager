@@ -4,7 +4,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision = "016_create_claims"
-down_revision = "015_create_session"
+down_revision = "015a_create_session_mining"
 branch_labels = None
 depends_on = None
 
