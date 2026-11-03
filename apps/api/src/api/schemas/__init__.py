@@ -15,7 +15,11 @@ from .mining_session_schema import (
     MiningSessionCostResponse,
 )
 from .refiner_schema import RefinerResponse
-from .session_line_schema import SessionLineResponse
+from .session_line_schema import (
+    CreateProducedSessionLineRequest,
+    SessionLineResponse,
+    UpdateProducedSessionLineRequest,
+)
 from .session_schema import SessionResponse
 from .session_transaction_schema import (
     CreateConsumedMaterialRequest,
@@ -31,6 +35,7 @@ __all__ = [
     "CreateConsumedMaterialRequest",
     "CreateMiningSessionRequest",
     "CreateMiningSessionResponse",
+    "CreateProducedSessionLineRequest",
     "CreateStackableBuyRequest",
     "CreateStackableSellRequest",
     "CreateUnstackableBuyRequest",
@@ -49,6 +54,7 @@ __all__ = [
     "MiningSessionCostResponse",
     "RefinerResponse",
     "SessionLineResponse",
+    "UpdateProducedSessionLineRequest",
     "SessionResponse",
     "SessionTransactionResponse",
     "UnstackableLotResponse",

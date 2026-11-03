@@ -2,12 +2,25 @@
 
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from api.db.models import SessionLineType
 
 from .item_schema import ItemSummaryResponse
 from .session_schema import SessionResponse
+
+
+class CreateProducedSessionLineRequest(BaseModel):
+    """Validate a produced mining line creation payload."""
+
+    item_id: UUID
+    quantity: int = Field(ge=0)
+
+
+class UpdateProducedSessionLineRequest(BaseModel):
+    """Validate a produced mining line quantity update payload."""
+
+    quantity: int = Field(ge=0)
 
 
 class SessionLineResponse(BaseModel):

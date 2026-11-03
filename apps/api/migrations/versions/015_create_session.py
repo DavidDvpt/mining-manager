@@ -233,6 +233,28 @@ def upgrade() -> None:
                 RETURN NEW;
             END IF;
 
+            IF NOT EXISTS (
+                SELECT 1
+                FROM session
+                WHERE session.id = NEW.session_id
+                    AND session.ended_at IS NULL
+            )
+            THEN
+                RAISE EXCEPTION 'Only an open session can change line quantity';
+            END IF;
+
+            IF update_mode = 'produced_qty' THEN
+                IF NEW.type <> 'PRODUCED'
+                    OR NEW.item_id IS NULL
+                    OR NEW.lot_id IS NOT NULL
+                    OR NEW.qty < 0
+                THEN
+                    RAISE EXCEPTION
+                        'Only produced line quantity can be changed here';
+                END IF;
+                RETURN NEW;
+            END IF;
+
             IF update_mode NOT IN ('enhancer_qty', 'close')
                 OR NEW.item_id IS NULL
                 OR NEW.lot_id IS NOT NULL
@@ -243,16 +265,6 @@ def upgrade() -> None:
                 )
             THEN
                 RAISE EXCEPTION 'Session line quantity cannot be changed here';
-            END IF;
-
-            IF NOT EXISTS (
-                SELECT 1
-                FROM session
-                WHERE session.id = NEW.session_id
-                    AND session.ended_at IS NULL
-            )
-            THEN
-                RAISE EXCEPTION 'Only an open session can change enhancer quantity';
             END IF;
 
             IF update_mode = 'enhancer_qty'
@@ -334,8 +346,43 @@ def upgrade() -> None:
         FOR EACH ROW EXECUTE FUNCTION enforce_session_line_decay_update();
         """
     )
+    op.execute(
+        """
+        CREATE FUNCTION prevent_session_line_delete_with_lot()
+        RETURNS trigger
+        LANGUAGE plpgsql
+        AS $$
+        BEGIN
+            IF EXISTS (
+                SELECT 1
+                FROM lot
+                WHERE lot.origin_id = OLD.id::text
+            )
+            THEN
+                RAISE EXCEPTION
+                    'A session line with an originating lot cannot be deleted';
+            END IF;
+            RETURN OLD;
+        END;
+        $$;
+        """
+    )
+    op.execute(
+        """
+        CREATE TRIGGER prevent_session_line_delete_with_lot_trigger
+        BEFORE DELETE ON session_line
+        FOR EACH ROW EXECUTE FUNCTION prevent_session_line_delete_with_lot();
+        """
+    )
 
 def downgrade() -> None:
+    op.execute(
+        """
+        DROP TRIGGER IF EXISTS prevent_session_line_delete_with_lot_trigger
+        ON session_line
+        """
+    )
+    op.execute("DROP FUNCTION IF EXISTS prevent_session_line_delete_with_lot()")
     op.execute(
         """
         DROP TRIGGER IF EXISTS enforce_session_line_decay_update_trigger
