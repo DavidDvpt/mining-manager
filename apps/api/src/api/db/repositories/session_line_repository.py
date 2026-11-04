@@ -141,6 +141,6 @@ class SessionLineRepository:
             .join(Session, Session.id == SessionLine.session_id)
             .options(joinedload(SessionLine.item), joinedload(SessionLine.session))
             .where(*conditions)
-            .with_for_update()
+            .with_for_update(of=SessionLine)
         )
         return await self._session.scalar(statement)
