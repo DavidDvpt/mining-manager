@@ -76,15 +76,6 @@ class SessionMiningRepository:
                 line.decay = SessionLineDecay(decay_ttc=decay)
             mining_session.lines.append(line)
 
-        for item_id in enhancer_lines:
-            mining_session.lines.append(
-                SessionLine(
-                    type=SessionLineType.CONSUMED,
-                    item_id=item_id,
-                    qty=0,
-                )
-            )
-
         self._session.add(mining_session)
         await self._session.flush()
         return mining_session

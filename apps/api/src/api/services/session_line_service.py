@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.core.exceptions import AppError, UnprocessingError
 from api.db.models import SessionLine, SessionLineType
 from api.db.repositories import SessionLineRepository
+from api.db.repositories.lot_repository import LotRepository
 from api.services.mining_loot_service import (
     MiningLootService,
     get_mining_loot_service,
@@ -140,6 +141,78 @@ class SessionLineService:
             session_line_id=session_line_id,
             user_id=user_id,
         )
+
+    async def consume_enhancer(
+        self,
+        *,
+        session_id: UUID,
+        item_id: UUID,
+        quantity: int,
+        user_id: UUID,
+    ) -> list[SessionLine]:
+        """Consume enhancer units into direct lot-backed session lines.
+
+        Existing lines are filled in FIFO order while their originating lots
+        have capacity. Additional lines are created only when another lot is
+        required. The operation locks the session and lots so concurrent
+        counter increments cannot over-consume inventory.
+        """
+
+        if quantity != 1:
+            raise UnprocessingError("Enhancer counters can only be incremented by 1")
+
+        async with _transaction_scope(self._repository.session):
+            session = await self._session_service.get_mining_session_for_user(
+                session_id=session_id, user_id=user_id
+            )
+            if session.ended_at is not None:
+                raise UnprocessingError("The mining session is closed")
+
+            item, lots, _stock = await LotRepository(
+                self._repository.session
+            ).get_enhancer_lots_for_item(
+                user_id=user_id,
+                item_id=item_id,
+            )
+            if item is None or item.enhancer is None:
+                raise AppError(404, "Enhancer item not found")
+            lines = await self._repository.get_consumed_lot_lines(
+                session_id=session_id
+            )
+
+            usage_by_lot = {
+                line.lot_id: line
+                for line in lines
+                if line.lot_id is not None
+            }
+            remaining = quantity
+            changed: list[SessionLine] = []
+            for lot in lots:
+                if remaining == 0:
+                    break
+                line = usage_by_lot.get(lot.id)
+                already_used = line.qty if line is not None and line.qty else 0
+                capacity = lot.qty - lot.reserved - already_used
+                if capacity <= 0:
+                    continue
+                allocated = min(remaining, capacity)
+                if line is None:
+                    line = await self._repository.create_consumed_enhancer_line(
+                        session=session, lot=lot, quantity=allocated
+                    )
+                    usage_by_lot[lot.id] = line
+                else:
+                    line = await self._repository.update_enhancer_quantity(
+                        line=line, quantity=already_used + allocated
+                    )
+                changed.append(line)
+                remaining -= allocated
+
+            if remaining:
+                raise UnprocessingError(
+                    "Insufficient enhancer quantity available"
+                )
+            return changed
 
 
 def get_session_line_service(session: AsyncSession) -> SessionLineService:

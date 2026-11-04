@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.api.deps import CurrentUser
 from api.db import get_session
 from api.schemas import (
+    ConsumeEnhancerRequest,
     CreateProducedSessionLineRequest,
     SessionLineResponse,
     UpdateProducedSessionLineRequest,
@@ -16,6 +17,29 @@ from api.schemas import (
 from api.services import get_session_line_service
 
 router = APIRouter(tags=["mining session lines"])
+
+
+@router.post(
+    "/{session_id}/enhancers/{item_id}/consume",
+    response_model=list[SessionLineResponse],
+    status_code=201,
+)
+async def consume_enhancer(
+    session_id: UUID,
+    item_id: UUID,
+    payload: ConsumeEnhancerRequest,
+    current_user: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> list[SessionLineResponse]:
+    """Increment an enhancer counter using owned inventory lots."""
+
+    lines = await get_session_line_service(session).consume_enhancer(
+        session_id=session_id,
+        item_id=item_id,
+        quantity=payload.quantity,
+        user_id=current_user["id"],
+    )
+    return [SessionLineResponse.model_validate(line) for line in lines]
 
 
 @router.post(

@@ -136,13 +136,18 @@ class SessionMiningService:
             )
             enhancer_data = []
             for item_id in enhancer_lines:
-                item, _lots, stock = await self._lot_service.get_fifo_lots(
+                item, _lots, _stock = await self._lot_service.get_fifo_lots(
                     user_id=user_id,
                     item_id=item_id,
                 )
                 if item.enhancer is None:
                     raise AppError(404, "Enhancer item not found")
-                enhancer_data.append((item, stock))
+                max_stock = await self._lot_service.get_enhancer_stock_by_type_socket(
+                    user_id=user_id,
+                    enhancer_type=item.enhancer.type.value,
+                    socket=item.enhancer.socket,
+                )
+                enhancer_data.append((item, max_stock))
 
             total_tt, total_ttc = self._calculate_costs(
                 finder_lots=finder_lots,

@@ -16,6 +16,7 @@ from .mining_session_schema import (
 )
 from .refiner_schema import RefinerResponse
 from .session_line_schema import (
+    ConsumeEnhancerRequest,
     CreateProducedSessionLineRequest,
     SessionLineResponse,
     UpdateProducedSessionLineRequest,
@@ -33,6 +34,7 @@ from .session_transaction_schema import (
 
 __all__ = [
     "CreateConsumedMaterialRequest",
+    "ConsumeEnhancerRequest",
     "CreateMiningSessionRequest",
     "CreateMiningSessionResponse",
     "CreateProducedSessionLineRequest",

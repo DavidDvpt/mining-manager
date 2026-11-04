@@ -214,11 +214,8 @@ def upgrade() -> None:
         LANGUAGE plpgsql
         AS $$
         DECLARE
-            update_mode text := current_setting(
-                'app.session_line_update_mode', true
-            );
             available_quantity integer;
-            session_owner uuid;
+            used_quantity integer;
         BEGIN
             IF NEW.id IS DISTINCT FROM OLD.id
                 OR NEW.session_id IS DISTINCT FROM OLD.session_id
@@ -243,7 +240,9 @@ def upgrade() -> None:
                 RAISE EXCEPTION 'Only an open session can change line quantity';
             END IF;
 
-            IF update_mode = 'produced_qty' THEN
+            IF current_setting('app.session_line_update_mode', true)
+                = 'produced_qty'
+            THEN
                 IF NEW.type <> 'PRODUCED'
                     OR NEW.item_id IS NULL
                     OR NEW.lot_id IS NOT NULL
@@ -255,47 +254,43 @@ def upgrade() -> None:
                 RETURN NEW;
             END IF;
 
-            IF update_mode NOT IN ('enhancer_qty', 'close')
-                OR NEW.item_id IS NULL
-                OR NEW.lot_id IS NOT NULL
+            IF current_setting('app.session_line_update_mode', true)
+                <> 'enhancer_qty'
+                OR NEW.type <> 'CONSUMED'
+                OR NEW.item_id IS NOT NULL
+                OR NEW.lot_id IS NULL
+                OR NEW.qty < 0
+                OR NEW.qty < OLD.qty
                 OR NOT EXISTS (
                     SELECT 1
-                    FROM enhancer
-                    WHERE enhancer.item_id = NEW.item_id
+                    FROM lot
+                    JOIN session_line origin_line
+                        ON origin_line.id::text = lot.origin_id
+                    JOIN enhancer
+                        ON enhancer.item_id = origin_line.item_id
+                    WHERE lot.id = NEW.lot_id
+                        AND lot.user_id = (
+                            SELECT user_id
+                            FROM session
+                            WHERE id = NEW.session_id
+                        )
                 )
             THEN
-                RAISE EXCEPTION 'Session line quantity cannot be changed here';
+                RAISE EXCEPTION 'Only enhancer quantity can be changed here';
             END IF;
 
-            IF update_mode = 'enhancer_qty'
-                AND abs(NEW.qty - OLD.qty) <> 1
-            THEN
-                RAISE EXCEPTION
-                    'Enhancer quantity can only change by one per action';
-            END IF;
-
-            IF NEW.qty < 0 THEN
-                RAISE EXCEPTION 'Enhancer quantity cannot be negative';
-            END IF;
-
-            SELECT session.user_id
-            INTO session_owner
-            FROM session
-            WHERE session.id = NEW.session_id;
-
-            SELECT coalesce(sum(lot.qty - lot.reserved), 0)
+            SELECT lot.qty - lot.reserved
             INTO available_quantity
             FROM lot
-            JOIN session_line origin_line
-                ON origin_line.id::text = lot.origin_id
-            JOIN session origin_session
-                ON origin_session.id = origin_line.session_id
-            WHERE lot.user_id = session_owner
-                AND origin_session.user_id = session_owner
-                AND origin_line.item_id = NEW.item_id
-                AND lot.is_active;
+            WHERE lot.id = NEW.lot_id;
 
-            IF NEW.qty > available_quantity THEN
+            SELECT coalesce(sum(session_line.qty), 0)
+            INTO used_quantity
+            FROM session_line
+            WHERE session_line.lot_id = NEW.lot_id
+                AND session_line.id <> NEW.id;
+
+            IF NEW.qty + used_quantity > available_quantity THEN
                 RAISE EXCEPTION 'Enhancer quantity exceeds available stock';
             END IF;
 

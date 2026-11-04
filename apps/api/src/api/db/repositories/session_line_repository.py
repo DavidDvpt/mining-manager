@@ -56,6 +56,54 @@ class SessionLineRepository:
         await self._session.flush()
         return line
 
+    async def update_enhancer_quantity(
+        self, *, line: SessionLine, quantity: int
+    ) -> SessionLine:
+        """Persist one validated enhancer consumption increment."""
+
+        await self._session.execute(
+            text("SET LOCAL app.session_line_update_mode = 'enhancer_qty'")
+        )
+        line.qty = quantity
+        await self._session.flush()
+        return line
+
+    async def create_consumed_enhancer_line(
+        self, *, session: Session, lot: Lot, quantity: int
+    ) -> SessionLine:
+        """Persist a consumed enhancer line tied directly to its inventory lot."""
+
+        line = SessionLine(
+            session_id=session.id,
+            type=SessionLineType.CONSUMED,
+            lot_id=lot.id,
+            qty=quantity,
+            session=session,
+            lot=lot,
+        )
+        self._session.add(line)
+        await self._session.flush()
+        return line
+
+    async def get_consumed_lot_lines(
+        self, *, session_id: UUID
+    ) -> list[SessionLine]:
+        """Lock consumed lot-backed lines belonging to a session."""
+
+        return list(
+            (
+                await self._session.scalars(
+                    select(SessionLine)
+                    .where(
+                        SessionLine.session_id == session_id,
+                        SessionLine.type == SessionLineType.CONSUMED,
+                        SessionLine.lot_id.is_not(None),
+                    )
+                    .with_for_update()
+                )
+            ).all()
+        )
+
     async def has_origin_lot(self, *, session_line_id: UUID) -> bool:
         """Return whether a lot was created from the supplied session line."""
 
