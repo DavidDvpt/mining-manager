@@ -49,3 +49,4 @@ def test_deposit_sizes_are_visible_in_openapi():
     paths = app.openapi()["paths"]
 
     assert f"{get_settings().api_v1_prefix}/mining/deposit_sizes" in paths
+    assert f"{get_settings().api_v1_prefix}/mining/deposit_sizes/{{value}}" not in paths

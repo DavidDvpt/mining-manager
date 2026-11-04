@@ -17,6 +17,8 @@ router = APIRouter(tags=["deposit-sizes"])
 def get_deposit_size_service(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> DepositSizeService:
+    """Build the deposit-size service for the current request."""
+
     return DepositSizeService(DepositSizeRepository(session))
 
 
@@ -27,4 +29,8 @@ async def get_all(
         Depends(get_deposit_size_service),
     ],
 ) -> list[DepositSize]:
+    """Return every deposit-size range from the reference table."""
+
     return await service.get_all()
+
+
