@@ -1,5 +1,6 @@
 """Business operations for mining session creation."""
 
+from collections.abc import Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from decimal import Decimal
@@ -13,6 +14,7 @@ from api.db.models import (
     Lot,
     LotKind,
     Session,
+    SessionLine,
     SessionLineType,
     SessionMiningSearchType,
 )
@@ -114,7 +116,7 @@ class SessionMiningService:
                     amplifier_lots, clic=clic, multiplier=multiplier
                 )
 
-            tool_lines = []
+            tool_lines: list[dict[str, object]] = []
             tool_lines.extend(
                 self._tool_line(lot, clic, multiplier, is_finder=True)
                 for lot in finder_lots
@@ -195,19 +197,19 @@ class SessionMiningService:
                 raise UnprocessingError("The mining session is already closed")
 
             lines = mining_session.lines
-            tool_lines = [
-                line
-                for line in lines
-                if line.type is SessionLineType.CONSUMED
-                and line.lot is not None
-                and line.lot.origin is not None
-                and line.lot.origin.item is not None
-                and (
-                    line.lot.origin.item.finder is not None
-                    or line.lot.origin.item.excavator is not None
-                    or line.lot.origin.item.finder_amplifier is not None
-                )
-            ]
+            tool_lines: list[SessionLine] = []
+            for line in lines:
+                item = self._line_item(line)
+                if (
+                    line.type is SessionLineType.CONSUMED
+                    and item is not None
+                    and (
+                        item.finder is not None
+                        or item.excavator is not None
+                        or item.finder_amplifier is not None
+                    )
+                ):
+                    tool_lines.append(line)
             self._require_exact_keys(
                 tool_decays,
                 {line.id for line in tool_lines},
@@ -218,28 +220,31 @@ class SessionMiningService:
                     line=line, decay=tool_decays[line.id]
                 )
 
-            amplifier_lines = [
-                line for line in tool_lines
-                if line.lot.origin.item.finder_amplifier is not None
-            ]
+            amplifier_lines: list[SessionLine] = []
+            for line in tool_lines:
+                item = self._line_item(line)
+                if item is not None and item.finder_amplifier is not None:
+                    amplifier_lines.append(line)
             self._require_exact_keys(
                 amplifier_tts,
                 {line.id for line in amplifier_lines},
                 "amplifier TT values",
             )
             for line in amplifier_lines:
-                if line.lot.tool_lot is None:
+                lot = line.lot
+                if lot is None or lot.tool_lot is None:
                     raise UnprocessingError("Amplifier line has no tool lot")
-                line.lot.tool_lot.tt = amplifier_tts[line.id]
+                lot.tool_lot.tt = amplifier_tts[line.id]
 
-            enhancer_lines = [
-                line for line in lines
-                if line.type is SessionLineType.CONSUMED
-                and line.lot is not None
-                and line.lot.origin is not None
-                and line.lot.origin.item is not None
-                and line.lot.origin.item.enhancer is not None
-            ]
+            enhancer_lines: list[SessionLine] = []
+            for line in lines:
+                item = self._line_item(line)
+                if (
+                    line.type is SessionLineType.CONSUMED
+                    and item is not None
+                    and item.enhancer is not None
+                ):
+                    enhancer_lines.append(line)
             self._require_exact_keys(
                 enhancer_quantities,
                 {line.id for line in enhancer_lines},
@@ -277,12 +282,20 @@ class SessionMiningService:
 
     @staticmethod
     def _require_exact_keys(
-        values: dict[UUID, object], expected: set[UUID], label: str
+        values: Mapping[UUID, object], expected: set[UUID], label: str
     ) -> None:
-        """Require a finalization payload to mention each and only each line."""
+        """Require a finalization mapping to mention each and only each line."""
 
         if set(values) != expected:
             raise UnprocessingError(f"The payload must contain all {label}")
+
+    @staticmethod
+    def _line_item(line: SessionLine) -> Item | None:
+        """Return a session line's item when its lot and origin are present."""
+
+        if line.lot is None or line.lot.origin is None:
+            return None
+        return line.lot.origin.item
 
     async def _set_final_quantities(
         self,
