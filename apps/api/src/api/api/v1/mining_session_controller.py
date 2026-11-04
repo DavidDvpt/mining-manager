@@ -11,12 +11,14 @@ from api.api.deps import CurrentUser
 from api.db import get_session
 from api.db.models import Item, Lot
 from api.schemas import (
+    CloseMiningSessionRequest,
     CreateMiningSessionRequest,
     CreateMiningSessionResponse,
     EnhancerDetailsResponse,
     ItemSummaryResponse,
     MiningEnhancerResponse,
     MiningSessionCostResponse,
+    SessionResponse,
     UnstackableLotResponse,
 )
 from api.services import MiningSessionCreation, get_session_mining_service
@@ -103,3 +105,32 @@ async def create_mining_session(
             ttc=creation.total_ttc,
         ),
     )
+
+
+@router.patch("/{session_id}/close", response_model=SessionResponse)
+async def close_mining_session(
+    session_id: UUID,
+    payload: CloseMiningSessionRequest,
+    current_user: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> SessionResponse:
+    """Finalize all mining lines and close an owned mining session."""
+
+    tool_lines = payload.finders + payload.excavators + payload.amplifiers
+    mining_session = await get_session_mining_service(session).close(
+        user_id=current_user["id"],
+        session_id=session_id,
+        tool_decays={line.line_id: line.decay for line in tool_lines},
+        amplifier_tts={
+            line.line_id: line.tt
+            for line in payload.amplifiers
+            if line.tt is not None
+        },
+        enhancer_quantities={
+            line.line_id: line.quantity for line in payload.enhancers
+        },
+        produced_quantities={
+            line.line_id: line.quantity for line in payload.produced
+        },
+    )
+    return SessionResponse.model_validate(mining_session)

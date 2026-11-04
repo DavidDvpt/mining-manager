@@ -9,6 +9,10 @@ from .item_schema import ItemSummaryResponse
 from .lot_schema import LotCollectionResponse, LotResponse, UnstackableLotResponse
 from .material_schema import MaterialResponse
 from .mining_session_schema import (
+    CloseEnhancerLineRequest,
+    CloseMiningSessionRequest,
+    CloseProducedLineRequest,
+    CloseToolLineRequest,
     CreateMiningSessionRequest,
     CreateMiningSessionResponse,
     MiningEnhancerResponse,
@@ -34,6 +38,10 @@ from .session_transaction_schema import (
 
 __all__ = [
     "CreateConsumedMaterialRequest",
+    "CloseMiningSessionRequest",
+    "CloseEnhancerLineRequest",
+    "CloseProducedLineRequest",
+    "CloseToolLineRequest",
     "ConsumeEnhancerRequest",
     "CreateMiningSessionRequest",
     "CreateMiningSessionResponse",

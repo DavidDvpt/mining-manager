@@ -255,12 +255,16 @@ def upgrade() -> None:
             END IF;
 
             IF current_setting('app.session_line_update_mode', true)
-                <> 'enhancer_qty'
+                NOT IN ('enhancer_qty', 'close')
                 OR NEW.type <> 'CONSUMED'
                 OR NEW.item_id IS NOT NULL
                 OR NEW.lot_id IS NULL
                 OR NEW.qty < 0
-                OR NEW.qty < OLD.qty
+                OR (
+                    current_setting('app.session_line_update_mode', true)
+                        = 'enhancer_qty'
+                    AND NEW.qty < OLD.qty
+                )
                 OR NOT EXISTS (
                     SELECT 1
                     FROM lot
@@ -321,9 +325,32 @@ def upgrade() -> None:
                 OR NOT EXISTS (
                     SELECT 1
                     FROM session_line
-                    JOIN item ON item.id = session_line.item_id
-                    JOIN excavator ON excavator.item_id = item.id
+                    LEFT JOIN item direct_item
+                        ON direct_item.id = session_line.item_id
+                    LEFT JOIN lot
+                        ON lot.id = session_line.lot_id
+                    LEFT JOIN session_line origin_line
+                        ON origin_line.id::text = lot.origin_id
+                    LEFT JOIN item origin_item
+                        ON origin_item.id = origin_line.item_id
+                    LEFT JOIN finder
+                        ON finder.item_id = coalesce(
+                            direct_item.id, origin_item.id
+                        )
+                    LEFT JOIN excavator
+                        ON excavator.item_id = coalesce(
+                            direct_item.id, origin_item.id
+                        )
+                    LEFT JOIN finder_amplifier
+                        ON finder_amplifier.item_id = coalesce(
+                            direct_item.id, origin_item.id
+                        )
                     WHERE session_line.id = NEW.session_line_id
+                        AND (
+                            finder.item_id IS NOT NULL
+                            OR excavator.item_id IS NOT NULL
+                            OR finder_amplifier.item_id IS NOT NULL
+                        )
                 )
             THEN
                 RAISE EXCEPTION 'Only closing may update excavator decay';

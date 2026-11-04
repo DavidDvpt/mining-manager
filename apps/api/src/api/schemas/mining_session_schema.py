@@ -68,6 +68,38 @@ class CreateMiningSessionResponse(BaseModel):
     cost: "MiningSessionCostResponse"
 
 
+class CloseToolLineRequest(BaseModel):
+    """Validate the final decay and optional TT of one tool line."""
+
+    line_id: UUID = Field(alias="lineId")
+    decay: Decimal = Field(ge=0)
+    tt: Decimal | None = Field(default=None, ge=0)
+
+
+class CloseEnhancerLineRequest(BaseModel):
+    """Validate the confirmed quantity of one enhancer line."""
+
+    line_id: UUID = Field(alias="lineId")
+    quantity: int = Field(ge=0)
+
+
+class CloseProducedLineRequest(BaseModel):
+    """Validate the confirmed quantity of one produced line."""
+
+    line_id: UUID = Field(alias="lineId")
+    quantity: int = Field(ge=0)
+
+
+class CloseMiningSessionRequest(BaseModel):
+    """Validate every final value displayed by the session confirmation form."""
+
+    finders: list[CloseToolLineRequest] = Field(default_factory=list)
+    excavators: list[CloseToolLineRequest] = Field(default_factory=list)
+    amplifiers: list[CloseToolLineRequest] = Field(default_factory=list)
+    enhancers: list[CloseEnhancerLineRequest] = Field(default_factory=list)
+    produced: list[CloseProducedLineRequest] = Field(default_factory=list)
+
+
 class MiningEnhancerResponse(BaseModel):
     """Serialize one enhancer socket, its catalogue item, and stock usage."""
 

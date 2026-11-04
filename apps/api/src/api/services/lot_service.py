@@ -1,5 +1,6 @@
 """Business operations for inventory lots."""
 
+from contextlib import asynccontextmanager
 from decimal import Decimal
 from uuid import UUID
 
@@ -11,6 +12,15 @@ from api.db.repositories import LotRepository
 
 from .item_service import ItemService, get_item_service
 from .session_line_service import SessionLineService, get_session_line_service
+
+
+@asynccontextmanager
+async def _transaction_scope(session: AsyncSession):
+    """Open a transaction or savepoint for a lot operation."""
+
+    transaction = session.begin_nested() if session.in_transaction() else session.begin()
+    async with transaction:
+        yield
 
 
 class LotService:
@@ -43,7 +53,7 @@ class LotService:
         service verifies that the line belongs to the same user.
         """
 
-        async with self._session.begin():
+        async with _transaction_scope(self._session):
             session_line = await self._session_line_service.get_session_line_for_user(
                 session_line_id=session_line_id,
                 user_id=user_id,

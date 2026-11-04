@@ -11,7 +11,9 @@ from api.core.exceptions import AppError, UnprocessingError
 from api.db.models import (
     Item,
     Lot,
+    LotKind,
     Session,
+    SessionLineType,
     SessionMiningSearchType,
 )
 from api.db.repositories import SessionMiningRepository
@@ -164,6 +166,142 @@ class SessionMiningService:
                 total_tt=total_tt,
                 total_ttc=total_ttc,
             )
+
+    async def close(
+        self,
+        *,
+        user_id: UUID,
+        session_id: UUID,
+        tool_decays: dict[UUID, Decimal],
+        amplifier_tts: dict[UUID, Decimal],
+        enhancer_quantities: dict[UUID, int],
+        produced_quantities: dict[UUID, int],
+    ) -> Session:
+        """Close a mining session after confirming every final line value.
+
+        Every excavator line must have a decay entry, enhancer quantities are
+        finalized from the payload, produced quantities are reconciled, and a
+        transaction lot is created for every produced line before the session
+        is marked closed.
+        """
+
+        async with _transaction_scope(self._session):
+            mining_session = await self._repository.get_session_for_close(
+                session_id=session_id, user_id=user_id
+            )
+            if mining_session is None:
+                raise AppError(404, "Mining session not found")
+            if mining_session.ended_at is not None:
+                raise UnprocessingError("The mining session is already closed")
+
+            lines = mining_session.lines
+            tool_lines = [
+                line
+                for line in lines
+                if line.type is SessionLineType.CONSUMED
+                and line.lot is not None
+                and line.lot.origin is not None
+                and line.lot.origin.item is not None
+                and (
+                    line.lot.origin.item.finder is not None
+                    or line.lot.origin.item.excavator is not None
+                    or line.lot.origin.item.finder_amplifier is not None
+                )
+            ]
+            self._require_exact_keys(
+                tool_decays,
+                {line.id for line in tool_lines},
+                "tool decays",
+            )
+            for line in tool_lines:
+                await self._repository.update_session_line_decay(
+                    line=line, decay=tool_decays[line.id]
+                )
+
+            amplifier_lines = [
+                line for line in tool_lines
+                if line.lot.origin.item.finder_amplifier is not None
+            ]
+            self._require_exact_keys(
+                amplifier_tts,
+                {line.id for line in amplifier_lines},
+                "amplifier TT values",
+            )
+            for line in amplifier_lines:
+                if line.lot.tool_lot is None:
+                    raise UnprocessingError("Amplifier line has no tool lot")
+                line.lot.tool_lot.tt = amplifier_tts[line.id]
+
+            enhancer_lines = [
+                line for line in lines
+                if line.type is SessionLineType.CONSUMED
+                and line.lot is not None
+                and line.lot.origin is not None
+                and line.lot.origin.item is not None
+                and line.lot.origin.item.enhancer is not None
+            ]
+            self._require_exact_keys(
+                enhancer_quantities,
+                {line.id for line in enhancer_lines},
+                "enhancer quantities",
+            )
+            await self._set_final_quantities(
+                enhancer_lines, enhancer_quantities, mode="close"
+            )
+
+            produced_lines = [
+                line for line in lines if line.type is SessionLineType.PRODUCED
+            ]
+            self._require_exact_keys(
+                produced_quantities,
+                {line.id for line in produced_lines},
+                "produced quantities",
+            )
+            for line in produced_lines:
+                quantity = produced_quantities[line.id]
+                if quantity < 0:
+                    raise UnprocessingError("Produced quantity cannot be negative")
+                if line.qty != quantity:
+                    await self._repository.update_line_quantity(
+                        line=line, quantity=quantity, mode="produced_qty"
+                    )
+                await self._lot_service.create_lot(
+                    user_id=user_id,
+                    kind=LotKind.MATERIAL,
+                    session_line_id=line.id,
+                    quantity=quantity,
+                    tt=None,
+                )
+
+            return await self._repository.close_session(session=mining_session)
+
+    @staticmethod
+    def _require_exact_keys(
+        values: dict[UUID, object], expected: set[UUID], label: str
+    ) -> None:
+        """Require a finalization payload to mention each and only each line."""
+
+        if set(values) != expected:
+            raise UnprocessingError(f"The payload must contain all {label}")
+
+    async def _set_final_quantities(
+        self,
+        lines: list,
+        quantities: dict[UUID, int],
+        *,
+        mode: str,
+    ) -> None:
+        """Apply final quantities to a set of session lines."""
+
+        for line in lines:
+            quantity = quantities[line.id]
+            if quantity < 0:
+                raise UnprocessingError("Quantity cannot be negative")
+            if line.qty != quantity:
+                await self._repository.update_line_quantity(
+                    line=line, quantity=quantity, mode=mode
+                )
+
 
     async def _required_tool(self, *, user_id: UUID, lot_id: UUID, role: str):
         """Load an owned tool lot and reject missing or incompatible tools."""

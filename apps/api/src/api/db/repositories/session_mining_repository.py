@@ -1,10 +1,12 @@
 """Persistence operations for mining sessions and their cost lines."""
 
+from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload, selectinload
 
 from api.db.models import (
     Session,
@@ -15,6 +17,7 @@ from api.db.models import (
     SessionMiningSearchType,
     SessionZone,
     User,
+    Lot,
 )
 
 
@@ -46,6 +49,61 @@ class SessionMiningRepository:
             .join(SessionMining, SessionMining.session_id == Session.id)
             .where(Session.user_id == user_id, Session.ended_at.is_(None))
         )
+
+    async def get_session_for_close(
+        self, *, session_id: UUID, user_id: UUID
+    ) -> Session | None:
+        """Lock a user's mining session with all lines and lot details."""
+
+        statement = (
+            select(Session)
+            .join(SessionMining, SessionMining.session_id == Session.id)
+            .options(
+                selectinload(Session.lines)
+                .selectinload(SessionLine.lot)
+                .selectinload(Lot.origin)
+                .selectinload(SessionLine.item),
+                selectinload(Session.lines)
+                .selectinload(SessionLine.lot)
+                .selectinload(Lot.tool_lot),
+                selectinload(Session.lines).selectinload(SessionLine.decay),
+            )
+            .where(
+                Session.id == session_id,
+                Session.user_id == user_id,
+            )
+            .with_for_update()
+        )
+        return await self._session.scalar(statement)
+
+    async def update_line_quantity(
+        self, *, line: SessionLine, quantity: int, mode: str
+    ) -> None:
+        """Persist a line quantity under the database transition guard."""
+
+        await self._session.execute(
+            text(f"SET LOCAL app.session_line_update_mode = '{mode}'")
+        )
+        line.qty = quantity
+        await self._session.flush()
+
+    async def update_session_line_decay(
+        self, *, line: SessionLine, decay: Decimal
+    ) -> None:
+        """Create or update an excavator decay value for a session line."""
+
+        if line.decay is None:
+            line.decay = SessionLineDecay(decay_ttc=decay)
+        else:
+            line.decay.decay_ttc = decay
+        await self._session.flush()
+
+    async def close_session(self, *, session: Session) -> Session:
+        """Set the session end date after all closing invariants are met."""
+
+        session.ended_at = date.today()
+        await self._session.flush()
+        return session
 
     async def create(
         self,
