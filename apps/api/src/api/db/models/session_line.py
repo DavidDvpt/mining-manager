@@ -48,6 +48,13 @@ class SessionLine(Base):
         default=None,
         server_default=None,
     )
+    line_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("session_line.id", ondelete="RESTRICT"),
+        nullable=True,
+        default=None,
+        server_default=None,
+    )
     qty: Mapped[int | None] = mapped_column(
         Integer, nullable=True, default=None, server_default=None
     )
@@ -59,4 +66,7 @@ class SessionLine(Base):
     )
     decay: Mapped["SessionLineDecay | None"] = relationship(
         back_populates="session_line", uselist=False
+    )
+    source_line: Mapped["SessionLine | None"] = relationship(
+        foreign_keys=[line_id], remote_side=[id], uselist=False
     )

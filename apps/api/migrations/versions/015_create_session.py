@@ -105,6 +105,7 @@ def upgrade() -> None:
         sa.Column("item_id", sa.Uuid(), nullable=True),
         sa.Column("type", session_line_type, nullable=False),
         sa.Column("lot_id", sa.Uuid(), nullable=True, server_default=sa.text("NULL")),
+        sa.Column("line_id", sa.Uuid(), nullable=True, server_default=sa.text("NULL")),
         sa.Column("qty", sa.Integer(), nullable=True, server_default=sa.text("NULL")),
         sa.CheckConstraint(
             "qty IS NULL OR qty >= 0",
@@ -119,26 +120,127 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["lot_id"], ["lot.id"], ondelete="RESTRICT"
         ),
+        sa.ForeignKeyConstraint(
+            ["line_id"], ["session_line.id"], ondelete="RESTRICT"
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
+    op.create_index(
+        "uq_lot_origin_id",
+        "lot",
+        ["origin_id"],
+        unique=True,
+    )
     op.create_index("ix_session_line_item_id", "session_line", ["item_id"])
+    op.create_index(
+        "uq_session_line_refinement_source",
+        "session_line",
+        ["line_id"],
+        unique=True,
+        postgresql_where=sa.text("line_id IS NOT NULL"),
+    )
     op.execute(
         """
         CREATE FUNCTION enforce_session_line_item_lot()
         RETURNS trigger
         LANGUAGE plpgsql
         AS $$
+        DECLARE
+            source_type text;
+            source_session_id uuid;
+            refinement_family text;
         BEGIN
-            IF NEW.type = 'PRODUCED' THEN
-                IF NEW.item_id IS NULL OR NEW.lot_id IS NOT NULL THEN
+            IF NEW.line_id IS NOT NULL THEN
+                SELECT type::text, session_id
+                INTO source_type, source_session_id
+                FROM session_line
+                WHERE id = NEW.line_id;
+
+                IF source_session_id IS DISTINCT FROM NEW.session_id
+                    OR source_type IS NULL
+                    OR source_type = NEW.type::text
+                THEN
                     RAISE EXCEPTION
-                        'A produced session line requires item_id and no lot_id';
+                        'A refinement line must reference the opposite line type in the same session';
+                END IF;
+            END IF;
+
+            IF NEW.type = 'PRODUCED' THEN
+                IF EXISTS (
+                    SELECT 1
+                    FROM session_refinage
+                    WHERE session_id = NEW.session_id
+                ) AND NEW.line_id IS NULL THEN
+                    RAISE EXCEPTION
+                        'A refining produced line must reference its consumed line';
+                END IF;
+                IF NEW.line_id IS NULL AND (
+                    NEW.item_id IS NULL OR NEW.lot_id IS NOT NULL
+                ) THEN
+                    RAISE EXCEPTION
+                        'A produced session line requires item_id';
+                END IF;
+                IF NEW.line_id IS NOT NULL
+                    AND ((NEW.item_id IS NOT NULL)::integer
+                        + (NEW.lot_id IS NOT NULL)::integer) <> 1 THEN
+                    RAISE EXCEPTION
+                        'A produced refinement requires exactly one item or lot';
+                END IF;
+                IF NEW.line_id IS NOT NULL
+                    AND EXISTS (
+                        SELECT 1 FROM session_line source
+                        WHERE source.id = NEW.line_id
+                            AND source.lot_id IS NOT NULL
+                    )
+                    AND NEW.lot_id IS NULL THEN
+                    RAISE EXCEPTION
+                        'A lot refinement must produce a lot';
+                END IF;
+                IF NEW.line_id IS NOT NULL
+                    AND EXISTS (
+                        SELECT 1 FROM session_line source
+                        WHERE source.id = NEW.line_id
+                            AND source.item_id IS NOT NULL
+                    )
+                    AND NEW.item_id IS NULL THEN
+                    RAISE EXCEPTION
+                        'A line refinement must produce a line item';
                 END IF;
             ELSIF NEW.type = 'CONSUMED' THEN
-                IF (NEW.lot_id IS NULL AND NEW.item_id IS NULL)
-                    OR (NEW.lot_id IS NOT NULL AND NEW.item_id IS NOT NULL) THEN
+                IF ((NEW.lot_id IS NOT NULL)::integer
+                    + (NEW.item_id IS NOT NULL)::integer) <> 1 THEN
                     RAISE EXCEPTION
-                        'A consumed session line requires either lot_id or item_id';
+                        'A consumed session line requires exactly one item or lot';
+                END IF;
+            END IF;
+
+            IF EXISTS (
+                SELECT 1
+                FROM session
+                JOIN session_refinage
+                    ON session_refinage.session_id = session.id
+                WHERE session.id = NEW.session_id
+            ) THEN
+                refinement_family := CASE
+                    WHEN NEW.lot_id IS NOT NULL THEN 'LOT'
+                    WHEN NEW.line_id IS NOT NULL THEN 'LINE'
+                    ELSE NULL
+                END;
+                IF refinement_family IS NOT NULL AND EXISTS (
+                    SELECT 1
+                    FROM session_line other_line
+                    WHERE other_line.session_id = NEW.session_id
+                        AND other_line.id <> NEW.id
+                        AND (
+                            (refinement_family = 'LOT'
+                                AND other_line.lot_id IS NULL
+                                AND other_line.line_id IS NOT NULL)
+                            OR (refinement_family = 'LINE'
+                                AND other_line.lot_id IS NOT NULL)
+                        )
+                ) THEN
+                    RAISE EXCEPTION
+                        'A refining session cannot mix lines and lots';
                 END IF;
             END IF;
             RETURN NEW;
@@ -149,7 +251,7 @@ def upgrade() -> None:
     op.execute(
         """
         CREATE TRIGGER enforce_session_line_item_lot_trigger
-        BEFORE INSERT OR UPDATE OF type, item_id, lot_id ON session_line
+        BEFORE INSERT OR UPDATE OF type, item_id, lot_id, line_id ON session_line
         FOR EACH ROW EXECUTE FUNCTION enforce_session_line_item_lot();
         """
     )
@@ -222,6 +324,7 @@ def upgrade() -> None:
                 OR NEW.item_id IS DISTINCT FROM OLD.item_id
                 OR NEW.type IS DISTINCT FROM OLD.type
                 OR NEW.lot_id IS DISTINCT FROM OLD.lot_id
+                OR NEW.line_id IS DISTINCT FROM OLD.line_id
             THEN
                 RAISE EXCEPTION 'Session line identity and type are immutable';
             END IF;
@@ -244,8 +347,11 @@ def upgrade() -> None:
                 = 'produced_qty'
             THEN
                 IF NEW.type <> 'PRODUCED'
-                    OR NEW.item_id IS NULL
                     OR NEW.lot_id IS NOT NULL
+                    OR (
+                        (NEW.item_id IS NOT NULL)::integer
+                        + (NEW.line_id IS NOT NULL)::integer
+                    ) <> 1
                     OR NEW.qty < 0
                 THEN
                     RAISE EXCEPTION
@@ -427,6 +533,10 @@ def downgrade() -> None:
     )
     op.execute("DROP FUNCTION IF EXISTS enforce_session_line_item_lot()")
     op.drop_index("ix_session_line_item_id", table_name="session_line")
+    op.drop_index(
+        "uq_session_line_refinement_source", table_name="session_line"
+    )
+    op.drop_index("uq_lot_origin_id", table_name="lot")
     op.drop_table("session_line")
     op.drop_table("session_transaction")
     op.drop_table("session_refinage")

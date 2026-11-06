@@ -1,4 +1,4 @@
-"""Refining session specialization."""
+"""Refining session specialization and line-to-line refinement links."""
 
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
 
 class SessionRefinage(Base):
+    """Store the common configuration of a refining session."""
     __tablename__ = "session_refinage"
     __table_args__ = (
         CheckConstraint("clic > 0", name="ck_session_refinage_clic_positive"),
@@ -25,5 +26,4 @@ class SessionRefinage(Base):
         primary_key=True,
     )
     clic: Mapped[int] = mapped_column(Integer, nullable=False)
-
     session: Mapped["Session"] = relationship(back_populates="refinage")
