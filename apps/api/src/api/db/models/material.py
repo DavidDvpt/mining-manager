@@ -9,6 +9,7 @@ from ..base import Base
 
 if TYPE_CHECKING:
     from .item import Item
+    from .refinage_recipe import RefinageRecipe
     from .resource_lot import ResourceLot
 
 
@@ -31,4 +32,12 @@ class Material(Base):
     )
     resource_lots: Mapped[list["ResourceLot"]] = relationship(
         back_populates="material",
+    )
+    result_recipes: Mapped[list["RefinageRecipe"]] = relationship(
+        foreign_keys="RefinageRecipe.result",
+        back_populates="result_material",
+    )
+    origin_recipes: Mapped[list["RefinageRecipe"]] = relationship(
+        foreign_keys="RefinageRecipe.origin",
+        back_populates="origin_material",
     )

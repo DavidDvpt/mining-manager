@@ -26,6 +26,7 @@ from .mining_session_schema import (
     MiningSessionCostResponse,
 )
 from .refiner_schema import RefinerResponse
+from .refinage_recipe_schema import RefinageRecipeResponse
 from .session_line_schema import (
     ConsumeEnhancerRequest,
     CreateProducedSessionLineRequest,
@@ -75,6 +76,7 @@ __all__ = [
     "MiningEnhancerResponse",
     "MiningSessionCostResponse",
     "RefinerResponse",
+    "RefinageRecipeResponse",
     "SessionLineResponse",
     "UpdateProducedSessionLineRequest",
     "SessionResponse",

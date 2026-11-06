@@ -21,6 +21,7 @@ from .mining_loot_type import MiningLootType
 from .planet import Planet
 from .profile import Profile
 from .refiner import Refiner
+from .refinage_recipe import RefinageRecipe
 from .resource_lot import ResourceLot, ResourceLotOrigin, ResourceLotOriginType
 from .session import Session
 from .session_line import SessionLine
@@ -65,6 +66,7 @@ __all__ = [
     "Planet",
     "Profile",
     "Refiner",
+    "RefinageRecipe",
     "ResourceLot",
     "ResourceLotOrigin",
     "ResourceLotOriginType",
