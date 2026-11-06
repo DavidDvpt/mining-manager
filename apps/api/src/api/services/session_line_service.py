@@ -110,6 +110,46 @@ class SessionLineService:
                 line=line, quantity=quantity
             )
 
+    async def increment_produced_line_for_item(
+        self,
+        *,
+        session_id: UUID,
+        item_id: UUID,
+        quantity: int,
+        user_id: UUID,
+    ) -> SessionLine:
+        """Add claim quantity to a produced line without an originating lot."""
+
+        async with _transaction_scope(self._repository.session):
+            mining_session = await self._session_service.get_mining_session_for_user(
+                session_id=session_id, user_id=user_id
+            )
+            if mining_session.ended_at is not None:
+                raise UnprocessingError("The mining session is closed")
+
+            line = await self._repository.get_produced_line_for_item(
+                session_id=session_id,
+                item_id=item_id,
+                user_id=user_id,
+            )
+            if line is None:
+                item = await self._mining_loot_service.get_item(item_id=item_id)
+                if item is None:
+                    raise AppError(404, "Item is not available as mining loot")
+                return await self._repository.create_produced_line(
+                    session=mining_session,
+                    item=item,
+                    quantity=quantity,
+                )
+            if await self._repository.has_origin_lot(session_line_id=line.id):
+                raise UnprocessingError(
+                    "A produced line with an originating lot cannot be incremented"
+                )
+            return await self._repository.update_quantity(
+                line=line,
+                quantity=(line.qty or 0) + quantity,
+            )
+
     async def delete_produced_line(
         self,
         *,

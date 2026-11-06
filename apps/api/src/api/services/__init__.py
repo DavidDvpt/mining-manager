@@ -1,6 +1,7 @@
 """Application services."""
 
 from .deposit_size_service import DepositSizeService
+from .claim_service import ClaimService, get_claim_service
 from .enhancer_service import EnhancerService
 from .excavator_service import ExcavatorService
 from .finder_amplifier_service import FinderAmplifierService
@@ -23,6 +24,7 @@ from .session_transaction_service import (
 )
 
 __all__ = [
+    "ClaimService",
     "DepositSizeService",
     "EnhancerService",
     "ExcavatorService",
@@ -39,6 +41,7 @@ __all__ = [
     "SessionService",
     "SessionTransactionService",
     "get_lot_service",
+    "get_claim_service",
     "get_mining_loot_service",
     "get_session_line_service",
     "get_session_mining_service",

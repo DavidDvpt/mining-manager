@@ -144,3 +144,26 @@ class SessionLineRepository:
             .with_for_update(of=SessionLine)
         )
         return await self._session.scalar(statement)
+
+    async def get_produced_line_for_item(
+        self,
+        *,
+        session_id: UUID,
+        item_id: UUID,
+        user_id: UUID,
+    ) -> SessionLine | None:
+        """Lock the owned produced line matching an item in a mining session."""
+
+        statement = (
+            select(SessionLine)
+            .join(Session, Session.id == SessionLine.session_id)
+            .options(joinedload(SessionLine.item), joinedload(SessionLine.session))
+            .where(
+                SessionLine.session_id == session_id,
+                SessionLine.item_id == item_id,
+                SessionLine.type == SessionLineType.PRODUCED,
+                Session.user_id == user_id,
+            )
+            .with_for_update(of=SessionLine)
+        )
+        return await self._session.scalar(statement)

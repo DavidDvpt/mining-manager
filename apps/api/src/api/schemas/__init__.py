@@ -1,6 +1,13 @@
 """HTTP response schemas."""
 
 from .deposit_size_schema import DepositSizeResponse
+from .claim_schema import (
+    ClaimCollectionResponse,
+    ClaimRequest,
+    ClaimResponse,
+    ClaimResultResponse,
+    CreateClaimRequest,
+)
 from .enhancer_schema import EnhancerDetailsResponse, EnhancerResponse
 from .excavator_schema import ExcavatorResponse
 from .finder_amplifier_schema import FinderAmplifierResponse
@@ -37,6 +44,11 @@ from .session_transaction_schema import (
 )
 
 __all__ = [
+    "ClaimResponse",
+    "ClaimRequest",
+    "ClaimCollectionResponse",
+    "ClaimResultResponse",
+    "CreateClaimRequest",
     "CreateConsumedMaterialRequest",
     "CloseMiningSessionRequest",
     "CloseEnhancerLineRequest",

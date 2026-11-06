@@ -169,3 +169,71 @@ async def test_delete_produced_line_rejects_lines_with_origin_lot():
         )
 
     repository.delete_line.assert_not_awaited()
+
+
+async def test_increment_produced_line_creates_missing_item_line():
+    """Create a produced line when no line exists for the requested item."""
+
+    service, repository, session_service, mining_loot_service = _service()
+    session_id = uuid4()
+    item_id = uuid4()
+    item = SimpleNamespace(id=item_id)
+    expected_line = SimpleNamespace(id=uuid4(), qty=4)
+    repository.get_produced_line_for_item.return_value = None
+    mining_loot_service.get_item.return_value = item
+    repository.create_produced_line.return_value = expected_line
+
+    result = await service.increment_produced_line_for_item(
+        session_id=session_id,
+        item_id=item_id,
+        quantity=4,
+        user_id=uuid4(),
+    )
+
+    assert result is expected_line
+    repository.create_produced_line.assert_awaited_once_with(
+        session=session_service.get_mining_session_for_user.return_value,
+        item=item,
+        quantity=4,
+    )
+    repository.update_quantity.assert_not_awaited()
+
+
+async def test_increment_produced_line_updates_existing_item_line():
+    """Add the requested quantity to an existing produced item line."""
+
+    service, repository, _session_service, _mining_loot_service = _service()
+    line = SimpleNamespace(id=uuid4(), qty=3)
+    repository.get_produced_line_for_item.return_value = line
+    repository.has_origin_lot.return_value = False
+    repository.update_quantity.return_value = line
+
+    result = await service.increment_produced_line_for_item(
+        session_id=uuid4(),
+        item_id=uuid4(),
+        quantity=2,
+        user_id=uuid4(),
+    )
+
+    assert result is line
+    repository.update_quantity.assert_awaited_once_with(line=line, quantity=5)
+    repository.create_produced_line.assert_not_awaited()
+
+
+async def test_increment_produced_line_rejects_lines_with_origin_lot():
+    """Reject claim increments when the produced line already created a lot."""
+
+    service, repository, _session_service, _mining_loot_service = _service()
+    line = SimpleNamespace(id=uuid4(), qty=3)
+    repository.get_produced_line_for_item.return_value = line
+    repository.has_origin_lot.return_value = True
+
+    with pytest.raises(UnprocessingError, match="cannot be incremented"):
+        await service.increment_produced_line_for_item(
+            session_id=uuid4(),
+            item_id=uuid4(),
+            quantity=2,
+            user_id=uuid4(),
+        )
+
+    repository.update_quantity.assert_not_awaited()

@@ -1,6 +1,7 @@
 """Persistence repositories."""
 
 from .deposit_size_repository import DepositSizeRepository
+from .claim_repository import ClaimRepository
 from .enhancer_repository import EnhancerRepository
 from .excavator_repository import ExcavatorRepository
 from .finder_amplifier_repository import FinderAmplifierRepository
@@ -18,6 +19,7 @@ from .session_transaction_repository import SessionTransactionRepository
 from .user_repository import UserRepository
 
 __all__ = [
+    "ClaimRepository",
     "DepositSizeRepository",
     "EnhancerRepository",
     "ExcavatorRepository",

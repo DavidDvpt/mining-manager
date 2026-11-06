@@ -76,6 +76,63 @@ async def test_bdd_mining_produced_line_lifecycle(test_db_session):
     )
 
 
+async def test_bdd_increment_produced_line_creates_and_updates_by_item(
+    test_db_session,
+):
+    """Create a missing produced line, then increment it for the same item."""
+
+    user, item, mining_session = await _mining_context(test_db_session)
+    service = get_session_line_service(test_db_session)
+
+    created = await service.increment_produced_line_for_item(
+        session_id=mining_session.id,
+        item_id=item.id,
+        quantity=4,
+        user_id=user.id,
+    )
+    incremented = await service.increment_produced_line_for_item(
+        session_id=mining_session.id,
+        item_id=item.id,
+        quantity=3,
+        user_id=user.id,
+    )
+
+    assert incremented.id == created.id
+    assert incremented.item_id == item.id
+    assert incremented.qty == 7
+
+
+async def test_bdd_increment_produced_line_rejects_originating_lot(
+    test_db_session,
+):
+    """Reject an increment when a lot already originates from the line."""
+
+    user, item, mining_session = await _mining_context(test_db_session)
+    service = get_session_line_service(test_db_session)
+    line = await service.create_produced_line(
+        session_id=mining_session.id,
+        item_id=item.id,
+        quantity=2,
+        user_id=user.id,
+    )
+    test_db_session.add(
+        Lot(
+            user_id=user.id,
+            type=LotType.TRANSACTION,
+            origin_id=str(line.id),
+            qty=2,
+        )
+    )
+    await test_db_session.flush()
+
+    with pytest.raises(UnprocessingError, match="cannot be incremented"):
+        await service.increment_produced_line_for_item(
+            session_id=mining_session.id,
+            item_id=item.id,
+            quantity=1,
+            user_id=user.id,
+        )
+
 async def test_bdd_mining_produced_line_requires_mining_loot(test_db_session):
     """Reject a produced line when its item is absent from mining loot."""
 
