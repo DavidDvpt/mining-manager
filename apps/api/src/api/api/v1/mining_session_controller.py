@@ -46,6 +46,7 @@ def _serialize_tool_lot(lot: Lot) -> UnstackableLotResponse:
         reserved=lot.reserved,
         tier=lot.tool_lot.tier,
         tt=lot.tool_lot.tt,
+        is_default=lot.tool_lot.is_default,
         created_at=lot.created_at,
         updated_at=lot.updated_at,
         is_active=lot.is_active,

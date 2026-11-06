@@ -47,6 +47,7 @@ class UnstackableLotResponse(BaseModel):
     reserved: int
     tier: int | None
     tt: Decimal | None
+    is_default: bool
     created_at: datetime
     updated_at: datetime | None
     is_active: bool

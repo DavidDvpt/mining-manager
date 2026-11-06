@@ -152,6 +152,29 @@ class LotService:
             raise UnprocessingError("Lot is not an unstackable tool lot")
         return lot
 
+    async def set_default_tool_lot(self, *, user_id: UUID, lot_id: UUID) -> Lot:
+        """Set an owned finder, excavator, or refiner lot as the default.
+
+        The database trigger clears the previous default in the same category;
+        this service validates ownership and the eligible catalogue type.
+        """
+
+        async with self._session.begin():
+            lot = await self._repository.get_tool_lot_for_default(
+                user_id=user_id, lot_id=lot_id
+            )
+            if lot is None:
+                raise AppError(404, "Lot not found")
+            if lot.origin is None or lot.origin.item is None or lot.tool_lot is None:
+                raise UnprocessingError("Lot is not an unstackable tool lot")
+            item = lot.origin.item
+            if item.finder is None and item.excavator is None and item.refiner is None:
+                raise UnprocessingError(
+                    "Only finder, excavator, or refiner lots can be default"
+                )
+            await self._repository.set_default_tool_lot(lot=lot)
+            return lot
+
     async def create_transaction_lot(
         self,
         *,

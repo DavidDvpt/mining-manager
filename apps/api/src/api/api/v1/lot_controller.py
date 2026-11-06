@@ -46,6 +46,36 @@ async def get_unstackable_lot(
         reserved=lot.reserved,
         tier=tool_lot.tier if tool_lot is not None else None,
         tt=tool_lot.tt if tool_lot is not None else None,
+        is_default=getattr(tool_lot, "is_default", False),
+        created_at=lot.created_at,
+        updated_at=lot.updated_at,
+        is_active=lot.is_active,
+    )
+
+
+@router.put("/unstackable/{lot_id}/default", response_model=UnstackableLotResponse)
+async def set_default_tool_lot(
+    lot_id: UUID,
+    current_user: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> UnstackableLotResponse:
+    """Set an owned finder, excavator, or refiner lot as the user's default."""
+
+    lot = await get_lot_service(session).set_default_tool_lot(
+        user_id=current_user["id"], lot_id=lot_id
+    )
+    if lot.origin is None or lot.origin.item is None or lot.tool_lot is None:
+        raise AppError(404, "Tool lot not found")
+    return UnstackableLotResponse(
+        id=lot.id,
+        user_id=lot.user_id,
+        type=lot.type.value,
+        item=ItemSummaryResponse.model_validate(lot.origin.item),
+        qty=lot.qty,
+        reserved=lot.reserved,
+        tier=lot.tool_lot.tier,
+        tt=lot.tool_lot.tt,
+        is_default=lot.tool_lot.is_default,
         created_at=lot.created_at,
         updated_at=lot.updated_at,
         is_active=lot.is_active,

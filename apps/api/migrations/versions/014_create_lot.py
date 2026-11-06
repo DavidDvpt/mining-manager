@@ -69,6 +69,12 @@ def upgrade() -> None:
         sa.Column("lot_id", sa.Uuid(), nullable=False),
         sa.Column("tier", sa.Integer(), nullable=True),
         sa.Column("tt", sa.Numeric(precision=20, scale=5), nullable=True),
+        sa.Column(
+            "is_default",
+            sa.Boolean(),
+            server_default=sa.text("false"),
+            nullable=False,
+        ),
         sa.CheckConstraint(
             "tier >= 0 AND tier <= 10",
             name="ck_tool_lot_tier_between_0_and_10",
@@ -121,9 +127,79 @@ def upgrade() -> None:
         FOR EACH ROW EXECUTE FUNCTION enforce_tool_lot_single_quantity();
         """
     )
+    op.execute(
+        """
+        CREATE FUNCTION enforce_default_tool_lot()
+        RETURNS trigger
+        LANGUAGE plpgsql
+        AS $$
+        DECLARE
+            owner_id uuid;
+            tool_category text;
+        BEGIN
+            IF NOT NEW.is_default THEN
+                RETURN NEW;
+            END IF;
+
+            EXECUTE $query$
+                SELECT l.user_id,
+                       CASE
+                           WHEN EXISTS (SELECT 1 FROM finder f WHERE f.item_id = sl.item_id)
+                               THEN 'finder'
+                           WHEN EXISTS (SELECT 1 FROM excavator e WHERE e.item_id = sl.item_id)
+                               THEN 'excavator'
+                           WHEN EXISTS (SELECT 1 FROM refiner r WHERE r.item_id = sl.item_id)
+                               THEN 'refiner'
+                       END
+                FROM lot l
+                JOIN session_line sl ON sl.id::text = l.origin_id
+                WHERE l.id = $1
+            $query$ INTO owner_id, tool_category USING NEW.lot_id;
+
+            IF tool_category IS NULL THEN
+                RAISE EXCEPTION
+                    'Only finder, excavator, or refiner lots can be default';
+            END IF;
+
+            PERFORM pg_advisory_xact_lock(
+                hashtextextended(owner_id::text || ':' || tool_category, 0)
+            );
+
+            EXECUTE $query$
+                UPDATE tool_lot tl
+                SET is_default = false
+                FROM lot l
+                JOIN session_line sl ON sl.id::text = l.origin_id
+                WHERE tl.lot_id = l.id
+                  AND l.user_id = $1
+                  AND tl.lot_id <> $3
+                  AND tl.is_default
+                  AND (
+                      ($2 = 'finder' AND EXISTS
+                          (SELECT 1 FROM finder f WHERE f.item_id = sl.item_id))
+                      OR ($2 = 'excavator' AND EXISTS
+                          (SELECT 1 FROM excavator e WHERE e.item_id = sl.item_id))
+                      OR ($2 = 'refiner' AND EXISTS
+                          (SELECT 1 FROM refiner r WHERE r.item_id = sl.item_id))
+                  )
+            $query$ USING owner_id, tool_category, NEW.lot_id;
+            RETURN NEW;
+        END;
+        $$;
+        """
+    )
+    op.execute(
+        """
+        CREATE TRIGGER enforce_default_tool_lot_trigger
+        BEFORE INSERT OR UPDATE OF is_default ON tool_lot
+        FOR EACH ROW EXECUTE FUNCTION enforce_default_tool_lot();
+        """
+    )
 
 
 def downgrade() -> None:
+    op.execute("DROP TRIGGER IF EXISTS enforce_default_tool_lot_trigger ON tool_lot")
+    op.execute("DROP FUNCTION IF EXISTS enforce_default_tool_lot()")
     op.execute(
         "DROP TRIGGER IF EXISTS enforce_tool_lot_quantity_on_lot_update ON lot"
     )

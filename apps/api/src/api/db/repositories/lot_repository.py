@@ -53,7 +53,7 @@ class LotRepository:
         await self._session.flush()
 
         if kind == "TOOL":
-            self._session.add(ToolLot(lot_id=lot.id, tt=tt))
+            self._session.add(ToolLot(lot_id=lot.id, tt=tt, is_default=False))
         elif kind == "ENHANCER":
             self._session.add(EnhancerLot(lot_id=lot.id))
         else:
@@ -98,6 +98,41 @@ class LotRepository:
             .with_for_update(of=Lot)
         )
         return await self._session.scalar(statement)
+
+    async def get_tool_lot_for_default(
+        self, *, user_id: UUID, lot_id: UUID
+    ) -> Lot | None:
+        """Lock and load an owned tool lot with eligible catalogue details."""
+
+        statement = (
+            select(Lot)
+            .join(SessionLine, cast(SessionLine.id, String) == Lot.origin_id)
+            .options(
+                joinedload(Lot.origin)
+                .joinedload(SessionLine.item)
+                .joinedload(Item.finder),
+                joinedload(Lot.origin)
+                .joinedload(SessionLine.item)
+                .joinedload(Item.excavator),
+                joinedload(Lot.origin)
+                .joinedload(SessionLine.item)
+                .joinedload(Item.refiner),
+                joinedload(Lot.tool_lot),
+            )
+            .where(Lot.id == lot_id, Lot.user_id == user_id)
+            .with_for_update(of=Lot)
+        )
+        lot = await self._session.scalar(statement)
+        return lot
+
+    async def set_default_tool_lot(self, *, lot: Lot) -> Lot:
+        """Persist the default flag on a validated, locked tool lot."""
+
+        if lot.tool_lot is None:
+            return lot
+        lot.tool_lot.is_default = True
+        await self._session.flush()
+        return lot
 
 
 

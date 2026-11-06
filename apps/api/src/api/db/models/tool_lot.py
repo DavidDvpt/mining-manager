@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, ForeignKey, Integer, Numeric
+from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Integer, Numeric, text
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -31,6 +31,9 @@ class ToolLot(Base):
     tier: Mapped[int | None] = mapped_column(Integer, nullable=True)
     tt: Mapped[Decimal | None] = mapped_column(
         Numeric(precision=20, scale=5), nullable=True
+    )
+    is_default: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false")
     )
 
     lot: Mapped["Lot"] = relationship(back_populates="tool_lot")
