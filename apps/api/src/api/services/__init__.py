@@ -3,9 +3,12 @@
 from .deposit_size_service import DepositSizeService
 from .claim_service import ClaimService, get_claim_service
 from .enhancer_service import EnhancerService, get_enhancer_service
-from .excavator_service import ExcavatorService
-from .finder_amplifier_service import FinderAmplifierService
-from .finder_service import FinderService
+from .excavator_service import ExcavatorService, get_excavator_service
+from .finder_amplifier_service import (
+    FinderAmplifierService,
+    get_finder_amplifier_service,
+)
+from .finder_service import FinderService, get_finder_service
 from .item_service import ItemService, is_limited_item
 from .lot_service import LotService, get_lot_service
 from .material_service import MaterialService
@@ -33,6 +36,9 @@ __all__ = [
     "ExcavatorService",
     "FinderAmplifierService",
     "FinderService",
+    "get_excavator_service",
+    "get_finder_amplifier_service",
+    "get_finder_service",
     "ItemService",
     "is_limited_item",
     "LotService",

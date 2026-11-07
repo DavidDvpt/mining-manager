@@ -8,9 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.core.exceptions import AppError
 from api.db import get_session
-from api.db.repositories import ExcavatorRepository
 from api.schemas import ExcavatorResponse
 from api.services import ExcavatorService
+from api.services import get_excavator_service as build_excavator_service
 
 router = APIRouter(tags=["excavators"])
 
@@ -18,7 +18,7 @@ router = APIRouter(tags=["excavators"])
 def get_excavator_service(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> ExcavatorService:
-    return ExcavatorService(ExcavatorRepository(session))
+    return build_excavator_service(session)
 
 
 @router.get("", response_model=list[ExcavatorResponse])

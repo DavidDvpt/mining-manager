@@ -8,9 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.core.exceptions import AppError
 from api.db import get_session
-from api.db.repositories import FinderRepository
 from api.schemas import FinderResponse
 from api.services import FinderService
+from api.services import get_finder_service as build_finder_service
 
 router = APIRouter(tags=["finders"])
 
@@ -20,7 +20,7 @@ def get_finder_service(
 ) -> FinderService:
     """Build the finder service for the current request."""
 
-    return FinderService(FinderRepository(session))
+    return build_finder_service(session)
 
 
 @router.get("", response_model=list[FinderResponse])

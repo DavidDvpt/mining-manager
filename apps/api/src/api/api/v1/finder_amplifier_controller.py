@@ -8,9 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.core.exceptions import AppError
 from api.db import get_session
-from api.db.repositories import FinderAmplifierRepository
 from api.schemas import FinderAmplifierResponse
 from api.services import FinderAmplifierService
+from api.services import (
+    get_finder_amplifier_service as build_finder_amplifier_service,
+)
 
 router = APIRouter(tags=["finder-amplifiers"])
 
@@ -18,7 +20,7 @@ router = APIRouter(tags=["finder-amplifiers"])
 def get_finder_amplifier_service(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> FinderAmplifierService:
-    return FinderAmplifierService(FinderAmplifierRepository(session))
+    return build_finder_amplifier_service(session)
 
 
 @router.get("", response_model=list[FinderAmplifierResponse])
