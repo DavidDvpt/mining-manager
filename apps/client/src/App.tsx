@@ -1,6 +1,4 @@
-// Uncomment this line to use CSS modules
-// import styles from './app.module.scss';
-import NxWelcome from './nx-welcome';
+import NxWelcome from './NxWelcome';
 
 import { Route, Routes, Link } from 'react-router-dom';
 
