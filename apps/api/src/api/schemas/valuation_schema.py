@@ -42,3 +42,12 @@ class ItemLotsValuationResponse(BaseModel):
     item_id: UUID
     lots: list[LotValuationResponse]
     calculated_at: datetime
+
+
+class SessionLotsValuationResponse(BaseModel):
+    """Per-lot valuation for one source session."""
+
+    session_id: UUID
+    session_type: str
+    lots: list[LotValuationResponse]
+    calculated_at: datetime

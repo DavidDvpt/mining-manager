@@ -65,19 +65,21 @@ class ValuationService:
         self,
         *,
         user_id: UUID,
-        item_id: UUID,
+        item_id: UUID | None,
         session_type: ValuationSessionType = ValuationSessionType.ALL,
         item_type: ItemCatalogueType | None = None,
+        origin_session_id: UUID | None = None,
     ) -> dict[str, object] | None:
         """Return realized profit attributed to each owned origin lot."""
 
-        item = await self._item_repository.get_item_with_economy(item_id=item_id)
-        if item is None:
-            return None
-        if item_type is not None and not await self._item_repository.is_item_of_type(
-            item_id=item_id, item_type=item_type
-        ):
-            return None
+        if item_id is not None:
+            item = await self._item_repository.get_item_with_economy(item_id=item_id)
+            if item is None:
+                return None
+            if item_type is not None and not await self._item_repository.is_item_of_type(
+                item_id=item_id, item_type=item_type
+            ):
+                return None
         lot_rows, consumed_rows = await self._repository.get_lot_graph(
             user_id=user_id
         )
@@ -170,10 +172,17 @@ class ValuationService:
 
         result_lots = []
         for lot in lots.values():
-            if lot["item_id"] != item_id or lot["origin_session_type"] not in {
+            if (
+                (item_id is not None and lot["item_id"] != item_id)
+                or (
+                    origin_session_id is not None
+                    and lot["origin_session_id"] != origin_session_id
+                )
+                or lot["origin_session_type"] not in {
                 "MINING",
                 "TRANSACTION",
-            }:
+                }
+            ):
                 continue
             if session_type is ValuationSessionType.MINING and lot["origin_session_type"] != "MINING":
                 continue

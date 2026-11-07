@@ -18,6 +18,7 @@ from api.db.models import (
 )
 from api.schemas.valuation_schema import (
     ItemLotsValuationResponse,
+    SessionLotsValuationResponse,
     ValuationSessionType,
 )
 from api.services.valuation_service import get_valuation_service
@@ -133,6 +134,36 @@ async def test_bdd_valuation_weights_buy_and_mining_lots_by_scope(test_db_sessio
     assert mining_valuation is not None
     assert mining_valuation["average_purchase_percent"] == Decimal("100.000000")
     assert mining_valuation["remaining_purchase_percent"] == Decimal("100.000000")
+
+    mining_lots = await service.get_item_lot_valuation(
+        user_id=user.id,
+        item_id=None,
+        session_type=ValuationSessionType.MINING,
+        origin_session_id=mining_session.id,
+    )
+    trade_lots = await service.get_item_lot_valuation(
+        user_id=user.id,
+        item_id=item.id,
+        session_type=ValuationSessionType.TRANSACTION,
+    )
+
+    assert mining_lots is not None
+    mining_response = SessionLotsValuationResponse.model_validate(
+        {
+            "session_id": mining_session.id,
+            "session_type": ValuationSessionType.MINING,
+            "lots": mining_lots["lots"],
+            "calculated_at": mining_lots["calculated_at"],
+        }
+    )
+    assert len(mining_response.lots) == 1
+    assert mining_response.lots[0].origin_session_id == mining_session.id
+    assert trade_lots is not None
+    trade_response = ItemLotsValuationResponse.model_validate(trade_lots)
+    assert len(trade_response.lots) == 2
+    assert all(
+        lot.origin_session_type == "TRANSACTION" for lot in trade_response.lots
+    )
 
 
 async def test_bdd_lot_valuation_attributes_only_sold_profit(test_db_session):

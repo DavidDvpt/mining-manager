@@ -10,7 +10,11 @@ from api.api.deps import CurrentUser
 from api.core.exceptions import AppError
 from api.db import get_session
 from api.db.repositories.item_repository import ItemCatalogueType
-from api.schemas import ItemLotsValuationResponse, ItemValuationResponse
+from api.schemas import (
+    ItemLotsValuationResponse,
+    ItemValuationResponse,
+    SessionLotsValuationResponse,
+)
 from api.schemas.valuation_schema import ValuationSessionType
 from api.services import ValuationService, get_valuation_service
 
@@ -51,7 +55,7 @@ async def _get_lot_valuation(
     current_user: dict,
     service: ValuationService,
     session_type: ValuationSessionType,
-    item_type: ItemCatalogueType,
+    item_type: ItemCatalogueType | None,
 ) -> ItemLotsValuationResponse:
     """Load and validate a per-lot valuation response."""
 
@@ -133,4 +137,49 @@ async def get_finder_amplifier_lot_valuation(
 
     return await _get_lot_valuation(
         finder_amplifier_id, current_user, service, session_type, "finder-amplifier"
+    )
+
+
+@router.get(
+    "/mining/{session_id}/lots", response_model=SessionLotsValuationResponse
+)
+async def get_mining_session_lot_valuation(
+    session_id: UUID,
+    current_user: CurrentUser,
+    service: Annotated[ValuationService, Depends(valuation_service_dependency)],
+) -> SessionLotsValuationResponse:
+    """Return all mining-origin lots and their realized profit for a session."""
+
+    valuation = await service.get_item_lot_valuation(
+        user_id=current_user["id"],
+        item_id=None,
+        session_type=ValuationSessionType.MINING,
+        origin_session_id=session_id,
+    )
+    if valuation is None:
+        raise AppError(404, "Mining session not found")
+    return SessionLotsValuationResponse.model_validate(
+        {
+            "session_id": session_id,
+            "session_type": ValuationSessionType.MINING,
+            "lots": valuation["lots"],
+            "calculated_at": valuation["calculated_at"],
+        }
+    )
+
+
+@router.get("/trade/{item_id}/lots", response_model=ItemLotsValuationResponse)
+async def get_trade_item_lot_valuation(
+    item_id: UUID,
+    current_user: CurrentUser,
+    service: Annotated[ValuationService, Depends(valuation_service_dependency)],
+) -> ItemLotsValuationResponse:
+    """Return all transaction-origin lots for one item."""
+
+    return await _get_lot_valuation(
+        item_id,
+        current_user,
+        service,
+        ValuationSessionType.TRANSACTION,
+        None,
     )
