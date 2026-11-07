@@ -89,7 +89,15 @@ class LotRepository:
             select(Lot)
             .join(SessionLine, cast(SessionLine.id, String) == Lot.origin_id)
             .options(
-                joinedload(Lot.origin).joinedload(SessionLine.item),
+                joinedload(Lot.origin)
+                .joinedload(SessionLine.item)
+                .joinedload(Item.finder),
+                joinedload(Lot.origin)
+                .joinedload(SessionLine.item)
+                .joinedload(Item.excavator),
+                joinedload(Lot.origin)
+                .joinedload(SessionLine.item)
+                .joinedload(Item.refiner),
                 joinedload(Lot.tool_lot),
                 joinedload(Lot.material_lot),
                 joinedload(Lot.enhancer_lot),
@@ -98,6 +106,18 @@ class LotRepository:
             .with_for_update(of=Lot)
         )
         return await self._session.scalar(statement)
+
+    async def update_tool_lot(
+        self, *, lot: Lot, tier: int | None, tt: Decimal | None, is_active: bool
+    ) -> Lot:
+        """Persist validated tool attributes and active state."""
+
+        if lot.tool_lot is not None:
+            lot.tool_lot.tier = tier
+            lot.tool_lot.tt = tt
+        lot.is_active = is_active
+        await self._session.flush()
+        return lot
 
     async def get_tool_lot_for_default(
         self, *, user_id: UUID, lot_id: UUID

@@ -18,7 +18,7 @@ from api.db.models import (
 )
 from api.db.repositories import SessionTransactionRepository
 
-from .item_service import ItemService, get_item_service
+from .item_service import ItemService, get_item_service, is_limited_item
 from .lot_service import LotService, get_lot_service
 
 
@@ -194,7 +194,13 @@ class SessionTransactionService:
             )
             if not lot.is_active or lot.qty != 1:
                 raise UnprocessingError("Only one active unstackable lot can be sold")
-            if lot.tool_lot is not None and lot.tool_lot.tt is not None and tt <= 0:
+            origin = getattr(lot, "origin", None)
+            if (
+                origin is not None
+                and origin.item is not None
+                and is_limited_item(origin.item)
+                and tt <= 0
+            ):
                 raise UnprocessingError("TT must be greater than 0 for a limited lot")
             
             await self._lot_service.reserve_unstackable_for_sale(lot=lot)

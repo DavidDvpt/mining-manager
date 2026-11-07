@@ -14,6 +14,7 @@ from api.schemas import (
     LotCollectionResponse,
     LotResponse,
     UnstackableLotResponse,
+    UpdateUnstackableLotRequest,
 )
 from api.services import get_lot_service
 
@@ -63,6 +64,39 @@ async def set_default_tool_lot(
 
     lot = await get_lot_service(session).set_default_tool_lot(
         user_id=current_user["id"], lot_id=lot_id
+    )
+    if lot.origin is None or lot.origin.item is None or lot.tool_lot is None:
+        raise AppError(404, "Tool lot not found")
+    return UnstackableLotResponse(
+        id=lot.id,
+        user_id=lot.user_id,
+        type=lot.type.value,
+        item=ItemSummaryResponse.model_validate(lot.origin.item),
+        qty=lot.qty,
+        reserved=lot.reserved,
+        tier=lot.tool_lot.tier,
+        tt=lot.tool_lot.tt,
+        is_default=lot.tool_lot.is_default,
+        created_at=lot.created_at,
+        updated_at=lot.updated_at,
+        is_active=lot.is_active,
+    )
+
+
+@router.put("/unstackable/{lot_id}", response_model=UnstackableLotResponse)
+async def update_unstackable_lot(
+    lot_id: UUID,
+    payload: UpdateUnstackableLotRequest,
+    current_user: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> UnstackableLotResponse:
+    """Update TT for a tool lot and tier for finder or excavator lots."""
+
+    lot = await get_lot_service(session).update_unstackable_lot(
+        user_id=current_user["id"],
+        lot_id=lot_id,
+        tier=payload.tier,
+        tt=payload.tt,
     )
     if lot.origin is None or lot.origin.item is None or lot.tool_lot is None:
         raise AppError(404, "Tool lot not found")

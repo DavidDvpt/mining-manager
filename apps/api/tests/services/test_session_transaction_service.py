@@ -259,7 +259,11 @@ async def test_create_sell_unstackable_rejects_limited_lot_with_zero_tt(service)
     """Reject a limited tool sale without a positive TT value."""
 
     lot = SimpleNamespace(
-        id=uuid4(), is_active=True, qty=1, tool_lot=SimpleNamespace(tt=Decimal("10"))
+        id=uuid4(),
+        is_active=True,
+        qty=1,
+        origin=SimpleNamespace(item=SimpleNamespace(name="Test Tool (L)")),
+        tool_lot=SimpleNamespace(tt=Decimal("10")),
     )
     service._lot_service.get_unstackable_lot.return_value = lot
 

@@ -20,6 +20,7 @@ from api.db.models import (
 )
 from api.db.repositories import SessionMiningRepository
 
+from .item_service import is_limited_item
 from .lot_service import LotService, get_lot_service
 
 
@@ -353,9 +354,11 @@ class SessionMiningService:
         """Ensure each limited tool covers the requested decay before repair."""
 
         for lot in lots:
+            if not is_limited_item(lot.origin.item):
+                continue
             tt = lot.tool_lot.tt
             if tt is None:
-                continue
+                raise UnprocessingError(f"A limited {role} has no TT value")
             try:
                 decay = cls._item_decay(lot.origin.item)
             except UnprocessingError:
@@ -374,9 +377,11 @@ class SessionMiningService:
         remaining_clicks = clic
         for lot in lots:
             item = lot.origin.item
+            if not is_limited_item(item):
+                continue
             tt = lot.tool_lot.tt
             if tt is None:
-                continue
+                raise UnprocessingError("A selected limited finder amplifier has no TT value")
             try:
                 decay = cls._item_decay(item)
             except UnprocessingError:
@@ -441,6 +446,8 @@ class SessionMiningService:
         for lot in amplifier_lots:
             if remaining_clicks <= 0:
                 break
+            if not is_limited_item(lot.origin.item):
+                continue
             tt = lot.tool_lot.tt
             if tt is None:
                 continue

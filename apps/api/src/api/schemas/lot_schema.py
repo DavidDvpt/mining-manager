@@ -4,7 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from .item_schema import ItemSummaryResponse
 from .session_line_schema import SessionLineResponse
@@ -51,3 +51,10 @@ class UnstackableLotResponse(BaseModel):
     created_at: datetime
     updated_at: datetime | None
     is_active: bool
+
+
+class UpdateUnstackableLotRequest(BaseModel):
+    """Payload for changing the mutable attributes of an owned tool lot."""
+
+    tier: int | None = Field(default=None, ge=0, le=10)
+    tt: Decimal | None = Field(default=None, ge=0)

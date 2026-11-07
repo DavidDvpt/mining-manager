@@ -8,6 +8,12 @@ from api.db.models import Item
 from api.db.repositories import ItemRepository
 
 
+def is_limited_item(item: Item) -> bool:
+    """Return whether the catalogue name marks an item as limited."""
+
+    return item.name.endswith("(L)")
+
+
 class ItemService:
     """Provide item-level business queries."""
 

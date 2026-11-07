@@ -6,7 +6,7 @@ from .enhancer_service import EnhancerService
 from .excavator_service import ExcavatorService
 from .finder_amplifier_service import FinderAmplifierService
 from .finder_service import FinderService
-from .item_service import ItemService
+from .item_service import ItemService, is_limited_item
 from .lot_service import LotService, get_lot_service
 from .material_service import MaterialService
 from .mining_loot_service import MiningLootService, get_mining_loot_service
@@ -32,6 +32,7 @@ __all__ = [
     "FinderAmplifierService",
     "FinderService",
     "ItemService",
+    "is_limited_item",
     "LotService",
     "MaterialService",
     "MiningLootService",

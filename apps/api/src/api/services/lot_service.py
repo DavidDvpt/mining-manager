@@ -10,7 +10,7 @@ from api.core.exceptions import AppError, UnprocessingError
 from api.db.models import Item, Lot, LotKind, SessionLine, SessionLineType
 from api.db.repositories import LotRepository
 
-from .item_service import ItemService, get_item_service
+from .item_service import ItemService, get_item_service, is_limited_item
 from .session_line_service import SessionLineService, get_session_line_service
 
 
@@ -173,6 +173,62 @@ class LotService:
                     "Only finder, excavator, or refiner lots can be default"
                 )
             await self._repository.set_default_tool_lot(lot=lot)
+            return lot
+
+    async def update_unstackable_lot(
+        self,
+        *,
+        user_id: UUID,
+        lot_id: UUID,
+        tier: int | None,
+        tt: Decimal | None,
+    ) -> Lot:
+        """Update unlimited-tool TT and finder/excavator tiers.
+
+        The lot must belong to the user and be a tool lot. At least one value
+        must be supplied; refiner tiers are rejected because refiner tiers are
+        not supported by the catalogue model. Limited-tool TT is changed only
+        by consumption workflows, never by this manual update.
+        """
+
+        if tier is None and tt is None:
+            raise UnprocessingError("At least one tool attribute is required")
+
+        async with self._session.begin():
+            lot = await self._repository.get_unstackable_lot(
+                user_id=user_id,
+                lot_id=lot_id,
+            )
+            if lot is None:
+                raise AppError(404, "Lot not found")
+            if lot.origin is None or lot.origin.item is None or lot.tool_lot is None:
+                raise UnprocessingError("Lot is not an unstackable tool lot")
+
+            item = lot.origin.item
+            is_finder_or_excavator = (
+                item.finder is not None or item.excavator is not None
+            )
+            is_refiner = item.refiner is not None
+            if tier is not None and not is_finder_or_excavator:
+                if is_refiner:
+                    raise UnprocessingError("Refiner lots do not support tier")
+                raise UnprocessingError("Only finder or excavator lots support tier")
+
+            if tt is not None and is_limited_item(item):
+                raise UnprocessingError("Limited tool TT cannot be updated manually")
+
+            effective_tt = lot.tool_lot.tt if tt is None else tt
+            is_active = (
+                effective_tt > 0
+                if is_limited_item(item) and effective_tt is not None
+                else lot.is_active
+            )
+            await self._repository.update_tool_lot(
+                lot=lot,
+                tier=lot.tool_lot.tier if tier is None else tier,
+                tt=effective_tt,
+                is_active=is_active,
+            )
             return lot
 
     async def create_transaction_lot(

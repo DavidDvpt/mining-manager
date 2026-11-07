@@ -13,7 +13,12 @@ from .excavator_schema import ExcavatorResponse
 from .finder_amplifier_schema import FinderAmplifierResponse
 from .finder_schema import FinderResponse
 from .item_schema import ItemSummaryResponse
-from .lot_schema import LotCollectionResponse, LotResponse, UnstackableLotResponse
+from .lot_schema import (
+    LotCollectionResponse,
+    LotResponse,
+    UnstackableLotResponse,
+    UpdateUnstackableLotRequest,
+)
 from .material_schema import MaterialResponse
 from .mining_session_schema import (
     CloseEnhancerLineRequest,
@@ -82,5 +87,6 @@ __all__ = [
     "SessionResponse",
     "SessionTransactionResponse",
     "UnstackableLotResponse",
+    "UpdateUnstackableLotRequest",
     "UpdateTransactionStatusRequest",
 ]
