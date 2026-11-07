@@ -48,7 +48,12 @@ from .session_transaction_schema import (
     SessionTransactionResponse,
     UpdateTransactionStatusRequest,
 )
-from .valuation_schema import ItemValuationResponse, ValuationSessionType
+from .valuation_schema import (
+    ItemLotsValuationResponse,
+    ItemValuationResponse,
+    LotValuationResponse,
+    ValuationSessionType,
+)
 
 __all__ = [
     "ClaimResponse",
@@ -91,5 +96,7 @@ __all__ = [
     "UpdateUnstackableLotRequest",
     "UpdateTransactionStatusRequest",
     "ItemValuationResponse",
+    "ItemLotsValuationResponse",
+    "LotValuationResponse",
     "ValuationSessionType",
 ]

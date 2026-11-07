@@ -132,6 +132,12 @@ def upgrade() -> None:
         unique=True,
     )
     op.create_index("ix_session_line_item_id", "session_line", ["item_id"])
+    op.create_index("ix_session_line_lot_id", "session_line", ["lot_id"])
+    op.create_index(
+        "ix_session_line_session_id_type",
+        "session_line",
+        ["session_id", "type"],
+    )
     op.create_index(
         "uq_session_line_refinement_source",
         "session_line",
@@ -533,6 +539,10 @@ def downgrade() -> None:
     )
     op.execute("DROP FUNCTION IF EXISTS enforce_session_line_item_lot()")
     op.drop_index("ix_session_line_item_id", table_name="session_line")
+    op.drop_index("ix_session_line_lot_id", table_name="session_line")
+    op.drop_index(
+        "ix_session_line_session_id_type", table_name="session_line"
+    )
     op.drop_index(
         "uq_session_line_refinement_source", table_name="session_line"
     )

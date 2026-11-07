@@ -1,17 +1,22 @@
 """Persistence queries for current inventory valuation."""
 
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import String, and_, case, cast, func, literal, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.db.models import (
+    Economy,
     Lot,
+    Session,
     SessionLine,
     SessionLineTransaction,
     SessionLineType,
     SessionMining,
+    SessionRefinage,
     SessionTransaction,
     SessionTransactionType,
 )
@@ -102,3 +107,66 @@ class ValuationRepository:
             statement = statement.where(or_(False))
         row = (await self._session.execute(statement)).one()
         return row.average_purchase_percent, row.remaining_purchase_percent
+
+    async def get_lot_graph(
+        self, *, user_id: UUID
+    ) -> tuple[
+        Sequence[Mapping[Any, Any]], Sequence[Mapping[Any, Any]]
+    ]:
+        """Load owned lot origins and consumed-line edges for valuation traversal."""
+
+        lot_rows = (
+            await self._session.execute(
+                select(
+                    Lot.id.label("lot_id"),
+                    Lot.origin_id.label("origin_line_id"),
+                    Lot.qty,
+                    Lot.reserved,
+                    SessionLine.id.label("line_id"),
+                    SessionLine.item_id,
+                    SessionLine.qty.label("origin_quantity"),
+                    Session.id.label("session_id"),
+                    SessionTransaction.type.label("transaction_type"),
+                    SessionLineTransaction.tt,
+                    SessionLineTransaction.ttc,
+                    Economy.tt.label("economy_tt"),
+                    SessionMining.session_id.label("mining_session_id"),
+                    SessionRefinage.session_id.label("refinage_session_id"),
+                )
+                .select_from(Lot)
+                .join(SessionLine, cast(SessionLine.id, String) == Lot.origin_id)
+                .join(Session, Session.id == SessionLine.session_id)
+                .outerjoin(SessionTransaction, SessionTransaction.session_id == Session.id)
+                .outerjoin(SessionLineTransaction, SessionLineTransaction.session_line_id == SessionLine.id)
+                .outerjoin(SessionMining, SessionMining.session_id == Session.id)
+                .outerjoin(SessionRefinage, SessionRefinage.session_id == Session.id)
+                .outerjoin(Economy, Economy.item_id == SessionLine.item_id)
+                .where(Lot.user_id == user_id)
+            )
+        ).mappings().all()
+        consumed_rows = (
+            await self._session.execute(
+                select(
+                    SessionLine.lot_id,
+                    SessionLine.session_id,
+                    SessionLine.qty,
+                    SessionLineTransaction.tt,
+                    SessionLineTransaction.ttc,
+                    SessionLineTransaction.fee,
+                    SessionTransaction.type.label("transaction_type"),
+                    SessionTransaction.status.label("transaction_status"),
+                    SessionRefinage.session_id.label("refinage_session_id"),
+                )
+                .select_from(SessionLine)
+                .join(Session, Session.id == SessionLine.session_id)
+                .outerjoin(SessionLineTransaction, SessionLineTransaction.session_line_id == SessionLine.id)
+                .outerjoin(SessionTransaction, SessionTransaction.session_id == Session.id)
+                .outerjoin(SessionRefinage, SessionRefinage.session_id == Session.id)
+                .where(
+                    Session.user_id == user_id,
+                    SessionLine.type == SessionLineType.CONSUMED,
+                    SessionLine.lot_id.is_not(None),
+                )
+            )
+        ).mappings().all()
+        return lot_rows, consumed_rows

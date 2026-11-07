@@ -23,3 +23,22 @@ class ItemValuationResponse(BaseModel):
     average_purchase_percent: Decimal | None
     remaining_purchase_percent: Decimal | None
     calculated_at: datetime
+
+
+class LotValuationResponse(BaseModel):
+    """Purchase origin and realized profit attributed to one owned lot."""
+
+    lot_id: UUID
+    origin_session_id: UUID
+    origin_session_type: str
+    origin_tt: Decimal
+    origin_ttc: Decimal
+    generated_sell_profit: Decimal
+
+
+class ItemLotsValuationResponse(BaseModel):
+    """Per-lot valuation for one catalogue item."""
+
+    item_id: UUID
+    lots: list[LotValuationResponse]
+    calculated_at: datetime

@@ -88,6 +88,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["lot_id"], ["lot.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("lot_id"),
     )
+    op.create_index("ix_lot_user_id", "lot", ["user_id"])
     op.execute(
         """
         CREATE FUNCTION enforce_tool_lot_single_quantity()
@@ -207,6 +208,7 @@ def downgrade() -> None:
         "DROP TRIGGER IF EXISTS enforce_tool_lot_quantity_on_insert ON tool_lot"
     )
     op.execute("DROP FUNCTION IF EXISTS enforce_tool_lot_single_quantity()")
+    op.drop_index("ix_lot_user_id", table_name="lot")
     for table_name in ("enhancer_lot", "tool_lot", "material_lot"):
         op.drop_table(table_name)
     op.drop_table("lot")

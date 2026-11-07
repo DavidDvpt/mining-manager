@@ -67,3 +67,57 @@ def test_get_item_valuation_returns_purchase_percentages():
         "item_id": item_id,
         "session_type": ValuationSessionType.MINING,
     }
+
+
+def test_get_material_lot_valuation_passes_catalogue_type():
+    """Use the material-specific route and preserve the source session metadata."""
+
+    user_id = uuid4()
+    material_id = uuid4()
+    lot_id = uuid4()
+    origin_session_id = uuid4()
+    calls = {}
+
+    async def fake_current_user():
+        """Return the authenticated user used by the request."""
+
+        return {"id": user_id, "role": "USER", "pseudo": "test-user"}
+
+    async def fake_get_lot_valuation(**kwargs):
+        """Capture the typed route scope and return one lot valuation."""
+
+        calls.update(kwargs)
+        return {
+            "item_id": material_id,
+            "lots": [
+                {
+                    "lot_id": lot_id,
+                    "origin_session_id": origin_session_id,
+                    "origin_session_type": "TRANSACTION",
+                    "origin_tt": Decimal(100),
+                    "origin_ttc": Decimal(120),
+                    "generated_sell_profit": Decimal(25),
+                }
+            ],
+            "calculated_at": datetime.now(UTC),
+        }
+
+    app.dependency_overrides[get_current_user] = fake_current_user
+    app.dependency_overrides[valuation_controller.valuation_service_dependency] = (
+        lambda: SimpleNamespace(get_item_lot_valuation=fake_get_lot_valuation)
+    )
+    try:
+        with TestClient(app) as client:
+            response = client.get(endpoint(f"/valuations/material/{material_id}/lots"))
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    assert response.json()["item_id"] == str(material_id)
+    assert response.json()["lots"][0]["generated_sell_profit"] == "25"
+    assert calls == {
+        "user_id": user_id,
+        "item_id": material_id,
+        "session_type": ValuationSessionType.ALL,
+        "item_type": "material",
+    }
