@@ -5,7 +5,8 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.db.models import FinderAmplifier
+from api.core.exceptions import AppError, UnprocessingError
+from api.db.models import FinderAmplifier, Lot
 from api.db.repositories import FinderAmplifierRepository
 from api.entities import ItemEntity
 
@@ -49,6 +50,22 @@ class FinderAmplifierService:
             user_id=user_id,
             item_ids=[amplifier.id for amplifier in amplifiers],
         )
+
+    async def get_owned_lot(self, *, user_id: UUID, lot_id: UUID) -> Lot:
+        """Return an owned lot after confirming that it contains an amplifier."""
+
+        if self._lot_service is None:
+            raise RuntimeError(
+                "LotService is required for finder amplifier lot queries"
+            )
+        lot = await self._lot_service.get_unstackable_lot(
+            user_id=user_id, lot_id=lot_id
+        )
+        if lot.origin is None or lot.origin.item is None:
+            raise AppError(404, "Finder amplifier lot not found")
+        if lot.origin.item.finder_amplifier is None:
+            raise UnprocessingError("A finder amplifier lot is required")
+        return lot
 
 
 def get_finder_amplifier_service(

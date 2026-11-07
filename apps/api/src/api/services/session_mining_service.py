@@ -21,6 +21,12 @@ from api.db.models import (
 from api.db.repositories import SessionMiningRepository
 
 from .enhancer_service import EnhancerService, get_enhancer_service
+from .excavator_service import ExcavatorService, get_excavator_service
+from .finder_amplifier_service import (
+    FinderAmplifierService,
+    get_finder_amplifier_service,
+)
+from .finder_service import FinderService, get_finder_service
 from .item_service import is_limited_item
 from .lot_service import LotService, get_lot_service
 
@@ -56,11 +62,17 @@ class SessionMiningService:
         repository: SessionMiningRepository,
         lot_service: LotService,
         enhancer_service: EnhancerService,
+        finder_service: FinderService,
+        excavator_service: ExcavatorService,
+        finder_amplifier_service: FinderAmplifierService,
     ) -> None:
         self._session = session
         self._repository = repository
         self._lot_service = lot_service
         self._enhancer_service = enhancer_service
+        self._finder_service = finder_service
+        self._excavator_service = excavator_service
+        self._finder_amplifier_service = finder_amplifier_service
 
     async def create(
         self,
@@ -148,8 +160,7 @@ class SessionMiningService:
                     user_id=user_id,
                     item_id=item_id,
                 )
-                if item.enhancer is None:
-                    raise AppError(404, "Enhancer item not found")
+                self._enhancer_service.validate_item(item)
                 max_stock = await self._enhancer_service.get_stock_by_type_socket(
                     user_id=user_id,
                     enhancer_type=item.enhancer.type.value,
@@ -323,19 +334,19 @@ class SessionMiningService:
     async def _required_tool(self, *, user_id: UUID, lot_id: UUID, role: str):
         """Load an owned tool lot and reject missing or incompatible tools."""
 
-        lot = await self._lot_service.get_unstackable_lot(
-            user_id=user_id, lot_id=lot_id
-        )
-        if lot.origin is None or lot.origin.item is None:
-            raise AppError(404, "Tool lot not found")
-        item = lot.origin.item
-        if role == "finder" and item.finder is None:
-            raise UnprocessingError("A finder lot is required")
-        if role == "excavator" and item.excavator is None:
-            raise UnprocessingError("An excavator lot is required")
-        if role == "finder amplifier" and item.finder_amplifier is None:
-            raise UnprocessingError("A finder amplifier lot is required")
-        return lot
+        if role == "finder":
+            return await self._finder_service.get_owned_lot(
+                user_id=user_id, lot_id=lot_id
+            )
+        if role == "excavator":
+            return await self._excavator_service.get_owned_lot(
+                user_id=user_id, lot_id=lot_id
+            )
+        if role == "finder amplifier":
+            return await self._finder_amplifier_service.get_owned_lot(
+                user_id=user_id, lot_id=lot_id
+            )
+        raise UnprocessingError("Unknown tool role")
 
     @staticmethod
     def _validate_identical_finders(finder_lots: list) -> None:
@@ -485,4 +496,7 @@ def get_session_mining_service(session: AsyncSession) -> SessionMiningService:
         SessionMiningRepository(session),
         lot_service,
         get_enhancer_service(session, lot_service),
+        get_finder_service(session, lot_service),
+        get_excavator_service(session, lot_service),
+        get_finder_amplifier_service(session, lot_service),
     )

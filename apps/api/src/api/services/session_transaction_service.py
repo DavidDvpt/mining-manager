@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.core.exceptions import AppError, UnprocessingError
 from api.db.models import (
-    Lot,
     LotKind,
     Session,
     SessionTransaction,
@@ -17,9 +16,11 @@ from api.db.models import (
     SessionTransactionTypeDetail,
 )
 from api.db.repositories import SessionTransactionRepository
+from api.db.repositories.material_repository import MaterialRepository
 
 from .item_service import ItemService, get_item_service, is_limited_item
 from .lot_service import LotService, get_lot_service
+from .material_service import MaterialService
 
 
 @asynccontextmanager
@@ -40,11 +41,13 @@ class SessionTransactionService:
         repository: SessionTransactionRepository,
         item_service: ItemService,
         lot_service: LotService,
+        material_service: MaterialService | None = None,
     ) -> None:
         self._session = session
         self._repository = repository
         self._item_service = item_service
         self._lot_service = lot_service
+        self._material_service = material_service
 
     async def create_buy_stackable(
         self,
@@ -221,19 +224,22 @@ class SessionTransactionService:
 
         if quantity < 1:
             raise UnprocessingError("Quantity must be at least 1")
-        material = await self._item_service.is_item_material(item_id=item_id)
-        if material is None:
-            raise AppError(404, "Item not found")
-        if not material:
-            raise UnprocessingError("Only material items can be consumed")
+        if self._material_service is not None:
+            material_item = await self._material_service.get_by_id(item_id)
+            if material_item is None:
+                raise AppError(404, "Item not found")
+        else:
+            material = await self._item_service.is_item_material(item_id=item_id)
+            if material is None:
+                raise AppError(404, "Item not found")
+            if not material:
+                raise UnprocessingError("Only material items can be consumed")
 
         item = await self._item_service.get_item_with_economy(item_id=item_id)
         if item is None:
             raise AppError(404, "Item not found")
         if item.economy is None or item.economy.tt is None:
             raise UnprocessingError("Item has no TT value")
-        tt = item.economy.tt * quantity
-
         async with _transaction_scope(self._session):
             _item, lots, total_quantity = await self._lot_service.get_fifo_lots(
                 user_id=user_id, item_id=item_id
@@ -322,4 +328,5 @@ def get_session_transaction_service(session: AsyncSession) -> SessionTransaction
         repository=SessionTransactionRepository(session),
         item_service=get_item_service(session),
         lot_service=get_lot_service(session),
+        material_service=MaterialService(MaterialRepository(session)),
     )

@@ -1,15 +1,18 @@
 """Business operations for enhancer catalogue data."""
 
 import logging
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.db.models import Enhancer
+from api.core.exceptions import AppError
+from api.db.models import Enhancer, Item, Lot
 from api.db.repositories import EnhancerRepository
 from api.entities import ItemEntity
 
-from .lot_service import LotService, get_lot_service
+if TYPE_CHECKING:
+    from .lot_service import LotService
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +21,9 @@ class EnhancerService:
     """Provide enhancer catalogue use cases."""
 
     def __init__(
-        self, repository: EnhancerRepository, lot_service: LotService | None = None
+        self,
+        repository: EnhancerRepository,
+        lot_service: "LotService | None" = None,
     ) -> None:
         self._repository = repository
         self._lot_service = lot_service
@@ -52,13 +57,37 @@ class EnhancerService:
         )
         return sum(quantities.values())
 
+    def validate_item(self, item: Item) -> Item:
+        """Confirm that an ORM item belongs to the enhancer catalogue."""
+
+        if item.enhancer is None:
+            raise AppError(404, "Enhancer item not found")
+        return item
+
+    async def get_owned_lots(
+        self, *, user_id: UUID, item_id: UUID
+    ) -> tuple[Item, list[Lot], int]:
+        """Return an enhancer item and its owned FIFO lots after type validation."""
+
+        if self._lot_service is None:
+            raise RuntimeError("LotService is required for enhancer lot queries")
+        item, lots, quantity = await self._lot_service.get_fifo_lots(
+            user_id=user_id,
+            item_id=item_id,
+        )
+        return self.validate_item(item), lots, quantity
+
 
 def get_enhancer_service(
-    session: AsyncSession, lot_service: LotService | None = None
+    session: AsyncSession, lot_service: "LotService | None" = None
 ) -> EnhancerService:
     """Build an enhancer service with optional lot-stock orchestration."""
 
+    if lot_service is None:
+        from .lot_service import get_lot_service
+
+        lot_service = get_lot_service(session)
     return EnhancerService(
         EnhancerRepository(session),
-        lot_service=lot_service or get_lot_service(session),
+        lot_service=lot_service,
     )

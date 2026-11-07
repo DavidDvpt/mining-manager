@@ -5,6 +5,8 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.core.exceptions import AppError, UnprocessingError
+from api.db.models import Lot
 from api.db.models.finder import Finder
 from api.db.repositories import FinderRepository
 from api.entities import ItemEntity
@@ -53,6 +55,20 @@ class FinderService:
             user_id=user_id,
             item_ids=[finder.id for finder in finders],
         )
+
+    async def get_owned_lot(self, *, user_id: UUID, lot_id: UUID) -> Lot:
+        """Return an owned lot after confirming that it contains a finder."""
+
+        if self._lot_service is None:
+            raise RuntimeError("LotService is required for finder lot queries")
+        lot = await self._lot_service.get_unstackable_lot(
+            user_id=user_id, lot_id=lot_id
+        )
+        if lot.origin is None or lot.origin.item is None:
+            raise AppError(404, "Finder lot not found")
+        if lot.origin.item.finder is None:
+            raise UnprocessingError("A finder lot is required")
+        return lot
 
 
 def get_finder_service(

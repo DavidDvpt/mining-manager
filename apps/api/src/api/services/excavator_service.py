@@ -5,7 +5,8 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.db.models import Excavator
+from api.core.exceptions import AppError, UnprocessingError
+from api.db.models import Excavator, Lot
 from api.db.repositories import ExcavatorRepository
 from api.entities import ItemEntity
 
@@ -45,6 +46,20 @@ class ExcavatorService:
             user_id=user_id,
             item_ids=[excavator.id for excavator in excavators],
         )
+
+    async def get_owned_lot(self, *, user_id: UUID, lot_id: UUID) -> Lot:
+        """Return an owned lot after confirming that it contains an excavator."""
+
+        if self._lot_service is None:
+            raise RuntimeError("LotService is required for excavator lot queries")
+        lot = await self._lot_service.get_unstackable_lot(
+            user_id=user_id, lot_id=lot_id
+        )
+        if lot.origin is None or lot.origin.item is None:
+            raise AppError(404, "Excavator lot not found")
+        if lot.origin.item.excavator is None:
+            raise UnprocessingError("An excavator lot is required")
+        return lot
 
 
 def get_excavator_service(

@@ -1,6 +1,7 @@
 """Business operations for session lines."""
 
 from contextlib import asynccontextmanager
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,12 +9,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.core.exceptions import AppError, UnprocessingError
 from api.db.models import SessionLine, SessionLineType
 from api.db.repositories import SessionLineRepository
-from api.db.repositories.lot_repository import LotRepository
+from api.db.repositories.enhancer_repository import EnhancerRepository
+from api.services.enhancer_service import EnhancerService
 from api.services.mining_loot_service import (
     MiningLootService,
     get_mining_loot_service,
 )
 from api.services.session_service import SessionService, get_session_service
+
+if TYPE_CHECKING:
+    from api.services.lot_service import LotService
 
 
 @asynccontextmanager
@@ -33,6 +38,8 @@ class SessionLineService:
         repository: SessionLineRepository,
         session_service: SessionService | None = None,
         mining_loot_service: MiningLootService | None = None,
+        enhancer_service: "EnhancerService | None" = None,
+        lot_service: "LotService | None" = None,
     ) -> None:
         self._repository = repository
         self._session_service = session_service or get_session_service(
@@ -41,6 +48,10 @@ class SessionLineService:
         self._mining_loot_service = mining_loot_service or get_mining_loot_service(
             repository.session
         )
+        self._enhancer_service = enhancer_service or EnhancerService(
+            EnhancerRepository(repository.session)
+        )
+        self._lot_service = lot_service
 
     async def _get_open_produced_line(
         self,
@@ -208,14 +219,16 @@ class SessionLineService:
             if session.ended_at is not None:
                 raise UnprocessingError("The mining session is closed")
 
-            item, lots, _stock = await LotRepository(
-                self._repository.session
-            ).get_enhancer_lots_for_item(
+            lot_service = self._lot_service
+            if lot_service is None:
+                from api.services.lot_service import get_lot_service
+
+                lot_service = get_lot_service(self._repository.session)
+            item, lots, _stock = await lot_service.get_fifo_lots(
                 user_id=user_id,
                 item_id=item_id,
             )
-            if item is None or item.enhancer is None:
-                raise AppError(404, "Enhancer item not found")
+            self._enhancer_service.validate_item(item)
             lines = await self._repository.get_consumed_lot_lines(
                 session_id=session_id
             )
