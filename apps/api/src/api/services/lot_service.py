@@ -122,15 +122,6 @@ class LotService:
         if stackable is None:
             raise AppError(404, "Item not found")
 
-    async def get_enhancer_stock_by_type_socket(
-        self, *, user_id: UUID, enhancer_type: str, socket: int
-    ) -> int:
-        """Return the maximum available stock for an enhancer type/socket."""
-
-        return await self._repository.get_enhancer_stock_by_type_socket(
-            user_id=user_id, enhancer_type=enhancer_type, socket=socket
-        )
-
     async def allocate_fifo_quantity(
         self, *, lots: list[Lot], quantity: int
     ) -> list[tuple[Lot, int]]:

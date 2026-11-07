@@ -20,6 +20,7 @@ from api.db.models import (
 )
 from api.db.repositories import SessionMiningRepository
 
+from .enhancer_service import EnhancerService, get_enhancer_service
 from .item_service import is_limited_item
 from .lot_service import LotService, get_lot_service
 
@@ -54,10 +55,12 @@ class SessionMiningService:
         session: AsyncSession,
         repository: SessionMiningRepository,
         lot_service: LotService,
+        enhancer_service: EnhancerService,
     ) -> None:
         self._session = session
         self._repository = repository
         self._lot_service = lot_service
+        self._enhancer_service = enhancer_service
 
     async def create(
         self,
@@ -147,7 +150,7 @@ class SessionMiningService:
                 )
                 if item.enhancer is None:
                     raise AppError(404, "Enhancer item not found")
-                max_stock = await self._lot_service.get_enhancer_stock_by_type_socket(
+                max_stock = await self._enhancer_service.get_stock_by_type_socket(
                     user_id=user_id,
                     enhancer_type=item.enhancer.type.value,
                     socket=item.enhancer.socket,
@@ -476,8 +479,10 @@ class SessionMiningService:
 def get_session_mining_service(session: AsyncSession) -> SessionMiningService:
     """Build the mining-session service for a database session."""
 
+    lot_service = get_lot_service(session)
     return SessionMiningService(
         session,
         SessionMiningRepository(session),
-        get_lot_service(session),
+        lot_service,
+        get_enhancer_service(session, lot_service),
     )

@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from api.db.models import (
-    Enhancer,
     EnhancerLot,
     Item,
     Lot,
@@ -264,23 +263,3 @@ class LotRepository:
         if item is None or item.enhancer is None:
             return item, [], 0
         return item, lots, total_quantity
-
-    async def get_enhancer_stock_by_type_socket(
-        self, *, user_id: UUID, enhancer_type: str, socket: int
-    ) -> int:
-        """Return available enhancer stock for a type/socket combination."""
-
-        statement = (
-            select(func.coalesce(func.sum(Lot.qty - Lot.reserved), 0))
-            .join(SessionLine, cast(SessionLine.id, String) == Lot.origin_id)
-            .join(Item, Item.id == SessionLine.item_id)
-            .join(Enhancer, Enhancer.item_id == Item.id)
-            .where(
-                Lot.user_id == user_id,
-                Lot.is_active.is_(True),
-                Lot.qty - Lot.reserved > 0,
-                Enhancer.type == enhancer_type,
-                Enhancer.socket == socket,
-            )
-        )
-        return int(await self._session.scalar(statement) or 0)

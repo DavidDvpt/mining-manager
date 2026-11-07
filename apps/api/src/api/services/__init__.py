@@ -2,7 +2,7 @@
 
 from .deposit_size_service import DepositSizeService
 from .claim_service import ClaimService, get_claim_service
-from .enhancer_service import EnhancerService
+from .enhancer_service import EnhancerService, get_enhancer_service
 from .excavator_service import ExcavatorService
 from .finder_amplifier_service import FinderAmplifierService
 from .finder_service import FinderService
@@ -29,6 +29,7 @@ __all__ = [
     "ClaimService",
     "DepositSizeService",
     "EnhancerService",
+    "get_enhancer_service",
     "ExcavatorService",
     "FinderAmplifierService",
     "FinderService",

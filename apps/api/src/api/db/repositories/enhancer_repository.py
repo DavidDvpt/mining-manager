@@ -30,3 +30,15 @@ class EnhancerRepository:
         result = await self._session.scalars(self._query().where(Item.id == item_id))
         item = result.first()
         return build_item_entity(item, item.enhancer) if item is not None else None
+
+    async def get_item_ids_by_type_socket(
+        self, *, enhancer_type: str, socket: int
+    ) -> list[UUID]:
+        """Return catalogue item IDs for an enhancer type and socket."""
+
+        statement = select(Enhancer.item_id).where(
+            Enhancer.type == enhancer_type,
+            Enhancer.socket == socket,
+        )
+        result = await self._session.scalars(statement)
+        return list(result.all())
