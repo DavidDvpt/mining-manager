@@ -1,5 +1,6 @@
 """Persistence operations for inventory lots."""
 
+from collections.abc import Collection
 from decimal import Decimal
 from uuid import UUID
 
@@ -8,8 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from api.db.models import (
-    EnhancerLot,
     Enhancer,
+    EnhancerLot,
     Item,
     Lot,
     LotType,
@@ -182,19 +183,10 @@ class LotRepository:
             return None, [], 0
 
         statement = (
-            select(Lot)
-            .join(SessionLine, cast(SessionLine.id, String) == Lot.origin_id)
-            .join(Session, Session.id == SessionLine.session_id)
-            .join(Item, Item.id == SessionLine.item_id)
+            self._available_lots_statement(user_id=user_id, item_id=item_id)
             .options(
                 joinedload(Lot.origin).joinedload(SessionLine.session),
                 joinedload(Lot.origin).joinedload(SessionLine.item),
-            )
-            .where(
-                Lot.user_id == user_id,
-                Item.id == item_id,
-                Lot.is_active.is_(True),
-                Lot.qty - Lot.reserved > 0,
             )
             .order_by(Lot.created_at.asc(), Lot.id.asc())
             .with_for_update(of=Lot)
@@ -202,6 +194,63 @@ class LotRepository:
         result = await self._session.scalars(statement)
         lots = list(result.unique().all())
         return item, lots, sum(lot.qty - lot.reserved for lot in lots)
+
+    def _available_lots_statement(self, *, user_id: UUID, item_id: UUID):
+        """Build the shared query for active lots with available quantity."""
+
+        return (
+            select(Lot)
+            .join(SessionLine, cast(SessionLine.id, String) == Lot.origin_id)
+            .join(Session, Session.id == SessionLine.session_id)
+            .join(Item, Item.id == SessionLine.item_id)
+            .where(
+                Lot.user_id == user_id,
+                Item.id == item_id,
+                Lot.is_active.is_(True),
+                Lot.qty - Lot.reserved > 0,
+            )
+        )
+
+    async def get_available_quantity_for_item(
+        self, *, user_id: UUID, item_id: UUID
+    ) -> int:
+        """Return one item's active, unreserved quantity without loading lots."""
+
+        statement = self._available_lots_statement(
+            user_id=user_id,
+            item_id=item_id,
+        ).with_only_columns(
+            func.coalesce(func.sum(Lot.qty - Lot.reserved), 0),
+            maintain_column_froms=True,
+        )
+        return int(await self._session.scalar(statement) or 0)
+
+    async def get_available_quantities(
+        self, *, user_id: UUID, item_ids: Collection[UUID]
+    ) -> dict[UUID, int]:
+        """Return active, unreserved quantities grouped by requested item IDs."""
+
+        if not item_ids:
+            return {}
+        statement = (
+            select(SessionLine.item_id, func.sum(Lot.qty - Lot.reserved))
+            .select_from(Lot)
+            .join(SessionLine, cast(SessionLine.id, String) == Lot.origin_id)
+            .where(
+                Lot.user_id == user_id,
+                SessionLine.item_id.in_(item_ids),
+                SessionLine.item_id.is_not(None),
+                Lot.is_active.is_(True),
+                Lot.qty - Lot.reserved > 0,
+            )
+            .group_by(SessionLine.item_id)
+        )
+        rows = (await self._session.execute(statement)).all()
+        return {
+            item_id: int(quantity)
+            for item_id, quantity in rows
+            if item_id is not None
+        }
 
     async def get_enhancer_lots_for_item(
         self, *, user_id: UUID, item_id: UUID

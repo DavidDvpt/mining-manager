@@ -1,5 +1,6 @@
 """Business operations for inventory lots."""
 
+from collections.abc import Collection
 from contextlib import asynccontextmanager
 from decimal import Decimal
 from uuid import UUID
@@ -8,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.core.exceptions import AppError, UnprocessingError
 from api.db.models import Item, Lot, LotKind, SessionLine, SessionLineType
-from api.db.repositories import LotRepository
+from api.db.repositories.lot_repository import LotRepository
 
 from .item_service import ItemService, get_item_service, is_limited_item
 from .session_line_service import SessionLineService, get_session_line_service
@@ -84,11 +85,7 @@ class LotService:
         and FIFO ordering. Non-stackable items raise HTTP 409.
         """
 
-        stackable = await self._item_service.is_item_stackable(item_id=item_id)
-        if stackable is False:
-            raise UnprocessingError("Item is not stackable")
-        if stackable is None:
-            raise AppError(404, "Item not found")
+        await self._validate_stackable_item(item_id=item_id)
         item, lots, total_quantity = await self._repository.get_fifo_lots_for_item(
             user_id=user_id,
             item_id=item_id,
@@ -96,6 +93,34 @@ class LotService:
         if item is None:
             raise AppError(404, "Item not found")
         return item, lots, total_quantity
+
+    async def get_available_quantity(self, *, user_id: UUID, item_id: UUID) -> int:
+        """Return one stackable item's active, unreserved stock quantity."""
+
+        await self._validate_stackable_item(item_id=item_id)
+        return await self._repository.get_available_quantity_for_item(
+            user_id=user_id,
+            item_id=item_id,
+        )
+
+    async def get_available_quantities(
+        self, *, user_id: UUID, item_ids: Collection[UUID]
+    ) -> dict[UUID, int]:
+        """Return active, unreserved stock grouped by the requested item IDs."""
+
+        return await self._repository.get_available_quantities(
+            user_id=user_id,
+            item_ids=item_ids,
+        )
+
+    async def _validate_stackable_item(self, *, item_id: UUID) -> None:
+        """Validate that an item exists and can use stackable lot stock."""
+
+        stackable = await self._item_service.is_item_stackable(item_id=item_id)
+        if stackable is False:
+            raise UnprocessingError("Item is not stackable")
+        if stackable is None:
+            raise AppError(404, "Item not found")
 
     async def get_enhancer_stock_by_type_socket(
         self, *, user_id: UUID, enhancer_type: str, socket: int

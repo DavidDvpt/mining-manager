@@ -23,6 +23,7 @@ from .session_transaction_service import (
     SessionTransactionService,
     get_session_transaction_service,
 )
+from .storage_service import StorageService, get_storage_service
 
 __all__ = [
     "ClaimService",
@@ -43,6 +44,7 @@ __all__ = [
     "SessionMiningService",
     "SessionService",
     "SessionTransactionService",
+    "StorageService",
     "get_lot_service",
     "get_claim_service",
     "get_mining_loot_service",
@@ -50,4 +52,5 @@ __all__ = [
     "get_session_mining_service",
     "get_session_service",
     "get_session_transaction_service",
+    "get_storage_service",
 ]
