@@ -12,6 +12,9 @@ depends_on = None
 
 
 REFINAGE_RECIPES = [
+    # The source row for result 4579598c-145f-4839-a69b-1ad5db0caa11 and
+    # origin 41a2cc3e-9e0e-4181-b57d-db095191995d is omitted because neither
+    # material exists in the 009_create_material migration.
     (UUID("aa89ab4c-fc51-4e97-9c3a-0175ef7368f8"), UUID("b68847c8-fc70-4be3-be1b-cce5d4b35e9c"), 3),
     (UUID("c3a0d051-5d22-40cc-8202-3f4de7f1c071"), UUID("4c69ad5e-a956-4ff9-830f-32413d542291"), 3),
     (UUID("f85d331f-07d0-4c8b-99c0-f1fc003d67b8"), UUID("7e5312ed-e805-42f5-9113-3ffa1a4ccff4"), 2),
@@ -79,7 +82,6 @@ REFINAGE_RECIPES = [
     (UUID("e502b056-c4fa-405f-930f-bc3e96f98ff4"), UUID("5d51e890-b6c3-49d7-adba-373d3332f272"), 3),
     (UUID("bed917b2-c893-4388-bf3e-f01d3cb950ec"), UUID("573c1c62-9020-4844-bbcf-27a55d55d48f"), 3),
     (UUID("9ca6c4a3-a47b-4bd6-b174-d36408c57840"), UUID("ba216add-fa45-4bf8-91fa-7276454a043d"), 3),
-    (UUID("4579598c-145f-4839-a69b-1ad5db0caa11"), UUID("41a2cc3e-9e0e-4181-b57d-db095191995d"), 3),
     (UUID("4baf9f24-c7a3-498d-b7cf-f22923388ae8"), UUID("6e4282ae-5ab4-427d-afaf-2cda0d716344"), 1),
     (UUID("4baf9f24-c7a3-498d-b7cf-f22923388ae8"), UUID("ded6abfe-1f78-437b-9613-4a70ea6ee40d"), 2),
     (UUID("eb0d516b-185d-4891-ba82-0ea36ed9896c"), UUID("c6214782-1b5f-4011-9e84-8a5d5b74d520"), 3),
