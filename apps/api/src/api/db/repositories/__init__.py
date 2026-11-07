@@ -18,6 +18,7 @@ from .session_mining_repository import SessionMiningRepository
 from .session_repository import SessionRepository
 from .session_transaction_repository import SessionTransactionRepository
 from .user_repository import UserRepository
+from .valuation_repository import ValuationRepository
 
 __all__ = [
     "ClaimRepository",
@@ -38,4 +39,5 @@ __all__ = [
     "SessionRepository",
     "SessionTransactionRepository",
     "UserRepository",
+    "ValuationRepository",
 ]
