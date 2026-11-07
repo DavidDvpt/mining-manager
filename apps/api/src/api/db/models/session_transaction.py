@@ -44,6 +44,11 @@ class SessionTransaction(Base):
             "type = 'BUY' OR type_detail IS NULL",
             name="ck_session_transaction_type_detail_buy_only",
         ),
+        CheckConstraint(
+            "(type = 'BUY' AND status IS NULL) "
+            "OR (type <> 'BUY' AND status IS NOT NULL)",
+            name="ck_session_transaction_status_by_type",
+        ),
     )
 
     session_id: Mapped[UUID] = mapped_column(
@@ -56,9 +61,9 @@ class SessionTransaction(Base):
         SqlEnum(SessionTransactionType, name="session_transaction_type"),
         nullable=False,
     )
-    status: Mapped[SessionTransactionStatus] = mapped_column(
+    status: Mapped[SessionTransactionStatus | None] = mapped_column(
         SqlEnum(SessionTransactionStatus, name="session_transaction_status"),
-        nullable=False,
+        nullable=True,
     )
     type_detail: Mapped[SessionTransactionTypeDetail | None] = mapped_column(
         SqlEnum(

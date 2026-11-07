@@ -68,7 +68,7 @@ def upgrade() -> None:
                 "CANCELLED",
                 name="session_transaction_status",
             ),
-            nullable=False,
+            nullable=True,
         ),
         sa.Column(
             "type_detail",
@@ -87,6 +87,11 @@ def upgrade() -> None:
         sa.CheckConstraint(
             "type = 'BUY' OR type_detail IS NULL",
             name="ck_session_transaction_type_detail_buy_only",
+        ),
+        sa.CheckConstraint(
+            "(type = 'BUY' AND status IS NULL) "
+            "OR (type <> 'BUY' AND status IS NOT NULL)",
+            name="ck_session_transaction_status_by_type",
         ),
         sa.ForeignKeyConstraint(
             ["session_id"], ["session.id"], ondelete="CASCADE"

@@ -42,7 +42,7 @@ async def create_consumed_material(
     return SessionTransactionResponse(
         session_id=transaction_session.id,
         type=transaction.type.value,
-        status=transaction.status.value,
+        status=transaction.status.value if transaction.status is not None else None,
     )
 
 
@@ -69,7 +69,7 @@ async def create_buy_stackable(
     return SessionTransactionResponse(
         session_id=transaction_session.id,
         type=transaction.type.value,
-        status=transaction.status.value,
+        status=transaction.status.value if transaction.status is not None else None,
     )
 
 
@@ -96,7 +96,7 @@ async def create_buy_unstackable(
     return SessionTransactionResponse(
         session_id=transaction_session.id,
         type=transaction.type.value,
-        status=transaction.status.value,
+        status=transaction.status.value if transaction.status is not None else None,
     )
 
 
@@ -121,7 +121,7 @@ async def create_sell_stackable(
     return SessionTransactionResponse(
         session_id=transaction_session.id,
         type=transaction.type.value,
-        status=transaction.status.value,
+        status=transaction.status.value if transaction.status is not None else None,
     )
 
 
@@ -145,7 +145,7 @@ async def create_sell_unstackable(
     return SessionTransactionResponse(
         session_id=transaction_session.id,
         type=transaction.type.value,
-        status=transaction.status.value,
+        status=transaction.status.value if transaction.status is not None else None,
     )
 
 
@@ -166,5 +166,5 @@ async def update_transaction_status(
     return SessionTransactionResponse(
         session_id=transaction.session_id,
         type=transaction.type.value,
-        status=transaction.status.value,
+        status=transaction.status.value if transaction.status is not None else None,
     )

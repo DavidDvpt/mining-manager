@@ -70,4 +70,4 @@ class SessionTransactionResponse(BaseModel):
 
     session_id: UUID
     type: str
-    status: str
+    status: str | None

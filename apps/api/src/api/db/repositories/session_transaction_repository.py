@@ -42,7 +42,7 @@ class SessionTransactionRepository:
         transaction_session = Session(user_id=user_id)
         transaction_session.transaction = SessionTransaction(
             type=SessionTransactionType.BUY,
-            status=SessionTransactionStatus.SOLDED,
+            status=None,
             type_detail=type_detail,
         )
         line = SessionLine(
