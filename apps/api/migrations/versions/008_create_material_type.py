@@ -24,6 +24,7 @@ MATERIAL_TYPES = [
     "Fragment",
     "consumable",
     "Animal oil",
+    "Strongboxes",
 ]
 
 

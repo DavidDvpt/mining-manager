@@ -251,6 +251,7 @@ def upgrade() -> None:
             "id",
             sa.Uuid(),
             server_default=sa.text("gen_random_uuid()"),
+            primary_key=True,
             nullable=False,
         ),
         sa.Column("result", sa.Uuid(), nullable=False),
@@ -278,9 +279,28 @@ def upgrade() -> None:
             for result, origin, quantity in REFINAGE_RECIPES
         ],
     )
+    op.add_column(
+        "session_refinage",
+        sa.Column("refinage_recipe_id", sa.Uuid(), nullable=True),
+    )
+    op.create_foreign_key(
+        "session_refinage_refinage_recipe_id_fkey",
+        "session_refinage",
+        "refinage_recipe",
+        ["refinage_recipe_id"],
+        ["id"],
+        ondelete="RESTRICT",
+    )
+    op.alter_column("session_refinage", "refinage_recipe_id", nullable=False)
 
 
 def downgrade() -> None:
     """Drop the refinage recipe table."""
 
+    op.drop_constraint(
+        "session_refinage_refinage_recipe_id_fkey",
+        "session_refinage",
+        type_="foreignkey",
+    )
+    op.drop_column("session_refinage", "refinage_recipe_id")
     op.drop_table("refinage_recipe")

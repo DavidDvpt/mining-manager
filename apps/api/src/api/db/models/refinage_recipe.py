@@ -9,6 +9,7 @@ from ..base import Base
 
 if TYPE_CHECKING:
     from .material import Material
+    from .session_refinage import SessionRefinage
 
 
 class RefinageRecipe(Base):
@@ -46,4 +47,7 @@ class RefinageRecipe(Base):
     origin_material: Mapped["Material"] = relationship(
         foreign_keys=[origin],
         back_populates="origin_recipes",
+    )
+    sessions: Mapped[list["SessionRefinage"]] = relationship(
+        back_populates="recipe",
     )

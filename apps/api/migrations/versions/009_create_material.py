@@ -435,6 +435,20 @@ CONSUMABLES = [
 ]
 
 
+STRONGBOXES = [
+    (
+        "5597b477-f071-4826-b463-3a8e25780d82",
+        "Mining Strongbox",
+        7340,
+        "0.00001",
+        "2026-10-26T18:39:32.494Z",
+        None,
+        None,
+        "/strongboxes/7",
+    ),
+]
+
+
 NATURAL_MATERIALS = [
     ("916f02a5-a5ac-4081-b14a-2859df585d43", "Acetylcholine", 6091, "0.03", "2026-10-16T15:08:38.612Z", "2026-10-18T14:00:20.765Z", False, False, "0.1", "/materials/19"),
     ("24ea2b84-7adf-42d8-9e3d-e468c49a80ed", "Acidic Jelly Droplet", None, "0.2", "2026-10-16T15:08:38.696Z", "2026-10-18T14:00:21.764Z", True, True, "0.1", "/materials/2643"),
@@ -1210,6 +1224,45 @@ def upgrade() -> None:
             for row in ANIMAL_OILS
         ],
     )
+    strongbox_type_id = bind.execute(
+        sa.select(material_type_table.c.id).where(
+            material_type_table.c.name == "Strongboxes"
+        )
+    ).scalar_one()
+    op.bulk_insert(
+        item_table,
+        [
+            {
+                "id": UUID(row[0]),
+                "name": row[1],
+                "img_id": row[2],
+                "weight": Decimal(row[6]) if row[6] is not None else None,
+                "is_rare": False,
+                "is_untradeable": False,
+                "created_at": _timestamp(row[4]),
+                "updated_at": _timestamp(row[5]),
+                "nexus_url": row[7],
+            }
+            for row in STRONGBOXES
+        ],
+    )
+    op.bulk_insert(
+        economy_table,
+        [
+            {"item_id": UUID(row[0]), "tt": _tt(row[3])}
+            for row in STRONGBOXES
+        ],
+    )
+    op.bulk_insert(
+        material_table,
+        [
+            {
+                "item_id": UUID(row[0]),
+                "type": strongbox_type_id,
+            }
+            for row in STRONGBOXES
+        ],
+    )
     enmatter_type_id = bind.execute(
         sa.select(material_type_table.c.id).where(
             material_type_table.c.name == "Enmatter"
@@ -1525,6 +1578,7 @@ def downgrade() -> None:
     fragment_item_ids = [UUID(row[0]) for row in FRAGMENTS]
     consumable_item_ids = [UUID(row[0]) for row in CONSUMABLES]
     natural_material_item_ids = [UUID(row[0]) for row in NATURAL_MATERIALS]
+    strongbox_item_ids = [UUID(row[0]) for row in STRONGBOXES]
     material_table = sa.table("material", sa.column("item_id", sa.Uuid()))
     economy_table = sa.table("economy", sa.column("item_id", sa.Uuid()))
     item_table = sa.table("item", sa.column("id", sa.Uuid()))
@@ -1595,4 +1649,11 @@ def downgrade() -> None:
     bind.execute(
         item_table.delete().where(item_table.c.id.in_(natural_material_item_ids))
     )
+    bind.execute(
+        material_table.delete().where(material_table.c.item_id.in_(strongbox_item_ids))
+    )
+    bind.execute(
+        economy_table.delete().where(economy_table.c.item_id.in_(strongbox_item_ids))
+    )
+    bind.execute(item_table.delete().where(item_table.c.id.in_(strongbox_item_ids)))
     op.drop_table("material")

@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ..base import Base
 
 if TYPE_CHECKING:
+    from .refinage_recipe import RefinageRecipe
     from .session import Session
 
 
@@ -25,5 +26,13 @@ class SessionRefinage(Base):
         ForeignKey("session.id", ondelete="CASCADE"),
         primary_key=True,
     )
+    refinage_recipe_id: Mapped[UUID] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("refinage_recipe.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
     clic: Mapped[int] = mapped_column(Integer, nullable=False)
     session: Mapped["Session"] = relationship(back_populates="refinage")
+    recipe: Mapped["RefinageRecipe"] = relationship(
+        back_populates="sessions",
+    )
