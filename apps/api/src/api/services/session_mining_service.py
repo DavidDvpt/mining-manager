@@ -161,10 +161,13 @@ class SessionMiningService:
                     item_id=item_id,
                 )
                 self._enhancer_service.validate_item(item)
+                enhancer = item.enhancer
+                if enhancer is None:
+                    raise AppError(404, "Enhancer item not found")
                 max_stock = await self._enhancer_service.get_stock_by_type_socket(
                     user_id=user_id,
-                    enhancer_type=item.enhancer.type.value,
-                    socket=item.enhancer.socket,
+                    enhancer_type=enhancer.type.value,
+                    socket=enhancer.socket,
                 )
                 enhancer_data.append((item, max_stock))
 
@@ -281,7 +284,7 @@ class SessionMiningService:
                 quantity = produced_quantities[line.id]
                 if quantity < 0:
                     raise UnprocessingError("Produced quantity cannot be negative")
-                if line.qty != quantity:
+                if line.quantity != quantity:
                     await self._repository.update_line_quantity(
                         line=line, quantity=quantity, mode="produced_qty"
                     )
@@ -325,7 +328,7 @@ class SessionMiningService:
             quantity = quantities[line.id]
             if quantity < 0:
                 raise UnprocessingError("Quantity cannot be negative")
-            if line.qty != quantity:
+            if line.quantity != quantity:
                 await self._repository.update_line_quantity(
                     line=line, quantity=quantity, mode=mode
                 )

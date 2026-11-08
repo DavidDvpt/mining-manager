@@ -53,7 +53,7 @@ async def test_bdd_mining_produced_line_lifecycle(test_db_session):
     assert line.type is SessionLineType.PRODUCED
     assert line.item_id == item.id
     assert line.lot_id is None
-    assert line.qty == 3
+    assert line.quantity == 3
 
     updated = await service.update_produced_line_quantity(
         session_id=mining_session.id,
@@ -61,7 +61,7 @@ async def test_bdd_mining_produced_line_lifecycle(test_db_session):
         quantity=8,
         user_id=user.id,
     )
-    assert updated.qty == 8
+    assert updated.quantity == 8
 
     await service.delete_produced_line(
         session_id=mining_session.id,
@@ -99,7 +99,7 @@ async def test_bdd_increment_produced_line_creates_and_updates_by_item(
 
     assert incremented.id == created.id
     assert incremented.item_id == item.id
-    assert incremented.qty == 7
+    assert incremented.quantity == 7
 
 
 async def test_bdd_increment_produced_line_rejects_originating_lot(

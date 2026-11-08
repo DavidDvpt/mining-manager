@@ -30,7 +30,7 @@ async def test_bdd_closing_mining_session_creates_produced_lot(test_db_session):
         session=mining_session,
         item=item,
         type=SessionLineType.PRODUCED,
-        qty=3,
+        quantity=3,
     )
     test_db_session.add_all([user, item, mining_session, produced_line])
     await test_db_session.flush()
@@ -45,7 +45,7 @@ async def test_bdd_closing_mining_session_creates_produced_lot(test_db_session):
     )
 
     assert closed_session.ended_at is not None
-    assert produced_line.qty == 7
+    assert produced_line.quantity == 7
 
     produced_lot = await test_db_session.scalar(
         select(Lot).where(Lot.origin_id == str(produced_line.id))

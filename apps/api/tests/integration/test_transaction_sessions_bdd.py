@@ -10,7 +10,6 @@ from api.db.models import (
     Material,
     MaterialType,
     SessionLine,
-    SessionLineTransaction,
     SessionTransaction,
     SessionTransactionStatus,
     SessionTransactionType,
@@ -69,18 +68,16 @@ async def test_bdd_stackable_buy_persists_transaction_line_and_lot(test_db_sessi
     line = await test_db_session.scalar(
         select(SessionLine).where(SessionLine.session_id == created.id)
     )
-    line_transaction = await test_db_session.scalar(
-        select(SessionLineTransaction).where(SessionLineTransaction.session_line_id == line.id)
-    )
     lot = await test_db_session.scalar(select(Lot).where(Lot.origin_id == str(line.id)))
 
     assert transaction is not None
     assert transaction.type is SessionTransactionType.BUY
     assert transaction.status is SessionTransactionStatus.SOLDED
     assert line.item_id == item.id
-    assert line.qty == 4
-    assert line_transaction.tt == Decimal("5.00000")
-    assert line_transaction.fee == Decimal("0.50")
+    assert line.quantity == 4
+    assert transaction.tt == Decimal("5.00000")
+    assert transaction.fee == Decimal("0.50")
+    assert transaction.ttc == Decimal("5.50")
     assert lot is not None
     assert lot.user_id == user.id
     assert lot.qty == 4
@@ -236,19 +233,15 @@ async def test_bdd_consumed_material_consumes_stock_and_records_zero_fee(
         select(SessionLine).where(SessionLine.session_id == consumed.id)
     )
     assert line is not None
-    line_transaction = await test_db_session.scalar(
-        select(SessionLineTransaction).where(SessionLineTransaction.session_line_id == line.id)
-    )
     lot = await test_db_session.scalar(select(Lot).where(Lot.user_id == user.id))
 
     assert transaction is not None
     assert transaction.type is SessionTransactionType.CONSUMED
     assert transaction.status is SessionTransactionStatus.SOLDED
-    assert line.qty == 4
-    assert line_transaction is not None
-    assert line_transaction.tt == Decimal("5.00000")
-    assert line_transaction.ttc == Decimal("5.00000")
-    assert line_transaction.fee == Decimal("0.00")
+    assert line.quantity == 4
+    assert transaction.tt == Decimal("5.00000")
+    assert transaction.ttc == Decimal("5.00000")
+    assert transaction.fee == Decimal("0.00")
     assert lot is not None
     assert lot.qty == 1
     assert lot.reserved == 0

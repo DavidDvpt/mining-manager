@@ -10,7 +10,6 @@ from sqlalchemy.orm import joinedload, selectinload
 from api.db.models import (
     Session,
     SessionLine,
-    SessionLineTransaction,
     SessionLineType,
     SessionTransaction,
     SessionTransactionStatus,
@@ -32,7 +31,7 @@ class SessionTransactionRepository:
         item_id: UUID,
         lot_id: UUID | None,
         quantity: int | None,
-        tt: Decimal | None,
+        tt: Decimal,
         fee: Decimal | None,
         ttc: Decimal,
         type_detail: SessionTransactionTypeDetail,
@@ -44,14 +43,16 @@ class SessionTransactionRepository:
             type=SessionTransactionType.BUY,
             status=None,
             type_detail=type_detail,
+            tt=tt,
+            fee=fee,
+            ttc=ttc,
         )
         line = SessionLine(
             item_id=item_id,
             lot_id=lot_id,
             type=SessionLineType.PRODUCED,
-            qty=quantity,
+            quantity=quantity,
         )
-        line.transaction = SessionLineTransaction(tt=tt, fee=fee, ttc=ttc)
         transaction_session.lines.append(line)
         self._session.add(transaction_session)
         await self._session.flush()
@@ -62,18 +63,23 @@ class SessionTransactionRepository:
         *,
         user_id: UUID,
         lines: list[dict[str, object]],
+        tt: Decimal,
+        fee: Decimal | None,
+        ttc: Decimal,
     ) -> tuple[Session, list[SessionLine]]:
-        """Persist a SELL session and its consumed lines atomically.
+        """Persist transaction totals and consumed lot lines atomically.
 
-        Each input dictionary must contain ``lot_id``, ``quantity``, ``tt``
-        and ``ttc``. The repository only maps validated values to persistence
-        models; ownership and inventory rules remain in the service.
+        Input dictionaries contain only ``lot_id`` and ``quantity``; monetary
+        values belong to the single session transaction.
         """
 
         transaction_session = Session(user_id=user_id)
         transaction_session.transaction = SessionTransaction(
             type=SessionTransactionType.SELL,
             status=SessionTransactionStatus.RUNNING,
+            tt=tt,
+            fee=fee,
+            ttc=ttc,
         )
         created_lines: list[SessionLine] = []
         for values in lines:
@@ -81,12 +87,7 @@ class SessionTransactionRepository:
                 item_id=None,
                 lot_id=values["lot_id"],
                 type=SessionLineType.CONSUMED,
-                qty=values["quantity"],
-            )
-            line.transaction = SessionLineTransaction(
-                tt=values["tt"],
-                fee=None,
-                ttc=values["ttc"],
+                quantity=values["quantity"],
             )
             transaction_session.lines.append(line)
             created_lines.append(line)
@@ -99,6 +100,9 @@ class SessionTransactionRepository:
         *,
         user_id: UUID,
         lines: list[dict[str, object]],
+        tt: Decimal,
+        fee: Decimal | None,
+        ttc: Decimal,
     ) -> tuple[Session, list[SessionLine]]:
         """Persist a completed CONSUMED session and its material lines."""
 
@@ -106,6 +110,9 @@ class SessionTransactionRepository:
         transaction_session.transaction = SessionTransaction(
             type=SessionTransactionType.CONSUMED,
             status=SessionTransactionStatus.SOLDED,
+            tt=tt,
+            fee=fee,
+            ttc=ttc,
         )
         created_lines: list[SessionLine] = []
         for values in lines:
@@ -113,12 +120,7 @@ class SessionTransactionRepository:
                 item_id=None,
                 lot_id=values["lot_id"],
                 type=SessionLineType.CONSUMED,
-                qty=values["quantity"],
-            )
-            line.transaction = SessionLineTransaction(
-                tt=values["tt"],
-                fee=Decimal("0"),
-                ttc=values["ttc"],
+                quantity=values["quantity"],
             )
             transaction_session.lines.append(line)
             created_lines.append(line)

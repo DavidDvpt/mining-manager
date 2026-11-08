@@ -1,10 +1,11 @@
 """Transaction session specialization."""
 
+from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, Enum as SqlEnum, ForeignKey
+from sqlalchemy import CheckConstraint, Enum as SqlEnum, ForeignKey, Numeric, text
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -71,6 +72,15 @@ class SessionTransaction(Base):
             name="session_transaction_type_detail",
         ),
         nullable=True,
+    )
+    tt: Mapped[Decimal] = mapped_column(
+        Numeric(precision=20, scale=5), nullable=False, server_default=text("0")
+    )
+    fee: Mapped[Decimal | None] = mapped_column(
+        Numeric(precision=20, scale=5), nullable=True
+    )
+    ttc: Mapped[Decimal] = mapped_column(
+        Numeric(precision=20, scale=5), nullable=False, server_default=text("0")
     )
 
     session: Mapped["Session"] = relationship(back_populates="transaction")

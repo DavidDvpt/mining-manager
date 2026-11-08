@@ -36,7 +36,7 @@ class SessionLineRepository:
             session_id=session.id,
             item_id=item.id,
             type=SessionLineType.PRODUCED,
-            qty=quantity,
+            quantity=quantity,
             session=session,
             item=item,
         )
@@ -52,7 +52,7 @@ class SessionLineRepository:
         await self._session.execute(
             text("SET LOCAL app.session_line_update_mode = 'produced_qty'")
         )
-        line.qty = quantity
+        line.quantity = quantity
         await self._session.flush()
         return line
 
@@ -64,7 +64,7 @@ class SessionLineRepository:
         await self._session.execute(
             text("SET LOCAL app.session_line_update_mode = 'enhancer_qty'")
         )
-        line.qty = quantity
+        line.quantity = quantity
         await self._session.flush()
         return line
 
@@ -77,7 +77,7 @@ class SessionLineRepository:
             session_id=session.id,
             type=SessionLineType.CONSUMED,
             lot_id=lot.id,
-            qty=quantity,
+            quantity=quantity,
             session=session,
             lot=lot,
         )

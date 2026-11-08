@@ -98,7 +98,7 @@ class SessionTransactionService:
         user_id: UUID,
         item_id: UUID,
         kind: str,
-        tt: Decimal | None,
+        tt: Decimal,
         fee: Decimal | None,
         ttc: Decimal,
         type_detail: SessionTransactionTypeDetail,
@@ -166,13 +166,11 @@ class SessionTransactionService:
                     {
                         "lot_id": lot.id,
                         "quantity": reserved_quantity,
-                        "tt": tt * Decimal(reserved_quantity) / Decimal(quantity),
-                        "ttc": ttc,
                     }
                 )
             await self._lot_service.reserve_for_sale(lots=allocations)
             transaction_session, _lines = await self._repository.create_sell(
-                user_id=user_id, lines=lines
+                user_id=user_id, lines=lines, tt=tt, fee=None, ttc=ttc
             )
             return transaction_session
 
@@ -209,7 +207,10 @@ class SessionTransactionService:
             await self._lot_service.reserve_unstackable_for_sale(lot=lot)
             transaction_session, _lines = await self._repository.create_sell(
                 user_id=user_id,
-                lines=[{"lot_id": lot_id, "quantity": 1, "tt": tt, "ttc": ttc}],
+                lines=[{"lot_id": lot_id, "quantity": 1}],
+                tt=tt,
+                fee=None,
+                ttc=ttc,
             )
             return transaction_session
 
@@ -252,18 +253,23 @@ class SessionTransactionService:
                 lots=lots, quantity=quantity
             )
             for lot, consumed_quantity in allocations:
-                line_tt = item.economy.tt * consumed_quantity
                 lines.append(
                     {
                         "lot_id": lot.id,
                         "quantity": consumed_quantity,
-                        "tt": line_tt,
-                        "ttc": line_tt,
                     }
                 )
             await self._lot_service.consume_for_consumption(lots=allocations)
             transaction_session, _lines = await self._repository.create_consumed(
-                user_id=user_id, lines=lines
+                user_id=user_id,
+                lines=[
+                    {"lot_id": lot_id, "quantity": consumed_quantity}
+                    for lot, consumed_quantity in allocations
+                    for lot_id in [lot.id]
+                ],
+                tt=item.economy.tt * quantity,
+                fee=Decimal("0"),
+                ttc=item.economy.tt * quantity,
             )
             return transaction_session
 
@@ -303,14 +309,14 @@ class SessionTransactionService:
                 raise UnprocessingError("Only RUNNING transactions can change status")
 
             for line in transaction.session.lines:
-                if line.lot_id is None or line.qty is None:
+                if line.lot_id is None or line.quantity is None:
                     raise UnprocessingError("SELL transaction line has no lot reservation")
                 lot = await self._lot_service.get_lot_by_id(
                     user_id=user_id, lot_id=line.lot_id
                 )
                 await self._lot_service.settle_sale_lot(
                     lot=lot,
-                    quantity=line.qty,
+                    quantity=line.quantity,
                     sold=status is SessionTransactionStatus.SOLDED,
                 )
 

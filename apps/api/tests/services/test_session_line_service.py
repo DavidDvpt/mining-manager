@@ -178,7 +178,7 @@ async def test_increment_produced_line_creates_missing_item_line():
     session_id = uuid4()
     item_id = uuid4()
     item = SimpleNamespace(id=item_id)
-    expected_line = SimpleNamespace(id=uuid4(), qty=4)
+    expected_line = SimpleNamespace(id=uuid4(), quantity=4)
     repository.get_produced_line_for_item.return_value = None
     mining_loot_service.get_item.return_value = item
     repository.create_produced_line.return_value = expected_line
@@ -203,7 +203,7 @@ async def test_increment_produced_line_updates_existing_item_line():
     """Add the requested quantity to an existing produced item line."""
 
     service, repository, _session_service, _mining_loot_service = _service()
-    line = SimpleNamespace(id=uuid4(), qty=3)
+    line = SimpleNamespace(id=uuid4(), quantity=3)
     repository.get_produced_line_for_item.return_value = line
     repository.has_origin_lot.return_value = False
     repository.update_quantity.return_value = line
@@ -224,7 +224,7 @@ async def test_increment_produced_line_rejects_lines_with_origin_lot():
     """Reject claim increments when the produced line already created a lot."""
 
     service, repository, _session_service, _mining_loot_service = _service()
-    line = SimpleNamespace(id=uuid4(), qty=3)
+    line = SimpleNamespace(id=uuid4(), quantity=3)
     repository.get_produced_line_for_item.return_value = line
     repository.has_origin_lot.return_value = True
 

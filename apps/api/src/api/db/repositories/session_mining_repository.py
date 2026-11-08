@@ -84,7 +84,7 @@ class SessionMiningRepository:
         await self._session.execute(
             text(f"SET LOCAL app.session_line_update_mode = '{mode}'")
         )
-        line.qty = quantity
+        line.quantity = quantity
         await self._session.flush()
 
     async def update_session_line_decay(

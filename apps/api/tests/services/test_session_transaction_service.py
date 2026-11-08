@@ -208,9 +208,10 @@ async def test_create_sell_stackable_allocates_fifo_lots(service):
     service._repository.create_sell.assert_awaited_once_with(
         user_id=user_id,
         lines=[
-            {"lot_id": first.id, "quantity": 3, "tt": Decimal("6"), "ttc": Decimal("13")},
-            {"lot_id": second.id, "quantity": 3, "tt": Decimal("6"), "ttc": Decimal("13")},
+                {"lot_id": first.id, "quantity": 3},
+                {"lot_id": second.id, "quantity": 3},
         ],
+            tt=Decimal("12"), fee=None, ttc=Decimal("13"),
     )
 
 
@@ -251,7 +252,8 @@ async def test_create_sell_unstackable_reserves_lot(service):
     service._lot_service.reserve_unstackable_for_sale.assert_awaited_once_with(lot=lot)
     service._repository.create_sell.assert_awaited_once_with(
         user_id=user_id,
-        lines=[{"lot_id": lot_id, "quantity": 1, "tt": Decimal("2"), "ttc": Decimal("3")}],
+        lines=[{"lot_id": lot_id, "quantity": 1}],
+        tt=Decimal("2"), fee=None, ttc=Decimal("3"),
     )
 
 
@@ -306,9 +308,10 @@ async def test_create_consumed_material_consumes_fifo_with_zero_fee(service):
     service._repository.create_consumed.assert_awaited_once_with(
         user_id=user_id,
         lines=[
-            {"lot_id": first.id, "quantity": 3, "tt": Decimal("3.75"), "ttc": Decimal("3.75")},
-            {"lot_id": second.id, "quantity": 1, "tt": Decimal("1.25"), "ttc": Decimal("1.25")},
+                {"lot_id": first.id, "quantity": 3},
+                {"lot_id": second.id, "quantity": 1},
         ],
+            tt=Decimal("5.00"), fee=Decimal("0"), ttc=Decimal("5.00"),
     )
 
 
@@ -348,7 +351,7 @@ async def test_patch_status_settles_each_line_and_persists_status(service):
         session_id=session_id,
         type=SessionTransactionType.SELL,
         status=SessionTransactionStatus.RUNNING,
-        session=SimpleNamespace(lines=[SimpleNamespace(lot_id=lot_id, qty=2)]),
+        session=SimpleNamespace(lines=[SimpleNamespace(lot_id=lot_id, quantity=2)]),
     )
     service._repository.get_transaction_by_id.return_value = transaction
     lot = SimpleNamespace(id=lot_id)

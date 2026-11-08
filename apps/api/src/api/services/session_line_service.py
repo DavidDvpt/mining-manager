@@ -158,7 +158,7 @@ class SessionLineService:
                 )
             return await self._repository.update_quantity(
                 line=line,
-                quantity=(line.qty or 0) + quantity,
+                quantity=(line.quantity or 0) + quantity,
             )
 
     async def delete_produced_line(
@@ -244,7 +244,7 @@ class SessionLineService:
                 if remaining == 0:
                     break
                 line = usage_by_lot.get(lot.id)
-                already_used = line.qty if line is not None and line.qty else 0
+                already_used = line.quantity if line is not None and line.quantity else 0
                 capacity = lot.qty - lot.reserved - already_used
                 if capacity <= 0:
                     continue

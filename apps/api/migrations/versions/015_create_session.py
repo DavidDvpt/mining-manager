@@ -84,6 +84,19 @@ def upgrade() -> None:
             ),
             nullable=True,
         ),
+        sa.Column(
+            "tt",
+            sa.Numeric(precision=20, scale=5),
+            server_default=sa.text("0"),
+            nullable=False,
+        ),
+        sa.Column("fee", sa.Numeric(precision=20, scale=5), nullable=True),
+        sa.Column(
+            "ttc",
+            sa.Numeric(precision=20, scale=5),
+            server_default=sa.text("0"),
+            nullable=False,
+        ),
         sa.CheckConstraint(
             "type = 'BUY' OR type_detail IS NULL",
             name="ck_session_transaction_type_detail_buy_only",
@@ -111,9 +124,9 @@ def upgrade() -> None:
         sa.Column("type", session_line_type, nullable=False),
         sa.Column("lot_id", sa.Uuid(), nullable=True, server_default=sa.text("NULL")),
         sa.Column("line_id", sa.Uuid(), nullable=True, server_default=sa.text("NULL")),
-        sa.Column("qty", sa.Integer(), nullable=True, server_default=sa.text("NULL")),
+        sa.Column("quantity", sa.Integer(), nullable=True, server_default=sa.text("NULL")),
         sa.CheckConstraint(
-            "qty IS NULL OR qty >= 0",
+            "quantity IS NULL OR quantity >= 0",
             name="ck_session_line_qty_non_negative",
         ),
         sa.ForeignKeyConstraint(
@@ -267,17 +280,6 @@ def upgrade() -> None:
         """
     )
     op.create_table(
-        "session_line_transaction",
-        sa.Column("session_line_id", sa.Uuid(), nullable=False),
-        sa.Column("tt", sa.Numeric(precision=12, scale=5), nullable=False),
-        sa.Column("ttc", sa.Numeric(precision=12, scale=5), nullable=False),
-        sa.Column("fee", sa.Numeric(precision=5, scale=2), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["session_line_id"], ["session_line.id"], ondelete="CASCADE"
-        ),
-        sa.PrimaryKeyConstraint("session_line_id"),
-    )
-    op.create_table(
         "session_line_decay",
         sa.Column("session_line_id", sa.Uuid(), nullable=False),
         sa.Column("decay_ttc", sa.Numeric(precision=12, scale=5), nullable=False),
@@ -340,7 +342,7 @@ def upgrade() -> None:
                 RAISE EXCEPTION 'Session line identity and type are immutable';
             END IF;
 
-            IF NEW.qty IS NOT DISTINCT FROM OLD.qty THEN
+            IF NEW.quantity IS NOT DISTINCT FROM OLD.quantity THEN
                 RETURN NEW;
             END IF;
 
@@ -363,7 +365,7 @@ def upgrade() -> None:
                         (NEW.item_id IS NOT NULL)::integer
                         + (NEW.line_id IS NOT NULL)::integer
                     ) <> 1
-                    OR NEW.qty < 0
+                    OR NEW.quantity < 0
                 THEN
                     RAISE EXCEPTION
                         'Only produced line quantity can be changed here';
@@ -376,11 +378,11 @@ def upgrade() -> None:
                 OR NEW.type <> 'CONSUMED'
                 OR NEW.item_id IS NOT NULL
                 OR NEW.lot_id IS NULL
-                OR NEW.qty < 0
+                OR NEW.quantity < 0
                 OR (
                     current_setting('app.session_line_update_mode', true)
                         = 'enhancer_qty'
-                    AND NEW.qty < OLD.qty
+                    AND NEW.quantity < OLD.quantity
                 )
                 OR NOT EXISTS (
                     SELECT 1
@@ -405,13 +407,13 @@ def upgrade() -> None:
             FROM lot
             WHERE lot.id = NEW.lot_id;
 
-            SELECT coalesce(sum(session_line.qty), 0)
+            SELECT coalesce(sum(session_line.quantity), 0)
             INTO used_quantity
             FROM session_line
             WHERE session_line.lot_id = NEW.lot_id
                 AND session_line.id <> NEW.id;
 
-            IF NEW.qty + used_quantity > available_quantity THEN
+            IF NEW.quantity + used_quantity > available_quantity THEN
                 RAISE EXCEPTION 'Enhancer quantity exceeds available stock';
             END IF;
 
@@ -538,7 +540,6 @@ def downgrade() -> None:
     )
     op.execute("DROP FUNCTION IF EXISTS enforce_session_immutability()")
     op.drop_table("session_line_decay")
-    op.drop_table("session_line_transaction")
     op.execute(
         "DROP TRIGGER IF EXISTS enforce_session_line_item_lot_trigger ON session_line"
     )

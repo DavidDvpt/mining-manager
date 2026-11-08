@@ -7,7 +7,6 @@ from api.db.models import (
     LotType,
     Session,
     SessionLine,
-    SessionLineTransaction,
     SessionLineType,
     SessionMining,
     SessionMiningSearchType,
@@ -33,36 +32,34 @@ async def test_bdd_valuation_weights_buy_and_mining_lots_by_scope(test_db_sessio
     await test_db_session.flush()
 
     buy_session = Session(user=user)
-    buy_session.transaction = SessionTransaction(
+    buy_transaction = SessionTransaction(
         type=SessionTransactionType.BUY,
         status=SessionTransactionStatus.SOLDED,
     )
+    buy_session.transaction = buy_transaction
     buy_line = SessionLine(
         session=buy_session,
         item=item,
         type=SessionLineType.PRODUCED,
-        qty=10,
+        quantity=10,
     )
-    buy_line.transaction = SessionLineTransaction(
-        tt=Decimal(100),
-        ttc=Decimal(120),
-    )
+    buy_transaction.tt = Decimal(100)
+    buy_transaction.ttc = Decimal(120)
 
     inactive_buy_session = Session(user=user)
-    inactive_buy_session.transaction = SessionTransaction(
+    inactive_buy_transaction = SessionTransaction(
         type=SessionTransactionType.BUY,
         status=SessionTransactionStatus.SOLDED,
     )
+    inactive_buy_session.transaction = inactive_buy_transaction
     inactive_buy_line = SessionLine(
         session=inactive_buy_session,
         item=item,
         type=SessionLineType.PRODUCED,
-        qty=10,
+        quantity=10,
     )
-    inactive_buy_line.transaction = SessionLineTransaction(
-        tt=Decimal(100),
-        ttc=Decimal(110),
-    )
+    inactive_buy_transaction.tt = Decimal(100)
+    inactive_buy_transaction.ttc = Decimal(110)
 
     mining_session = Session(user=user)
     mining_session.mining = SessionMining(
@@ -73,7 +70,7 @@ async def test_bdd_valuation_weights_buy_and_mining_lots_by_scope(test_db_sessio
         session=mining_session,
         item=item,
         type=SessionLineType.PRODUCED,
-        qty=5,
+        quantity=5,
     )
     test_db_session.add_all(
         [buy_session, inactive_buy_session, mining_session, buy_line, inactive_buy_line, mining_line]
@@ -175,17 +172,19 @@ async def test_bdd_lot_valuation_attributes_only_sold_profit(test_db_session):
     await test_db_session.flush()
 
     buy_session = Session(user=user)
-    buy_session.transaction = SessionTransaction(
+    buy_transaction = SessionTransaction(
         type=SessionTransactionType.BUY,
         status=SessionTransactionStatus.SOLDED,
     )
+    buy_session.transaction = buy_transaction
     buy_line = SessionLine(
         session=buy_session,
         item=item,
         type=SessionLineType.PRODUCED,
-        qty=10,
+        quantity=10,
     )
-    buy_line.transaction = SessionLineTransaction(tt=Decimal(100), ttc=Decimal(120))
+    buy_transaction.tt = Decimal(100)
+    buy_transaction.ttc = Decimal(120)
     test_db_session.add_all([buy_session, buy_line])
     await test_db_session.flush()
 
@@ -199,34 +198,36 @@ async def test_bdd_lot_valuation_attributes_only_sold_profit(test_db_session):
     await test_db_session.flush()
 
     sold_session = Session(user=user)
-    sold_session.transaction = SessionTransaction(
+    sold_transaction = SessionTransaction(
         type=SessionTransactionType.SELL,
         status=SessionTransactionStatus.SOLDED,
     )
+    sold_session.transaction = sold_transaction
     sold_line = SessionLine(
         session=sold_session,
         lot=lot,
         type=SessionLineType.CONSUMED,
-        qty=10,
+        quantity=10,
     )
-    sold_line.transaction = SessionLineTransaction(
-        tt=Decimal(100), ttc=Decimal(130), fee=Decimal(5)
-    )
+    sold_transaction.tt = Decimal(100)
+    sold_transaction.ttc = Decimal(130)
+    sold_transaction.fee = Decimal(5)
 
     returned_session = Session(user=user)
-    returned_session.transaction = SessionTransaction(
+    returned_transaction = SessionTransaction(
         type=SessionTransactionType.SELL,
         status=SessionTransactionStatus.RETURNED,
     )
+    returned_session.transaction = returned_transaction
     returned_line = SessionLine(
         session=returned_session,
         lot=lot,
         type=SessionLineType.CONSUMED,
-        qty=1,
+        quantity=1,
     )
-    returned_line.transaction = SessionLineTransaction(
-        tt=Decimal(10), ttc=Decimal(100), fee=Decimal(0)
-    )
+    returned_transaction.tt = Decimal(10)
+    returned_transaction.ttc = Decimal(100)
+    returned_transaction.fee = Decimal(0)
     test_db_session.add_all(
         [sold_session, sold_line, returned_session, returned_line]
     )

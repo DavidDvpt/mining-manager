@@ -26,7 +26,6 @@ from .resource_lot import ResourceLot, ResourceLotOrigin, ResourceLotOriginType
 from .session import Session
 from .session_line import SessionLine
 from .session_line_decay import SessionLineDecay
-from .session_line_transaction import SessionLineTransaction
 from .session_line_type import SessionLineType
 from .session_mining import SessionMining
 from .session_mining_search_type import SessionMiningSearchType
@@ -74,7 +73,6 @@ __all__ = [
     "Session",
     "SessionLine",
     "SessionLineDecay",
-    "SessionLineTransaction",
     "SessionLineType",
     "SessionMining",
     "SessionMiningSearchType",

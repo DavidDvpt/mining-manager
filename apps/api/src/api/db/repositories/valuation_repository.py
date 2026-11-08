@@ -13,7 +13,6 @@ from api.db.models import (
     Lot,
     Session,
     SessionLine,
-    SessionLineTransaction,
     SessionLineType,
     SessionMining,
     SessionRefinage,
@@ -41,8 +40,8 @@ class ValuationRepository:
         weighting uses only active, unreserved quantity.
         """
 
-        purchase_percent = SessionLineTransaction.ttc / func.nullif(
-            SessionLineTransaction.tt, 0
+        purchase_percent = SessionTransaction.ttc / func.nullif(
+            SessionTransaction.tt, 0
         )
         acquisition_percent = case(
             (SessionTransaction.type == SessionTransactionType.BUY, purchase_percent),
@@ -65,8 +64,8 @@ class ValuationRepository:
         statement = (
             select(
                 (
-                    func.sum(SessionLine.qty * acquisition_percent)
-                    / func.nullif(func.sum(SessionLine.qty), 0)
+                    func.sum(SessionLine.quantity * acquisition_percent)
+                    / func.nullif(func.sum(SessionLine.quantity), 0)
                     * 100
                 ).label("average_purchase_percent"),
                 (
@@ -77,10 +76,6 @@ class ValuationRepository:
             )
             .select_from(Lot)
             .join(SessionLine, cast(SessionLine.id, String) == Lot.origin_id)
-            .outerjoin(
-                SessionLineTransaction,
-                SessionLineTransaction.session_line_id == SessionLine.id,
-            )
             .outerjoin(
                 SessionTransaction,
                 SessionTransaction.session_id == SessionLine.session_id,
@@ -124,11 +119,11 @@ class ValuationRepository:
                     Lot.reserved,
                     SessionLine.id.label("line_id"),
                     SessionLine.item_id,
-                    SessionLine.qty.label("origin_quantity"),
+                    SessionLine.quantity.label("origin_quantity"),
                     Session.id.label("session_id"),
                     SessionTransaction.type.label("transaction_type"),
-                    SessionLineTransaction.tt,
-                    SessionLineTransaction.ttc,
+                    SessionTransaction.tt,
+                    SessionTransaction.ttc,
                     Economy.tt.label("economy_tt"),
                     SessionMining.session_id.label("mining_session_id"),
                     SessionRefinage.session_id.label("refinage_session_id"),
@@ -137,7 +132,6 @@ class ValuationRepository:
                 .join(SessionLine, cast(SessionLine.id, String) == Lot.origin_id)
                 .join(Session, Session.id == SessionLine.session_id)
                 .outerjoin(SessionTransaction, SessionTransaction.session_id == Session.id)
-                .outerjoin(SessionLineTransaction, SessionLineTransaction.session_line_id == SessionLine.id)
                 .outerjoin(SessionMining, SessionMining.session_id == Session.id)
                 .outerjoin(SessionRefinage, SessionRefinage.session_id == Session.id)
                 .outerjoin(Economy, Economy.item_id == SessionLine.item_id)
@@ -149,17 +143,34 @@ class ValuationRepository:
                 select(
                     SessionLine.lot_id,
                     SessionLine.session_id,
-                    SessionLine.qty,
-                    SessionLineTransaction.tt,
-                    SessionLineTransaction.ttc,
-                    SessionLineTransaction.fee,
+                    SessionLine.quantity,
+                    (
+                        SessionTransaction.tt
+                        * SessionLine.quantity
+                        / func.nullif(
+                            func.sum(SessionLine.quantity).over(
+                                partition_by=SessionLine.session_id
+                            ),
+                            0,
+                        )
+                    ).label("tt"),
+                    (
+                        SessionTransaction.ttc
+                        * SessionLine.quantity
+                        / func.nullif(
+                            func.sum(SessionLine.quantity).over(
+                                partition_by=SessionLine.session_id
+                            ),
+                            0,
+                        )
+                    ).label("ttc"),
+                    SessionTransaction.fee,
                     SessionTransaction.type.label("transaction_type"),
                     SessionTransaction.status.label("transaction_status"),
                     SessionRefinage.session_id.label("refinage_session_id"),
                 )
                 .select_from(SessionLine)
                 .join(Session, Session.id == SessionLine.session_id)
-                .outerjoin(SessionLineTransaction, SessionLineTransaction.session_line_id == SessionLine.id)
                 .outerjoin(SessionTransaction, SessionTransaction.session_id == Session.id)
                 .outerjoin(SessionRefinage, SessionRefinage.session_id == Session.id)
                 .where(
