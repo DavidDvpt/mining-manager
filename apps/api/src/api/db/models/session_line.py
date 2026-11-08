@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from .lot import Lot
     from .session import Session
     from .session_line_decay import SessionLineDecay
+    from .session_line_refinage import SessionLineRefinage
 
 
 class SessionLine(Base):
@@ -47,13 +48,6 @@ class SessionLine(Base):
         default=None,
         server_default=None,
     )
-    line_id: Mapped[UUID | None] = mapped_column(
-        PostgresUUID(as_uuid=True),
-        ForeignKey("session_line.id", ondelete="RESTRICT"),
-        nullable=True,
-        default=None,
-        server_default=None,
-    )
     quantity: Mapped[int | None] = mapped_column(
         Integer, nullable=True, default=None, server_default=None
     )
@@ -63,6 +57,9 @@ class SessionLine(Base):
     decay: Mapped["SessionLineDecay | None"] = relationship(
         back_populates="session_line", uselist=False
     )
-    source_line: Mapped["SessionLine | None"] = relationship(
-        foreign_keys=[line_id], remote_side=[id], uselist=False
+    refinage: Mapped["SessionLineRefinage | None"] = relationship(
+        back_populates="session_line",
+        foreign_keys="SessionLineRefinage.session_line_id",
+        uselist=False,
+        cascade="all, delete-orphan",
     )
