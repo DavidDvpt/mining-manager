@@ -42,9 +42,11 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Drop the session zone table."""
 
-    op.drop_constraint(
-        "fk_session_mining_session_zone_id_session_zone",
-        "session_mining",
-        type_="foreignkey",
+    op.execute(
+        """
+        ALTER TABLE session_mining
+        DROP CONSTRAINT IF EXISTS fk_session_mining_session_zone_id_session_zone,
+        DROP CONSTRAINT IF EXISTS fk_session_mining_session_sone_id_session_zone
+        """
     )
     op.drop_table("session_zone")
