@@ -120,7 +120,7 @@ class SessionMiningRepository:
         mining_session = Session(user_id=user_id)
         mining_session.mining = SessionMining(
             clic=clic,
-            session_sone_id=zone_id,
+            session_zone_id=zone_id,
             search_type=search_type,
         )
 

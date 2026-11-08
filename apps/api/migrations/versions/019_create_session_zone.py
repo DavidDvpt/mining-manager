@@ -30,10 +30,10 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_foreign_key(
-        "fk_session_mining_session_sone_id_session_zone",
+        "fk_session_mining_session_zone_id_session_zone",
         "session_mining",
         "session_zone",
-        ["session_sone_id"],
+        ["session_zone_id"],
         ["id"],
         ondelete="CASCADE",
     )
@@ -43,7 +43,7 @@ def downgrade() -> None:
     """Drop the session zone table."""
 
     op.drop_constraint(
-        "fk_session_mining_session_sone_id_session_zone",
+        "fk_session_mining_session_zone_id_session_zone",
         "session_mining",
         type_="foreignkey",
     )

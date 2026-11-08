@@ -25,7 +25,7 @@ class SessionMining(Base):
         ForeignKey("session.id", ondelete="CASCADE"),
         primary_key=True,
     )
-    session_sone_id: Mapped[UUID | None] = mapped_column(
+    session_zone_id: Mapped[UUID | None] = mapped_column(
         PostgresUUID(as_uuid=True),
         ForeignKey("session_zone.id", ondelete="CASCADE"),
         nullable=True,

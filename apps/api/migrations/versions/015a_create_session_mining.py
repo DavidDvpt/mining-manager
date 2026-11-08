@@ -25,7 +25,7 @@ def upgrade() -> None:
     op.create_table(
         "session_mining",
         sa.Column("session_id", sa.Uuid(), nullable=False),
-        sa.Column("session_sone_id", sa.Uuid(), nullable=True),
+        sa.Column("session_zone_id", sa.Uuid(), nullable=True),
         sa.Column("search_type", session_mining_search_type, nullable=False),
         sa.Column("clic", sa.Integer(), nullable=False),
         sa.CheckConstraint("clic > 0", name="ck_session_mining_clic_positive"),
