@@ -1,16 +1,19 @@
 /// <reference types='vitest' />
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig(() => ({
-  root: import.meta.dirname,
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, import.meta.dirname, '');
+
+  return {
+    root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/apps/client',
   server: {
     port: 4200,
     host: 'localhost',
     proxy: {
       '/api': {
-        target: process.env.VITE_PROXY_TARGET ?? '',
+        target: env.VITE_PROXY_TARGET ?? '',
         changeOrigin: true,
       },
     },
@@ -44,4 +47,5 @@ export default defineConfig(() => ({
       provider: 'v8' as const,
     },
   },
-}));
+  };
+});

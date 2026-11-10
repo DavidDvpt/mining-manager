@@ -5,12 +5,13 @@ import { loadEnv } from 'vite';
 const clientRoot = fileURLToPath(new URL('.', import.meta.url));
 const env = loadEnv('dev', clientRoot, '');
 const apiBaseUrl = env.VITE_API_BASE_URL ?? '/api/v1';
+const proxyTarget = env.VITE_PROXY_TARGET?.replace(/\/+$/, '');
 
 const openApiTarget =
   env.ORVAL_OPENAPI_URL ??
   (apiBaseUrl.startsWith('http')
     ? `${apiBaseUrl}/openapi.json`
-    : `http://127.0.0.1:5173${apiBaseUrl}/openapi.json`);
+    : `${proxyTarget ?? 'http://127.0.0.1:5173'}${apiBaseUrl}/openapi.json`);
 
 export default defineConfig({
   miningManager: {
