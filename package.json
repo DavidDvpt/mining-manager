@@ -4,6 +4,8 @@
   "license": "MIT",
   "scripts": {
     "prepare": "husky",
+    "api:generate": "orval --config apps/client/orval.config.ts",
+    "api:update": "npm run api:generate && npm exec nx run client:typecheck",
     "test": "npx nx run-many --targets=test --all"
   },
   "private": true,
