@@ -8,6 +8,12 @@ export default defineConfig(() => ({
   server: {
     port: 4200,
     host: 'localhost',
+    proxy: {
+      '/api': {
+        target: process.env.VITE_PROXY_TARGET ?? '',
+        changeOrigin: true,
+      },
+    },
   },
   preview: {
     port: 4300,

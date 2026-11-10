@@ -103,6 +103,7 @@ services:
       - '127.0.0.1:${CLIENT_PORT:-5173}:4200'
     environment:
       CHOKIDAR_USEPOLLING: 'true'
+      VITE_PROXY_TARGET: http://api:8040
     volumes:
       - ../..:/workspace
       - client-node-modules:/workspace/node_modules

@@ -54,8 +54,8 @@ Thumbs.db
 .nx/self-healing
 .nx/migrate-runs
 
-.env*
-!.env.example
+**/.env*
+!*.example
 
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
