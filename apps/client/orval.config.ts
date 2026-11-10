@@ -1,8 +1,16 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'orval';
+import { loadEnv } from 'vite';
+
+const clientRoot = fileURLToPath(new URL('.', import.meta.url));
+const env = loadEnv('dev', clientRoot, '');
+const apiBaseUrl = env.VITE_API_BASE_URL ?? '/api/v1';
 
 const openApiTarget =
-  process.env.ORVAL_OPENAPI_URL ??
-  'http://localhost:8040/api/v1/openapi.json';
+  env.ORVAL_OPENAPI_URL ??
+  (apiBaseUrl.startsWith('http')
+    ? `${apiBaseUrl}/openapi.json`
+    : `http://127.0.0.1:5173${apiBaseUrl}/openapi.json`);
 
 export default defineConfig({
   miningManager: {
@@ -13,12 +21,12 @@ export default defineConfig({
       client: 'react-query',
       httpClient: 'axios',
       mode: 'split',
-      target: './apps/client/src/api/generated',
-      schemas: './apps/client/src/api/generated/model',
+      target: './src/api/generated',
+      schemas: './src/api/generated/model',
       clean: true,
       override: {
         mutator: {
-          path: './apps/client/src/api/mutator/customInstance.ts',
+          path: './src/api/mutator/customInstance.ts',
           name: 'customInstance',
         },
         query: {
