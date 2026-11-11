@@ -1,20 +1,26 @@
+import { Slot } from '@radix-ui/react-slot';
 import type { VariantProps } from 'class-variance-authority';
 import type { ButtonHTMLAttributes } from 'react';
-import { cn } from '../../../lib/utils/styles';
+import { cn } from '@/lib/utils/styles';
 import { buttonVariants } from './button.variants';
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
-  VariantProps<typeof buttonVariants>;
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean;
+  };
 
-/** Render a button with typed visual variants and native form behavior. */
+/** Render a styled button or transfer its styles to a single child element. */
 export function Button({
   className,
   variant,
   size,
+  asChild = false,
   ...props
 }: ButtonProps) {
+  const Component = asChild ? Slot : 'button';
+
   return (
-    <button
+    <Component
       className={cn(buttonVariants({ variant, size }), className)}
       {...props}
     />

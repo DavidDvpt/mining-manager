@@ -27,5 +27,8 @@ export const fr_FR: TranslationSchema = {
     TITLE: 'Mining Manager',
     HOME_DESCRIPTION:
       'Retrouvez ici les informations principales de votre activité.',
+    HOME_LINK: 'Accueil Mining Manager',
+    PRIMARY_NAVIGATION: 'Navigation principale',
+    IMAGE_UNAVAILABLE: '{alt} indisponible',
   },
 };

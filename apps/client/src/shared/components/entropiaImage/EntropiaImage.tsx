@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { cn } from '@/lib/utils/styles';
+import { useTranslations } from '@/i18n/useTranslations';
 import type { EntropiaImageProps } from '@/shared/types/image';
 import styles from './entropia-image.module.scss';
 
@@ -11,6 +12,7 @@ export function EntropiaImage({
   size = 'medium',
   className,
 }: EntropiaImageProps) {
+  const { t } = useTranslations();
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const hasError = failedUrl === url;
 
@@ -25,7 +27,10 @@ export function EntropiaImage({
           onError={() => setFailedUrl(url)}
         />
       ) : (
-        <span className={styles.fallback} aria-label={`${alt} indisponible`}>
+        <span
+          className={styles.fallback}
+          aria-label={t('APP.IMAGE_UNAVAILABLE').replace('{alt}', alt)}
+        >
           -
         </span>
       )}

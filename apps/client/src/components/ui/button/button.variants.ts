@@ -7,6 +7,7 @@ export const buttonVariants = cva(styles.button, {
     variant: {
       primary: styles.primary,
       ternary: styles.ternary,
+      topbar: styles.topbar,
     },
     size: {
       default: styles.default,

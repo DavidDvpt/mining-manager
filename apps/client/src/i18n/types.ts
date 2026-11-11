@@ -22,6 +22,9 @@ export type TranslationSchema = {
   APP: {
     TITLE: string;
     HOME_DESCRIPTION: string;
+    HOME_LINK: string;
+    PRIMARY_NAVIGATION: string;
+    IMAGE_UNAVAILABLE: string;
   };
 };
 

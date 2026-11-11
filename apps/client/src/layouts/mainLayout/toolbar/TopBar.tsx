@@ -1,15 +1,24 @@
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 import brand from '@/assets/images/brand.png';
+import { useTranslations } from '@/i18n/useTranslations';
+import TopBarNav from './TopBarNav';
 import styles from './toolbar.module.scss';
 
-/** Render the persistent application header and its home navigation link. */
+/** Render the persistent application header and its primary navigation links. */
 export function TopBar() {
+  const { t } = useTranslations();
+
   return (
     <header className={styles.topBar}>
-      <Link className={styles.brand} to="/" aria-label="Accueil Mining Manager">
+      <NavLink
+        className={styles.brand}
+        to="/"
+        aria-label={t('APP.HOME_LINK')}
+      >
         <img src={brand} alt="Mining Manager" />
-      </Link>
+      </NavLink>
+      <TopBarNav />
     </header>
   );
 }

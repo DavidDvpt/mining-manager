@@ -5,7 +5,28 @@
   flex: 0 0 4rem;
   padding: 0 1.5rem 0 0;
   border-bottom: 1px solid var(--border);
-  background: var(--surface);
+}
+
+.navigation {
+  display: flex;
+  height: 100%;
+  align-items: stretch;
+  gap: 0;
+}
+
+.navButton {
+  display: flex;
+  width: 10rem;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 10rem;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.activeLink {
+  background: var(--blue-500);
+  color: var(--text);
 }
 
 .brand {
