@@ -1,0 +1,92 @@
+# Production runtime for the Mining Manager API and frontend.
+#
+# PostgreSQL, Redis, n8n and the reverse proxy are managed by the existing
+# production stack. This Compose project only deploys the two application
+# images and joins the same external Docker network as that stack.
+#
+# Secrets are injected by Bitwarden Secrets Manager on the server:
+#   bws run --project-id "$BWS_PROJECT_ID" -- \
+#     'docker compose -p mining-manager -f /opt/docker/mining-manager.yaml up -d'
+
+name: mining-manager
+
+services:
+  migrations:
+    image: ${DOCKERHUB_NAMESPACE:-lamouche42}/mining-manager-api:${IMAGE_TAG:-latest}
+    pull_policy: always
+    working_dir: /app
+    command: ['alembic', 'upgrade', 'head']
+    restart: 'no'
+    environment:
+      APP_ENV: production
+      DEBUG: 'false'
+      DB_SCHEME: ${DB_SCHEME:-postgresql+asyncpg}
+      DB_HOST: ${DB_HOST:?DB_HOST is required}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME_MM:?DB_NAME_MM is required}
+      DB_USER: ${DB_USER_MM:?DB_USER_MM is required}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      API_V1_PREFIX: ${API_V1_PREFIX:-/api/v1}
+      INTERNAL_V1_PREFIX: ${INTERNAL_V1_PREFIX:-/internal/v1}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://mining-manager}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-24h}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:-}
+    networks:
+      - ser5-network
+
+  api:
+    image: ${DOCKERHUB_NAMESPACE:-lamouche42}/mining-manager-api:${IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: mining-manager-api
+    restart: unless-stopped
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+    environment:
+      APP_ENV: production
+      DEBUG: 'false'
+      PORT: '8040'
+      DB_SCHEME: ${DB_SCHEME:-postgresql+asyncpg}
+      DB_HOST: ${DB_HOST:?DB_HOST is required}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME_MM:?DB_NAME_MM is required}
+      DB_USER: ${DB_USER_MM:?DB_USER_MM is required}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      API_V1_PREFIX: ${API_V1_PREFIX:-/api/v1}
+      INTERNAL_V1_PREFIX: ${INTERNAL_V1_PREFIX:-/internal/v1}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://mining-manager}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-24h}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:-}
+    expose:
+      - '8040'
+    healthcheck:
+      test: ['CMD-SHELL', 'python -c "import urllib.request; urllib.request.urlopen(\"http://127.0.0.1:8040/health\", timeout=3)"']
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    networks:
+      - ser5-network
+
+  frontend:
+    image: ${DOCKERHUB_NAMESPACE:-lamouche42}/mining-manager-frontend:${IMAGE_TAG:-latest}
+    pull_policy: always
+    container_name: mining-manager-frontend
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    expose:
+      - '8039'
+    networks:
+      - ser5-network
+
+networks:
+  ser5-network:
+    external: true
