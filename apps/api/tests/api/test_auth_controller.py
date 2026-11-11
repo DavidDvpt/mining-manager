@@ -60,10 +60,12 @@ def test_signup_delegates_to_auth_service(client, monkeypatch):
 
 def test_signup_returns_conflict_when_database_rejects_duplicate_user(client, monkeypatch):
     async def fake_signup(session, **kwargs):
+        duplicate_error = Exception("duplicate key")
+        setattr(duplicate_error, "sqlstate", "23505")
         raise IntegrityError(
             "INSERT INTO user",
             {},
-            SimpleNamespace(sqlstate="23505"),
+            duplicate_error,
         )
 
     monkeypatch.setattr(auth_service, "signup", fake_signup)
