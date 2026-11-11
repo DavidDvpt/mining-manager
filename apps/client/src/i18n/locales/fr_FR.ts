@@ -37,13 +37,7 @@ export const fr_FR: TranslationSchema = {
   TRANSACTIONS: {
     TITLE: 'Transactions',
     SIDEBAR_LABEL: 'Filtres des transactions',
-    OWNED: 'Possédés',
-    TOOLS: 'Outils',
-    ACCESSORIES: 'Accessoires',
     MATERIALS: 'Matériaux',
-    ORES: 'Minerais',
-    ENMAT: 'EnMat',
-    REFINED: 'Matériaux raffinés',
     ACTIVE_VIEW: 'Vue active : {view}',
     DESCRIPTION:
       'Sélectionnez une catégorie à gauche pour afficher les achats, ventes et éléments possédés dans cette même vue.',

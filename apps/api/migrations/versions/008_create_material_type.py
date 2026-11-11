@@ -22,7 +22,7 @@ MATERIAL_TYPES = [
     "Food",
     "Natural Material",
     "Fragment",
-    "consumable",
+    "Consumable",
     "Animal oil",
     "Strongboxes",
 ]

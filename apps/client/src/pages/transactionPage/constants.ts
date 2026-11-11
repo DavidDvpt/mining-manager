@@ -4,14 +4,25 @@ import type { MaterialTypeResponse } from '@/api/generated/model/materialTypeRes
 
 type Translate = (key: TranslationKey) => string;
 
+export const FIXED_TRANSACTION_BUTTONS = [
+  { id: 'finder', label: 'Finder' },
+  { id: 'excavator', label: 'Excavator' },
+  { id: 'refiner', label: 'Refiner' },
+  { id: 'finder-enhancers', label: 'Finder Enhancers' },
+  { id: 'finder-excavators', label: 'Finder Excavators' },
+] as const;
+
+export type TransactionButtonId =
+  (typeof FIXED_TRANSACTION_BUTTONS)[number]['id']
+  | `material-type-${string}`
+  | 'materials';
+
 /** Build transaction navigation and append material types returned by the API. */
 export const transactionButtons = (
   t: Translate,
   materialTypes: MaterialTypeResponse[] = [],
-): SidebarButton[] => [
-  { id: 'owned', label: t('TRANSACTIONS.OWNED') },
-  { id: 'tools', label: t('TRANSACTIONS.TOOLS') },
-  { id: 'accessories', label: t('TRANSACTIONS.ACCESSORIES') },
+): SidebarButton<TransactionButtonId>[] => [
+  ...FIXED_TRANSACTION_BUTTONS,
   {
     id: 'materials',
     label: t('TRANSACTIONS.MATERIALS'),

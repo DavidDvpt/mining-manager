@@ -1493,7 +1493,7 @@ def upgrade() -> None:
 
     consumable_type_id = bind.execute(
         sa.select(material_type_table.c.id).where(
-            material_type_table.c.name == "consumable"
+            material_type_table.c.name == "Consumable"
         )
     ).scalar_one()
     op.bulk_insert(

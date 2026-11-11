@@ -32,13 +32,7 @@ export type TranslationSchema = {
   TRANSACTIONS: {
     TITLE: string;
     SIDEBAR_LABEL: string;
-    OWNED: string;
-    TOOLS: string;
-    ACCESSORIES: string;
     MATERIALS: string;
-    ORES: string;
-    ENMAT: string;
-    REFINED: string;
     ACTIVE_VIEW: string;
     DESCRIPTION: string;
   };

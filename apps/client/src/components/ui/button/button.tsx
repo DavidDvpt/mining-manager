@@ -51,8 +51,8 @@ export function Button({
       {...props}
     >
       {iconPosition === 'start' ? renderIcon('start') : null}
-      {iconPosition === 'end' ? renderIcon('end') : null}
       {children}
+      {iconPosition === 'end' ? renderIcon('end') : null}
     </Component>
   );
 }

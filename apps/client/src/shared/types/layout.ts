@@ -2,11 +2,13 @@ import type { PropsWithChildren } from 'react';
 import type { AppIconName } from '@/shared/components/icon';
 
 /** A sidebar button that can contain nested choices. */
-export type SidebarButton = {
-  id: string;
+export type SidebarButtonId = string;
+
+export type SidebarButton<Id extends SidebarButtonId = SidebarButtonId> = {
+  id: Id;
   label: string;
   icon?: AppIconName;
-  children?: SidebarButton[];
+  children?: SidebarButton<Id>[];
   disabled?: boolean;
 };
 

@@ -3,6 +3,7 @@ import { useSidebarLayoutContext } from '@/layouts/sidebarLayout';
 import { Panel, Section } from '@/shared/components';
 import type { MaterialTypeResponse } from '@/api/generated/model/materialTypeResponse';
 
+import { FIXED_TRANSACTION_BUTTONS } from './constants';
 import styles from './transaction-page.module.scss';
 
 type TransactionContentProps = {
@@ -15,14 +16,19 @@ export function TransactionContent({
 }: TransactionContentProps) {
   const { activeButtonId } = useSidebarLayoutContext();
   const { t } = useTranslations();
-  const activeViewLabels: Record<string, string> = {
-    owned: t('TRANSACTIONS.OWNED'),
-    tools: t('TRANSACTIONS.TOOLS'),
-    accessories: t('TRANSACTIONS.ACCESSORIES'),
-    materials: t('TRANSACTIONS.MATERIALS'),
-  };
+  const fixedButton = FIXED_TRANSACTION_BUTTONS.find(
+    ({ id }) => id === activeButtonId,
+  );
   const materialType = materialTypes.find(
     ({ id }) => `material-type-${id}` === activeButtonId,
+  );
+  const activeView =
+    fixedButton?.label ??
+    (activeButtonId === 'materials'
+      ? t('TRANSACTIONS.MATERIALS')
+      : materialType?.name ?? activeButtonId);
+  const [activeViewPrefix, activeViewSuffix] = t('TRANSACTIONS.ACTIVE_VIEW').split(
+    '{view}',
   );
 
   return (
@@ -30,10 +36,9 @@ export function TransactionContent({
       <Section>
         <h1>{t('TRANSACTIONS.TITLE')}</h1>
         <p>
-          {t('TRANSACTIONS.ACTIVE_VIEW').replace(
-            '{view}',
-            activeViewLabels[activeButtonId] ?? materialType?.name ?? activeButtonId,
-          )}
+          {activeViewPrefix}
+          <span className={styles.activeView}>{activeView}</span>
+          {activeViewSuffix}
         </p>
         <p>{t('TRANSACTIONS.DESCRIPTION')}</p>
       </Section>
