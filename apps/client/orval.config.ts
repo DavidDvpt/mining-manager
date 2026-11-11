@@ -4,7 +4,7 @@ import { loadEnv } from 'vite';
 
 const clientRoot = fileURLToPath(new URL('.', import.meta.url));
 const env = loadEnv('dev', clientRoot, '');
-const apiBaseUrl = env.VITE_API_BASE_URL ?? '/api/v1';
+const apiBaseUrl = env.VITE_API_BASE_URL || '/api/v1';
 const proxyTarget = env.VITE_PROXY_TARGET?.replace(/\/+$/, '');
 
 const openApiTarget =

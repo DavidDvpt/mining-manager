@@ -9,5 +9,5 @@
 export interface SessionTransactionResponse {
   session_id: string;
   type: string;
-  status: string;
+  status: string | null;
 }

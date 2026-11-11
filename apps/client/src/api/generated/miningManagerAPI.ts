@@ -50,6 +50,7 @@ import type {
   ItemValuationResponse,
   LotCollectionResponse,
   MaterialResponse,
+  MaterialTypeResponse,
   PostApiV1Signup201,
   ProfileResponse,
   RefinageRecipeResponse,
@@ -1181,6 +1182,76 @@ export function useGetApiV1MaterialsItemId<TData = Awaited<ReturnType<typeof get
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetApiV1MaterialsItemIdQueryOptions(itemId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Return active material types ordered by display name.
+ * @summary Get All Material Types
+ */
+export const getApiV1MaterialTypes = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<MaterialTypeResponse[]>(
+      {url: `/api/v1/material-types`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1MaterialTypesQueryKey = () => {
+    return [
+    `/api/v1/material-types`
+    ] as const;
+    }
+
+
+export const getGetApiV1MaterialTypesQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1MaterialTypes>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1MaterialTypes>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1MaterialTypesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1MaterialTypes>>> = ({ signal }) => getApiV1MaterialTypes(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1MaterialTypes>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetApiV1MaterialTypesQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1MaterialTypes>>>
+export type GetApiV1MaterialTypesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get All Material Types
+ */
+
+export function useGetApiV1MaterialTypes<TData = Awaited<ReturnType<typeof getApiV1MaterialTypes>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1MaterialTypes>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetApiV1MaterialTypesQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

@@ -56,6 +56,7 @@ export * from './lotResponse.js';
 export * from './lotValuationResponse.js';
 export * from './materialDetailsResponse.js';
 export * from './materialResponse.js';
+export * from './materialTypeResponse.js';
 export * from './miningEnhancerResponse.js';
 export * from './miningSessionCostResponse.js';
 export * from './postApiV1Signup201.js';
