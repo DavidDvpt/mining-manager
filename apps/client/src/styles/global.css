@@ -52,3 +52,20 @@
     0 5px 12px rgb(8 13 20 / 65%), 0 2px 14px rgb(49 89 121 / 30%);
   --shadow-active: 0 0 12px rgb(49 89 121 / 25%);
 }
+
+body {
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;
+}
+
+html {
+  font-family: var(--font-sans);
+  font-optical-sizing: auto;
+  font-size: 12px;
+}
+html,
+body,
+#root {
+  height: 100%;
+}

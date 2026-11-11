@@ -1,0 +1,50 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.control {
+  position: relative;
+}
+
+.passwordInput {
+  padding-right: 2.75rem;
+}
+
+.passwordToggle {
+  position: absolute;
+  top: 50%;
+  right: 0.625rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transform: translateY(-50%);
+
+  &:hover {
+    color: var(--text);
+  }
+
+  &:focus-visible {
+    border-radius: var(--radius);
+    outline: 2px solid var(--primary-300);
+    outline-offset: 1px;
+  }
+}
+
+.invalid {
+  border-color: var(--danger);
+}
+
+.error {
+  margin: 0;
+  color: var(--error-300);
+  font-size: 0.8125rem;
+}

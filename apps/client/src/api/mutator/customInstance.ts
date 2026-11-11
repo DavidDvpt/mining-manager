@@ -3,6 +3,7 @@ import {
   axiosPrivateInstance,
   axiosPublicInstance,
 } from '../../lib/axios/instances';
+import type { ApiError } from '../../lib/axios/types';
 
 type OrvalRequestConfig = AxiosRequestConfig & {
   data?: unknown;
@@ -34,7 +35,7 @@ export const customInstance = <T>(
   return client.request<T>(requestConfig).then(({ data }) => data);
 };
 
-export type ErrorType<Error> = Error;
+export type ErrorType<_Error> = ApiError;
 export type BodyType<BodyData> = BodyData;
 
 export default customInstance;
