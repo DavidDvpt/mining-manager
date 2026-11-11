@@ -1,0 +1,88 @@
+.list {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.header,
+.row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.header {
+  min-height: 2.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-hover);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.body {
+  min-height: 0;
+  overflow: auto;
+}
+
+.row {
+  min-height: 44px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &:hover {
+    background: var(--surface-hover);
+  }
+}
+
+.cell {
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.imageCell {
+  display: flex;
+  flex: 0 0 40px;
+  align-items: center;
+  justify-content: center;
+}
+
+.imageColumn {
+  padding-block: 2px;
+}
+
+.image {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--white);
+  object-fit: contain;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.empty {
+  padding: 1rem;
+  color: var(--text-muted);
+}
+
+.select {
+  max-width: 100%;
+  border: 1px solid var(--border-active);
+  border-radius: var(--radius);
+  background: var(--input-bg);
+  color: var(--text);
+  padding: 0.25rem 0.5rem;
+}
