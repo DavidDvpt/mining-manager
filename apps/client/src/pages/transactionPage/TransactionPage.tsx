@@ -1,15 +1,25 @@
 import MainLayout from '@/layouts/mainLayout/MainLayout';
-import { Panel, Section } from '@/shared/components';
+import {
+  SidebarLayout,
+} from '@/layouts/sidebarLayout';
+import { useTranslations } from '@/i18n/useTranslations';
 
-/** Render the transactions page shell with a temporary page marker. */
+import { transactionButtons } from './constants';
+import TransactionContent from './TransactionContent';
+
+/** Render the transactions workspace with inventory and transaction filters. */
 export function TransactionPage() {
+  const { t } = useTranslations();
+
   return (
     <MainLayout>
-      <Panel>
-        <Section>
-          <h1>Transactions</h1>
-        </Section>
-      </Panel>
+      <SidebarLayout
+        buttons={transactionButtons(t)}
+        defaultButtonId="owned"
+        sidebarLabel={t('TRANSACTIONS.SIDEBAR_LABEL')}
+      >
+        <TransactionContent />
+      </SidebarLayout>
     </MainLayout>
   );
 }

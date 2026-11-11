@@ -8,6 +8,8 @@ export const buttonVariants = cva(styles.button, {
       primary: styles.primary,
       ternary: styles.ternary,
       topbar: styles.topbar,
+      'sidebar-default': styles.sidebarDefault,
+      'sidebar-active': styles.sidebarActive,
     },
     size: {
       default: styles.default,

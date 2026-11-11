@@ -32,4 +32,18 @@ export const en_EN: TranslationSchema = {
     PROFILE: 'Profile',
     LOGOUT: 'Log out',
   },
+  TRANSACTIONS: {
+    TITLE: 'Transactions',
+    SIDEBAR_LABEL: 'Transaction filters',
+    OWNED: 'Owned',
+    TOOLS: 'Tools',
+    ACCESSORIES: 'Accessories',
+    MATERIALS: 'Materials',
+    ORES: 'Ores',
+    ENMAT: 'EnMat',
+    REFINED: 'Refined materials',
+    ACTIVE_VIEW: 'Active view: {view}',
+    DESCRIPTION:
+      'Select a category on the left to display purchases, sales, and owned items in the same view.',
+  },
 };
