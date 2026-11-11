@@ -1,0 +1,19 @@
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.button {
+  min-width: 8.75rem;
+}
+
+.fullWidth {
+  width: 100%;
+
+  .button {
+    width: 100%;
+    min-width: 0;
+  }
+}

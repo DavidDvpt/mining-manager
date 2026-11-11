@@ -1,0 +1,25 @@
+.topBar {
+  display: flex;
+  min-height: 4rem;
+  align-items: center;
+  flex: 0 0 4rem;
+  padding: 0 1.5rem 0 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.brand {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  color: var(--text);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.brand img {
+  display: block;
+  width: auto;
+  height: 100%;
+  object-fit: contain;
+}

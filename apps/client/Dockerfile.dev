@@ -1,0 +1,15 @@
+# syntax=docker/dockerfile:1
+
+# Local development image for the React client.
+# The source tree is mounted by docker/dev/compose.yaml for hot reload.
+
+FROM node:22-alpine
+
+WORKDIR /workspace
+
+COPY package.json package-lock.json ./
+RUN npm install --include=optional
+
+EXPOSE 4200
+
+CMD ["npx", "nx", "serve", "client", "--host=0.0.0.0", "--port=4200", "--mode=dev"]

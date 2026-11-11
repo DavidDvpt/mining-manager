@@ -90,7 +90,26 @@ services:
     volumes:
       - ../../apps/api/src:/app/src
 
+  client:
+    build:
+      context: ../..
+      dockerfile: apps/client/Dockerfile.dev
+    container_name: mining-manager-client-dev
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - '127.0.0.1:${CLIENT_PORT:-5173}:4200'
+    environment:
+      CHOKIDAR_USEPOLLING: 'true'
+      VITE_PROXY_TARGET: http://api:8040
+    volumes:
+      - ../..:/workspace
+      - client-node-modules:/workspace/node_modules
+
 volumes:
   pg-dev-data:
   n8n-dev-data:
   redis-dev-data:
+  client-node-modules:
