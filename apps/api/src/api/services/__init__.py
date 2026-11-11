@@ -12,6 +12,7 @@ from .finder_service import FinderService, get_finder_service
 from .item_service import ItemService, is_limited_item
 from .lot_service import LotService, get_lot_service
 from .material_service import MaterialService
+from .material_type_service import MaterialTypeService
 from .mining_loot_service import MiningLootService, get_mining_loot_service
 from .refiner_service import RefinerService
 from .refinage_recipe_service import RefinageRecipeService
@@ -44,6 +45,7 @@ __all__ = [
     "is_limited_item",
     "LotService",
     "MaterialService",
+    "MaterialTypeService",
     "MiningLootService",
     "MiningSessionCreation",
     "RefinerService",

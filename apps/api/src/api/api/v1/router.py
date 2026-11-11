@@ -9,6 +9,7 @@ from .finder_amplifier_controller import router as finder_amplifier_router
 from .finder_controller import router as finder_router
 from .lot_controller import router as lot_router
 from .material_controller import router as material_router
+from .material_type_controller import router as material_type_router
 from .mining_router import mining_router
 from .profile_controller import router as profile_router
 from .refiner_controller import router as refiner_router
@@ -25,6 +26,7 @@ api_v1_router.include_router(finder_router, prefix="/finders")
 api_v1_router.include_router(finder_amplifier_router, prefix="/finder-amplifiers")
 api_v1_router.include_router(enhancer_router, prefix="/enhancers")
 api_v1_router.include_router(material_router, prefix="/materials")
+api_v1_router.include_router(material_type_router, prefix="/material-types")
 api_v1_router.include_router(lot_router, prefix="/lots")
 api_v1_router.include_router(mining_router, prefix="/mining")
 api_v1_router.include_router(refiner_router, prefix="/refiners")

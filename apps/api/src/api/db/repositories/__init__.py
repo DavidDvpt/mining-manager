@@ -9,6 +9,7 @@ from .finder_repository import FinderRepository
 from .item_repository import ItemRepository
 from .lot_repository import LotRepository
 from .material_repository import MaterialRepository
+from .material_type_repository import MaterialTypeRepository
 from .mining_loot_repository import MiningLootRepository
 from .profile_repository import ProfileRepository
 from .refiner_repository import RefinerRepository
@@ -30,6 +31,7 @@ __all__ = [
     "ItemRepository",
     "LotRepository",
     "MaterialRepository",
+    "MaterialTypeRepository",
     "MiningLootRepository",
     "ProfileRepository",
     "RefinerRepository",

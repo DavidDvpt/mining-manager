@@ -20,6 +20,7 @@ from .lot_schema import (
     UpdateUnstackableLotRequest,
 )
 from .material_schema import MaterialResponse
+from .material_type_schema import MaterialTypeResponse
 from .mining_session_schema import (
     CloseEnhancerLineRequest,
     CloseMiningSessionRequest,
@@ -88,6 +89,7 @@ __all__ = [
     "LotResponse",
     "LotValuationResponse",
     "MaterialResponse",
+    "MaterialTypeResponse",
     "MiningEnhancerResponse",
     "MiningSessionCostResponse",
     "RefinageRecipeResponse",
