@@ -5,6 +5,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, Request
+from jwt import ExpiredSignatureError
 
 from api.core.config import get_settings
 from api.core.exceptions import AppError
@@ -22,6 +23,8 @@ def _bearer(request: Request) -> str | None:
 def _decode(token: str) -> dict:
     try:
         return decode_token(secret=get_settings().jwt_access_secret, token=token)
+    except ExpiredSignatureError:
+        raise AppError(401, "Expired JWT token") from None
     except Exception:
         raise AppError(401, "Unauthorized") from None
 

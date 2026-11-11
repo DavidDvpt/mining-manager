@@ -32,9 +32,23 @@ export function ProfileMenu() {
   };
 
   const handleLogout = async () => {
+    /**
+     * Log out through the API and navigate only after success.
+     * Cancel and seed the current-user query to prevent GuestOnly from
+     * refetching `/me` after the authentication cookies are deleted.
+     */
     setIsOpen(false);
-    await logout.mutateAsync();
-    await queryClient.invalidateQueries({ queryKey: getGetApiV1MeQueryKey() });
+    const currentUserQueryKey = getGetApiV1MeQueryKey();
+    await queryClient.cancelQueries({ queryKey: currentUserQueryKey });
+
+    try {
+      await logout.mutateAsync();
+    } catch {
+      return;
+    }
+
+    queryClient.setQueryDefaults(currentUserQueryKey, { staleTime: Infinity });
+    queryClient.setQueryData(currentUserQueryKey, null);
     navigate('/signin', { replace: true });
   };
 

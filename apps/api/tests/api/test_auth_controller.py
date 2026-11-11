@@ -262,14 +262,55 @@ def test_me_requires_authentication(client):
     assert response.json() == {"message": "Unauthorized"}
 
 
+def test_me_reports_expired_access_token(client, monkeypatch):
+    """Expose a distinct 401 message when access-token decoding detects expiry."""
+
+    def fake_decode_token(**_kwargs):
+        raise jwt.ExpiredSignatureError
+
+    monkeypatch.setattr("api.api.deps.decode_token", fake_decode_token)
+    client.cookies.set(ACCESS_TOKEN_COOKIE, "expired-token")
+
+    response = client.get(endpoint("/me"))
+
+    assert response.status_code == 401
+    assert response.json() == {"message": "Expired JWT token"}
+
+
+def test_me_reports_unauthorized_for_invalid_access_token(client, monkeypatch):
+    """Keep malformed or otherwise invalid access tokens distinct from expiry."""
+
+    def fake_decode_token(**_kwargs):
+        raise jwt.InvalidTokenError
+
+    monkeypatch.setattr("api.api.deps.decode_token", fake_decode_token)
+    client.cookies.set(ACCESS_TOKEN_COOKIE, "invalid-token")
+
+    response = client.get(endpoint("/me"))
+
+    assert response.status_code == 401
+    assert response.json() == {"message": "Unauthorized"}
+
+
 def test_logout_deletes_auth_cookies(client):
+    """Return success and expire both authentication cookies during logout."""
+
+    client.cookies.set(ACCESS_TOKEN_COOKIE, "access-token")
+    client.cookies.set(REFRESH_TOKEN_COOKIE, "refresh-token")
+
     response = client.post(endpoint("/logout"))
 
     assert response.status_code == 200
     assert response.json() == {"message": "Logged out"}
     set_cookie = response.headers.get_list("set-cookie")
-    assert any(f"{ACCESS_TOKEN_COOKIE}=\"\"" in value for value in set_cookie)
-    assert any('refresh_token=""' in value for value in set_cookie)
+    assert any(
+        f'{ACCESS_TOKEN_COOKIE}=""' in value and "Max-Age=0" in value
+        for value in set_cookie
+    )
+    assert any(
+        f'{REFRESH_TOKEN_COOKIE}=""' in value and "Max-Age=0" in value
+        for value in set_cookie
+    )
 
 
 def test_full_openapi_includes_auth_but_interactive_docs_hide_it():

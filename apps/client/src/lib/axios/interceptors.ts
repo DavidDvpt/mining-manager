@@ -12,12 +12,18 @@ import {
 } from './types';
 
 let refreshPromise: Promise<void> | null = null;
+const EXPIRED_JWT_TOKEN_MESSAGE = 'Expired JWT token';
 
 /** Return whether a request is one of the authentication endpoints. */
 function isAuthenticationRequest(url: string): boolean {
   return ['/signin', '/signup', '/refresh-token', '/logout'].some((path) =>
     url.includes(path),
   );
+}
+
+/** Return whether the API explicitly reported an expired access token. */
+function isExpiredAccessToken(error: AxiosError<ApiErrorBody>): boolean {
+  return error.response?.data?.message === EXPIRED_JWT_TOKEN_MESSAGE;
 }
 
 /** Convert an Axios failure into the frontend API error contract. */
@@ -116,6 +122,7 @@ export function attachPrivateResponseInterceptor(
       const requestUrl = config?.url ?? '';
       const shouldRefresh =
         error.response?.status === 401 &&
+        isExpiredAccessToken(error) &&
         Boolean(config) &&
         !config?.authRetry &&
         !isAuthenticationRequest(requestUrl);
