@@ -38,6 +38,7 @@ export const fr_FR: TranslationSchema = {
     TITLE: 'Transactions',
     SIDEBAR_LABEL: 'Filtres des transactions',
     MATERIALS: 'Matériaux',
+    RUNNING_TRANSACTIONS: 'Transactions en cours',
     ACTIVE_VIEW: 'Vue active : {view}',
     DESCRIPTION:
       'Sélectionnez une catégorie à gauche pour afficher les achats, ventes et éléments possédés dans cette même vue.',

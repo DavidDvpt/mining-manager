@@ -29,6 +29,32 @@
   min-width: 0;
 }
 
+.label {
+  min-width: 0;
+  white-space: normal;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.separator {
+  height: 1px;
+  margin: 0.5rem 0;
+  background: var(--blue-400);
+}
+
+.highlighted {
+  justify-content: center;
+  padding-block: 0.75rem;
+  background: var(--primary-700);
+  color: var(--text);
+  text-align: center;
+
+  &:hover:not(:disabled) {
+    background: var(--primary-500);
+    color: var(--text);
+  }
+}
+
 .collapsedChevron {
   transform: rotate(-90deg);
 }

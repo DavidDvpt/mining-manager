@@ -36,6 +36,7 @@ export const en_EN: TranslationSchema = {
     TITLE: 'Transactions',
     SIDEBAR_LABEL: 'Transaction filters',
     MATERIALS: 'Materials',
+    RUNNING_TRANSACTIONS: 'Running transactions',
     ACTIVE_VIEW: 'Active view: {view}',
     DESCRIPTION:
       'Select a category on the left to display purchases, sales, and owned items in the same view.',

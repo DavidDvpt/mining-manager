@@ -15,13 +15,20 @@ export const FIXED_TRANSACTION_BUTTONS = [
 export type TransactionButtonId =
   (typeof FIXED_TRANSACTION_BUTTONS)[number]['id']
   | `material-type-${string}`
-  | 'materials';
+  | 'materials'
+  | 'running-transactions';
 
-/** Build transaction navigation and append material types returned by the API. */
+/** Build transaction navigation, material choices, and the running-transactions entry. */
 export const transactionButtons = (
   t: Translate,
   materialTypes: MaterialTypeResponse[] = [],
 ): SidebarButton<TransactionButtonId>[] => [
+  {
+    id: 'running-transactions',
+    label: t('TRANSACTIONS.RUNNING_TRANSACTIONS'),
+    separatorAfter: true,
+    highlighted: true,
+  },
   ...FIXED_TRANSACTION_BUTTONS,
   {
     id: 'materials',

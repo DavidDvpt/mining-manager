@@ -26,6 +26,8 @@ export function TransactionContent({
     fixedButton?.label ??
     (activeButtonId === 'materials'
       ? t('TRANSACTIONS.MATERIALS')
+      : activeButtonId === 'running-transactions'
+        ? t('TRANSACTIONS.RUNNING_TRANSACTIONS')
       : materialType?.name ?? activeButtonId);
   const [activeViewPrefix, activeViewSuffix] = t('TRANSACTIONS.ACTIVE_VIEW').split(
     '{view}',

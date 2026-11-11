@@ -10,6 +10,9 @@ export type SidebarButton<Id extends SidebarButtonId = SidebarButtonId> = {
   icon?: AppIconName;
   children?: SidebarButton<Id>[];
   disabled?: boolean;
+  separatorBefore?: boolean;
+  separatorAfter?: boolean;
+  highlighted?: boolean;
 };
 
 /** State and actions exposed by a sidebar layout context. */

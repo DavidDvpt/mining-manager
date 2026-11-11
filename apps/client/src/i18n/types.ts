@@ -33,6 +33,7 @@ export type TranslationSchema = {
     TITLE: string;
     SIDEBAR_LABEL: string;
     MATERIALS: string;
+    RUNNING_TRANSACTIONS: string;
     ACTIVE_VIEW: string;
     DESCRIPTION: string;
   };

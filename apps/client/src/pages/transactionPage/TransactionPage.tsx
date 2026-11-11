@@ -17,7 +17,7 @@ export function TransactionPage() {
     <MainLayout>
       <SidebarLayout
         buttons={transactionButtons(t, materialTypes)}
-        defaultButtonId="finder"
+        defaultButtonId="running-transactions"
         sidebarLabel={t('TRANSACTIONS.SIDEBAR_LABEL')}
       >
         <TransactionContent materialTypes={materialTypes} />
