@@ -1,11 +1,18 @@
 import { useTranslations } from '@/i18n/useTranslations';
 import { useSidebarLayoutContext } from '@/layouts/sidebarLayout';
 import { Panel, Section } from '@/shared/components';
+import type { MaterialTypeResponse } from '@/api/generated/model/materialTypeResponse';
 
 import styles from './transaction-page.module.scss';
 
-/** Render the transaction content using the selection supplied by the sidebar context. */
-export function TransactionContent() {
+type TransactionContentProps = {
+  materialTypes?: MaterialTypeResponse[];
+};
+
+/** Render transaction content using the sidebar selection and loaded material types. */
+export function TransactionContent({
+  materialTypes = [],
+}: TransactionContentProps) {
   const { activeButtonId } = useSidebarLayoutContext();
   const { t } = useTranslations();
   const activeViewLabels: Record<string, string> = {
@@ -13,10 +20,10 @@ export function TransactionContent() {
     tools: t('TRANSACTIONS.TOOLS'),
     accessories: t('TRANSACTIONS.ACCESSORIES'),
     materials: t('TRANSACTIONS.MATERIALS'),
-    'materials-ores': t('TRANSACTIONS.ORES'),
-    'materials-enmat': t('TRANSACTIONS.ENMAT'),
-    'materials-refined': t('TRANSACTIONS.REFINED'),
   };
+  const materialType = materialTypes.find(
+    ({ id }) => `material-type-${id}` === activeButtonId,
+  );
 
   return (
     <Panel className={styles.page}>
@@ -25,7 +32,7 @@ export function TransactionContent() {
         <p>
           {t('TRANSACTIONS.ACTIVE_VIEW').replace(
             '{view}',
-            activeViewLabels[activeButtonId] ?? activeButtonId,
+            activeViewLabels[activeButtonId] ?? materialType?.name ?? activeButtonId,
           )}
         </p>
         <p>{t('TRANSACTIONS.DESCRIPTION')}</p>

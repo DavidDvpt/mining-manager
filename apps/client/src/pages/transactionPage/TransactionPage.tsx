@@ -3,6 +3,7 @@ import {
   SidebarLayout,
 } from '@/layouts/sidebarLayout';
 import { useTranslations } from '@/i18n/useTranslations';
+import { useGetApiV1MaterialTypes } from '@/api/generated/miningManagerAPI';
 
 import { transactionButtons } from './constants';
 import TransactionContent from './TransactionContent';
@@ -10,15 +11,16 @@ import TransactionContent from './TransactionContent';
 /** Render the transactions workspace with inventory and transaction filters. */
 export function TransactionPage() {
   const { t } = useTranslations();
+  const { data: materialTypes = [] } = useGetApiV1MaterialTypes();
 
   return (
     <MainLayout>
       <SidebarLayout
-        buttons={transactionButtons(t)}
+        buttons={transactionButtons(t, materialTypes)}
         defaultButtonId="owned"
         sidebarLabel={t('TRANSACTIONS.SIDEBAR_LABEL')}
       >
-        <TransactionContent />
+        <TransactionContent materialTypes={materialTypes} />
       </SidebarLayout>
     </MainLayout>
   );
