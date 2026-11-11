@@ -30,5 +30,8 @@ export const fr_FR: TranslationSchema = {
     HOME_LINK: 'Accueil Mining Manager',
     PRIMARY_NAVIGATION: 'Navigation principale',
     IMAGE_UNAVAILABLE: '{alt} indisponible',
+    PROFILE_MENU: 'Ouvrir le menu du profil',
+    PROFILE: 'Profil',
+    LOGOUT: 'Se déconnecter',
   },
 };

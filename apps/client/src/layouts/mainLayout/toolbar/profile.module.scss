@@ -1,0 +1,63 @@
+.profileMenu {
+  position: relative;
+  display: flex;
+  height: 100%;
+  align-items: stretch;
+  margin-left: auto;
+  padding-left: 1rem;
+}
+
+.profileTrigger {
+  display: inline-flex;
+  height: 100%;
+  min-height: 4rem;
+  align-items: center;
+  gap: 0.5rem;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.avatar {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--primary-900);
+  border-radius: 50%;
+  background: var(--primary-700);
+  color: var(--white);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.profileDropdown {
+  position: absolute;
+  z-index: 2;
+  top: 100%;
+  right: 0;
+  display: flex;
+  min-width: 10rem;
+  flex-direction: column;
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-surface);
+}
+
+.profileAction {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  padding: 0.625rem 0.75rem;
+  text-align: left;
+}
+
+.profileAction:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
