@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import {
   getGetApiV1MeQueryKey,
   usePostApiV1Signin,
-} from '../../api/generated/miningManagerAPI';
-import { useTranslations } from '../../i18n/useTranslations';
-import { ApiError } from '../../lib/axios/types';
+} from '@/api/generated/miningManagerAPI';
+import { useTranslations } from '@/i18n/useTranslations';
+import { ApiError } from '@/lib/axios/types';
 import { SignInForm } from './SignInForm';
 import type { SignInValues } from './signInSchema';
 import styles from './sign-in-page.module.scss';

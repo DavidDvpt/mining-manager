@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getApiBaseUrl } from '../../config/api';
+import { getApiBaseUrl } from '@/config/api';
 import {
   attachPrivateRequestInterceptor,
   attachPrivateResponseInterceptor,

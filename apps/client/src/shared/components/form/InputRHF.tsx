@@ -1,10 +1,10 @@
-import { Eye, EyeOff } from 'lucide-react';
 import type { InputHTMLAttributes } from 'react';
 import { useState } from 'react';
-import { Input } from '../../../components/ui/input/input';
-import { useTranslations } from '../../../i18n/useTranslations';
-import { Label } from '../../../components/ui/label/label';
-import { cn } from '../../../lib/utils/styles';
+import { Input } from '@/components/ui/input/input';
+import { useTranslations } from '@/i18n/useTranslations';
+import { Label } from '@/components/ui/label/label';
+import { cn } from '@/lib/utils/styles';
+import { AppIcon, AppIconName } from '@/shared/components/icon';
 import { useSafeFormContext } from './useSafeFormContext';
 import styles from './input-rhf.module.scss';
 
@@ -53,7 +53,10 @@ export function InputRHF({ name, label, className, id, ...props }: InputRHFProps
             }
             aria-pressed={isPasswordVisible}
           >
-            {isPasswordVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+            <AppIcon
+              name={isPasswordVisible ? AppIconName.EyeOff : AppIconName.Eye}
+              size={16}
+            />
           </button>
         ) : null}
       </div>

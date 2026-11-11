@@ -23,6 +23,11 @@ export default defineConfig(({ mode }) => {
     host: 'localhost',
   },
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': `${import.meta.dirname}/src`,
+    },
+  },
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [],

@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { FormProvider, useForm } from 'react-hook-form';
 import type { DefaultValues, FieldValues } from 'react-hook-form';
 import type { ZodType } from 'zod';
-import { cn } from '../../../lib/utils/styles';
+import { cn } from '@/lib/utils/styles';
 import type { GenericFormProps } from './form.types';
 
 /** Provide a typed React Hook Form context backed by a Zod schema. */

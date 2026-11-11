@@ -1,8 +1,6 @@
-import type { ApiError } from '../../lib/axios/types';
-import { useTranslations } from '../../i18n/useTranslations';
-import { FormButtonsSection } from '../../shared/components/form/FormButtonsSection';
-import { GenericForm } from '../../shared/components/form/GenericForm';
-import { InputRHF } from '../../shared/components/form/InputRHF';
+import type { ApiError } from '@/lib/axios/types';
+import { useTranslations } from '@/i18n/useTranslations';
+import { FormButtonsSection, GenericForm, InputRHF } from '@/shared/components';
 import { createSignInSchema, type SignInValues } from './signInSchema';
 import styles from './sign-in-form.module.scss';
 

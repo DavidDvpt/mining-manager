@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { useGetApiV1Me } from '../../../api/generated/miningManagerAPI';
-import { useTranslations } from '../../../i18n/useTranslations';
+
+import { useGetApiV1Me } from '@/api/generated/miningManagerAPI';
+import { useTranslations } from '@/i18n/useTranslations';
 
 /** Allow public pages only while no valid cookie session exists. */
 export function GuestOnly() {

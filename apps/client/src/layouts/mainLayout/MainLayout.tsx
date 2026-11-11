@@ -1,4 +1,5 @@
 import type { PropsWithChildren } from 'react';
+
 import TopBar from './toolbar/TopBar';
 import styles from './main-layout.module.scss';
 

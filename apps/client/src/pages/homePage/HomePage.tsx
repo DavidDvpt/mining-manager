@@ -1,6 +1,6 @@
-import { Panel, Section, SubSection } from '../../shared/components/containers';
-import MainLayout from '../../shared/components/mainLayout/MainLayout';
-import { useTranslations } from '../../i18n/useTranslations';
+import MainLayout from '@/layouts/mainLayout/MainLayout';
+import { Panel, Section, SubSection } from '@/shared/components';
+import { useTranslations } from '@/i18n/useTranslations';
 import styles from './home-page.module.scss';
 
 /** Render the authenticated information dashboard without showing running transactions. */

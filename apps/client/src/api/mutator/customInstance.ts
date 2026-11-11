@@ -2,8 +2,8 @@ import type { AxiosRequestConfig } from 'axios';
 import {
   axiosPrivateInstance,
   axiosPublicInstance,
-} from '../../lib/axios/instances';
-import type { ApiError } from '../../lib/axios/types';
+} from '@/lib/axios/instances';
+import type { ApiError } from '@/lib/axios/types';
 
 type OrvalRequestConfig = AxiosRequestConfig & {
   data?: unknown;

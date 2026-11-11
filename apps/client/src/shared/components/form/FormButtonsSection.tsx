@@ -1,6 +1,6 @@
 import type { MouseEventHandler } from 'react';
-import { cn } from '../../../lib/utils/styles';
-import { Button } from '../../../components/ui/button/button';
+import { cn } from '@/lib/utils/styles';
+import { Button } from '@/components/ui/button/button';
 import styles from './form-buttons-section.module.scss';
 
 type FormButtonsSectionBaseProps = {

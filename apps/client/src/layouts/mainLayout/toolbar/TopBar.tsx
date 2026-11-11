@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import brand from '../../../../assets/images/brand.png';
+
+import brand from '@/assets/images/brand.png';
 import styles from './toolbar.module.scss';
 
 /** Render the persistent application header and its home navigation link. */
