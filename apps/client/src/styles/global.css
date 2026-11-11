@@ -54,12 +54,16 @@
 }
 
 body {
-  margin: 0;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  background: var(--bg);
   font-family: 'DM Sans', sans-serif;
   font-weight: 400;
 }
 
 html {
+  background: var(--bg);
   font-family: var(--font-sans);
   font-optical-sizing: auto;
   font-size: 12px;

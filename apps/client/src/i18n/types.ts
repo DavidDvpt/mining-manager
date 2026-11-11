@@ -21,6 +21,7 @@ export type TranslationSchema = {
   };
   APP: {
     TITLE: string;
+    HOME_DESCRIPTION: string;
   };
 };
 

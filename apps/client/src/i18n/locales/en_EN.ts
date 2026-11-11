@@ -23,5 +23,7 @@ export const en_EN: TranslationSchema = {
   },
   APP: {
     TITLE: 'Mining Manager',
+    HOME_DESCRIPTION:
+      'Find the main information about your activity here.',
   },
 };
