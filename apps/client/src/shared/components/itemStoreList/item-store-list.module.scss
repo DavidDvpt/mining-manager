@@ -15,11 +15,17 @@
 }
 
 .header {
-  min-height: 2.5rem;
+  min-height: 44px;
   border-bottom: 1px solid var(--border);
   background: var(--surface-hover);
   color: var(--text-muted);
   font-weight: 600;
+}
+
+.header .cell {
+  line-height: 1.1;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .body {
@@ -58,6 +64,20 @@
 
 .imageColumn {
   padding-block: 2px;
+}
+
+.actionCell {
+  display: flex;
+  flex: 0 0 2.75rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.buyButton {
+  width: 2.25rem;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
 }
 
 .image {

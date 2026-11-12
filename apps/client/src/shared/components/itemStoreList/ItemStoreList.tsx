@@ -8,6 +8,7 @@ import {
   createMaterialColumns,
   createRefinerColumns,
 } from './columns';
+import { createBuyColumn, createSummaryColumn } from './columns/common';
 import type {
   ItemStoreColumn,
   ItemStoreListProps,
@@ -15,17 +16,29 @@ import type {
 import styles from './item-store-list.module.scss';
 
 /** Render catalogue rows with type-specific columns and flex-based layout. */
-export function ItemStoreList({ kind, rows, isLoading = false, isError = false }: ItemStoreListProps) {
+export function ItemStoreList({
+  kind,
+  rows,
+  isLoading = false,
+  isError = false,
+  showMaterialType = false,
+}: ItemStoreListProps) {
   const columns = useMemo<ItemStoreColumn[]>(() => {
+    let typeColumns: ItemStoreColumn[] = [];
+
     switch (kind) {
-      case 'finder': return createFinderColumns();
-      case 'excavator': return createExcavatorColumns();
-      case 'refiner': return createRefinerColumns();
-      case 'finder-amplifier': return createFinderAmplifierColumns();
-      case 'enhancer': return createEnhancerColumns();
-      case 'material': return createMaterialColumns();
+      case 'finder': typeColumns = createFinderColumns(); break;
+      case 'excavator': typeColumns = createExcavatorColumns(); break;
+      case 'refiner': typeColumns = createRefinerColumns(); break;
+      case 'finder-amplifier': typeColumns = createFinderAmplifierColumns(); break;
+      case 'enhancer': typeColumns = createEnhancerColumns(); break;
+      case 'material':
+        typeColumns = createMaterialColumns({ includeType: showMaterialType });
+        break;
     }
-  }, [kind]);
+
+    return [...typeColumns, createSummaryColumn(), createBuyColumn()];
+  }, [kind, showMaterialType]);
 
   if (isLoading) return <div className={styles.empty}>Loading items…</div>;
   if (isError) return <div className={styles.empty}>Unable to load items.</div>;
@@ -51,7 +64,7 @@ export function ItemStoreList({ kind, rows, isLoading = false, isError = false }
             {columns.map((column) => (
               <div
                 key={column.key}
-                className={`${styles.cell} ${column.key === 'image' ? styles.imageColumn : ''}`}
+                className={`${styles.cell} ${column.key === 'image' ? styles.imageColumn : ''} ${column.kind === 'button' ? styles.actionCell : ''}`}
                 style={{ flex: column.flex, textAlign: column.align ?? 'left' }}
                 role="cell"
               >

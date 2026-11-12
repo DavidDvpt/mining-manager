@@ -4,6 +4,25 @@ import type { ItemStoreColumn } from '@/shared/types/listItem';
 /** Return columns specific to finder catalogue rows. */
 export const createFinderColumns = (): ItemStoreColumn[] => [
   ...createCommonItemColumns(),
-  { key: 'depth', label: 'Depth', flex: '0 1 7rem', align: 'right', render: itemDetail('depth') },
-  { key: 'range', label: 'Range', flex: '0 1 7rem', align: 'right', render: itemDetail('range') },
+  {
+    key: 'depth',
+    label: 'Depth',
+    flex: '0 1 7rem',
+    align: 'right',
+    render: itemDetail('depth'),
+  },
+  {
+    key: 'range',
+    label: 'Range',
+    flex: '0 1 7rem',
+    align: 'right',
+    render: itemDetail('range'),
+  },
+  {
+    key: 'ammoBurn',
+    label: 'Ammo burn',
+    flex: '0 0 5rem',
+    align: 'right',
+    render: itemDetail('ammo_burn'),
+  },
 ];

@@ -26,7 +26,7 @@ export type ItemStoreRow = {
 export type ItemStoreColumn = {
   key: string;
   label: string;
-  kind?: 'text' | 'select';
+  kind?: 'text' | 'select' | 'button';
   flex?: string;
   align?: 'left' | 'center' | 'right';
   render: (row: ItemStoreRow) => ReactNode;
@@ -41,6 +41,7 @@ export type ItemStoreListProps = {
   rows: ItemStoreRow[];
   isLoading?: boolean;
   isError?: boolean;
+  showMaterialType?: boolean;
 };
 
 /** Common shape required from each generated catalogue response. */

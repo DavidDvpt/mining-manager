@@ -93,6 +93,7 @@ export function TransactionContent({
             rows={displayRows}
             isLoading={isLoading}
             isError={isError}
+            showMaterialType={activeButtonId === 'materials'}
           />
         ) : null}
       </Section>
