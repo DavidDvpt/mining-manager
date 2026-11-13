@@ -22,6 +22,7 @@ export function ItemStoreList({
   isLoading = false,
   isError = false,
   showMaterialType = false,
+  onBuy,
 }: ItemStoreListProps) {
   const columns = useMemo<ItemStoreColumn[]>(() => {
     let typeColumns: ItemStoreColumn[] = [];
@@ -37,8 +38,12 @@ export function ItemStoreList({
         break;
     }
 
-    return [...typeColumns, createSummaryColumn(), createBuyColumn()];
-  }, [kind, showMaterialType]);
+    return [
+      ...typeColumns,
+      createSummaryColumn(),
+      createBuyColumn(onBuy),
+    ];
+  }, [kind, onBuy, showMaterialType]);
 
   if (isLoading) return <div className={styles.empty}>Loading items…</div>;
   if (isError) return <div className={styles.empty}>Unable to load items.</div>;

@@ -33,6 +33,7 @@ export type ItemStoreColumn = {
   selectOptions?: Array<{ label: string; value: string }>;
   selectValue?: (row: ItemStoreRow) => string;
   onSelectChange?: (row: ItemStoreRow, value: string) => void;
+  onClick?: (row: ItemStoreRow) => void;
 };
 
 /** Props accepted by the normalized item-store list component. */
@@ -42,6 +43,7 @@ export type ItemStoreListProps = {
   isLoading?: boolean;
   isError?: boolean;
   showMaterialType?: boolean;
+  onBuy?: (row: ItemStoreRow) => void;
 };
 
 /** Common shape required from each generated catalogue response. */

@@ -10,6 +10,7 @@ type FormButtonsSectionBaseProps = {
   onCancel?: MouseEventHandler<HTMLButtonElement>;
   cancelLabel?: string;
   submitLabel?: string;
+  align?: 'center' | 'right';
 };
 
 type SingleButtonProps = {
@@ -25,7 +26,7 @@ type TwoButtonProps = {
 type FormButtonsSectionProps = FormButtonsSectionBaseProps &
   (SingleButtonProps | TwoButtonProps);
 
-/** Render a form action row with an optional cancel button and a submit button. */
+/** Render a form action row with optional cancellation and configurable alignment. */
 export function FormButtonsSection({
   className,
   submitDisabled = false,
@@ -35,6 +36,7 @@ export function FormButtonsSection({
   onCancel,
   cancelLabel = 'Cancel',
   submitLabel = 'Submit',
+  align = 'center',
 }: FormButtonsSectionProps) {
   const shouldUseFullWidth = fullWidth === true && cancelVisible === false;
 
@@ -42,6 +44,7 @@ export function FormButtonsSection({
     <div
       className={cn(
         styles.actions,
+        align === 'right' && styles.alignRight,
         shouldUseFullWidth && styles.fullWidth,
         className,
       )}

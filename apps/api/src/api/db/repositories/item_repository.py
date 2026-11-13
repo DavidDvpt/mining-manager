@@ -31,14 +31,16 @@ class ItemRepository:
         """Return whether an item is stackable, or ``None`` if it is absent."""
 
         statement = (
-            select(Item.id, Material.item_id)
+            select(Item.id, Material.item_id, Enhancer.item_id)
             .outerjoin(Material, Material.item_id == Item.id)
+            .outerjoin(Enhancer, Enhancer.item_id == Item.id)
             .where(Item.id == item_id)
         )
         row = (await self._session.execute(statement)).first()
         if row is None:
             return None
-        return row[1] is not None
+        enhancer_item_id = row[2] if len(row) > 2 else None
+        return row[1] is not None or enhancer_item_id is not None
 
     async def is_item_material(self, *, item_id: UUID) -> bool | None:
         """Return whether an item exists and has a material catalogue row."""

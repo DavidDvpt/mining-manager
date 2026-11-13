@@ -59,13 +59,15 @@ export const itemDetail = (key: string) => (row: ItemStoreRow) =>
   valueOrDash(row.details[key]);
 
 /** Create the trailing buy action column shared by every item-store list. */
-export const createBuyColumn = (): ItemStoreColumn => ({
+export const createBuyColumn = (
+  onBuy?: (row: ItemStoreRow) => void,
+): ItemStoreColumn => ({
   key: 'buy',
   label: '',
   kind: 'button',
   flex: '0 0 2.75rem',
   align: 'center',
-  render: () => (
+  render: (row) => (
     <Button
       type="button"
       variant="primary"
@@ -75,10 +77,10 @@ export const createBuyColumn = (): ItemStoreColumn => ({
       iconOnly
       aria-label="Buy"
       title="Buy"
+      onClick={() => onBuy?.(row)}
     />
   ),
 });
-
 /** Create the item financial-summary action column shared by every item-store list. */
 export const createSummaryColumn = (): ItemStoreColumn => ({
   key: 'summary',

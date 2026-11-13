@@ -1,3 +1,5 @@
+export type EditableNumber = number | undefined;
+
 /** Format a decimal with a comma, preserving significant digits and at least two decimals. */
 export function formatDecimalValue(value: unknown): string {
   if (value === null || value === undefined || value === '') {
@@ -11,4 +13,17 @@ export function formatDecimalValue(value: unknown): string {
   const paddedFraction = fraction.padEnd(2, '0');
 
   return `${integerPart},${paddedFraction}`;
+}
+
+/** Convert a possibly-null numeric value into a finite number with a zero fallback. */
+export function numericValue(value: string | null): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+/** Preserve an empty numeric input while the user replaces it. */
+export function parseInputValue(value: string): EditableNumber {
+  if (value.trim() === '') return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.max(0, parsed) : undefined;
 }
