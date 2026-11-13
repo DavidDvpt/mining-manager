@@ -25,6 +25,13 @@
 - Every new or modified function and method must have a concise docstring describing its responsibility, important inputs and validation rules, side effects, and return value when applicable.
 - Keep the documentation close to the implementation and update it whenever the function's behavior changes.
 
+# Reuse before extension
+
+- Before adding a function, helper, service method, repository query, or API endpoint, search the existing services, repositories, controllers, generated client, and shared helpers for an equivalent capability.
+- Prefer reusing or extending the existing domain-owned implementation over introducing a parallel abstraction or endpoint.
+- Preserve the existing OpenAPI surface when it already supports the use case; add a new endpoint only when the existing contract cannot support the requirement.
+- Never regenerate or update the OpenAPI specification or generated client automatically. The repository owner updates it manually after reviewing and validating the backend and frontend changes.
+
 <!-- nx configuration end-->
 
 # Repository Architecture

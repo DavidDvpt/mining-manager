@@ -41,7 +41,7 @@ async def test_get_material_stock_for_item_delegates_to_one_scalar_lot_query():
     material_id = uuid4()
     user_id = uuid4()
     lot_service = SimpleNamespace(
-        get_available_quantities=AsyncMock(return_value={material_id: 7})
+        get_available_quantity=AsyncMock(return_value=7)
     )
     material_service = SimpleNamespace(
         get_by_id=AsyncMock(return_value=SimpleNamespace(id=material_id))
@@ -55,7 +55,7 @@ async def test_get_material_stock_for_item_delegates_to_one_scalar_lot_query():
 
     assert stock == {material_id: 7}
     material_service.get_by_id.assert_awaited_once_with(material_id)
-    lot_service.get_available_quantities.assert_awaited_once_with(
+    lot_service.get_available_quantity.assert_awaited_once_with(
         user_id=user_id,
-        item_ids={material_id},
+        item_id=material_id,
     )

@@ -14,7 +14,9 @@ class StorageService:
     """Provide storage inventory use cases."""
 
     def __init__(
-        self, lot_service: LotService, material_service: MaterialService
+        self,
+        lot_service: LotService,
+        material_service: MaterialService,
     ) -> None:
         """Store services used to identify materials and query their stock."""
 
@@ -42,11 +44,11 @@ class StorageService:
         material = await self._material_service.get_by_id(material_id)
         if material is None:
             return {}
-        stock = await self._lot_service.get_available_quantities(
+        quantity = await self._lot_service.get_available_quantity(
             user_id=user_id,
-            item_ids={material.id},
+            item_id=material.id,
         )
-        return stock
+        return {material.id: quantity}
 
 
 def get_storage_service(session: AsyncSession) -> StorageService:
