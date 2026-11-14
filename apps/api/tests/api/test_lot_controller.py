@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -141,7 +141,7 @@ def test_get_unstackable_lot_returns_item_and_tool_attributes(client, monkeypatc
         qty=1,
         reserved=0,
         tool_lot=SimpleNamespace(tier=7, tt="12.34500"),
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
         updated_at=None,
         is_active=True,
     )

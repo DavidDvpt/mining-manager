@@ -13,6 +13,10 @@ import { getItemStoreKind } from '@/shared/utils';
 import { FIXED_TRANSACTION_BUTTONS } from './constants';
 import styles from './transaction-page.module.scss';
 import { useItemStoreData } from '@/shared/hooks';
+import {
+  getGetApiV1LotsUnstackableItemItemIdQueryKey,
+  useGetApiV1LotsUnstackableItemItemId,
+} from '@/api/generated/miningManagerAPI';
 
 type TransactionContentProps = {
   materialTypes?: MaterialTypeResponse[];
@@ -27,6 +31,16 @@ export function TransactionContent({
   const { rows, isLoading, isError } = useItemStoreData();
   const [selectedItem, setSelectedItem] = useState<(typeof rows.material)[number] | null>(null);
   const [transactionAction, setTransactionAction] = useState<'buy' | 'sell'>('buy');
+  const selectedItemId = selectedItem?.id ?? '';
+  const unstackableLots = useGetApiV1LotsUnstackableItemItemId(
+    selectedItemId,
+    {
+      query: {
+        queryKey: getGetApiV1LotsUnstackableItemItemIdQueryKey(selectedItemId),
+        enabled: transactionAction === 'sell' && selectedItem !== null,
+      },
+    },
+  );
   const fixedButton = FIXED_TRANSACTION_BUTTONS.find(
     ({ id }) => id === activeButtonId,
   );
@@ -81,7 +95,10 @@ export function TransactionContent({
             isLoading={isLoading}
             isError={isError}
             showMaterialType={activeButtonId === 'materials'}
-            onBuy={setSelectedItem}
+            onBuy={(row) => {
+              setTransactionAction('buy');
+              setSelectedItem(row);
+            }}
             onSell={(row) => {
               setTransactionAction('sell');
               setSelectedItem(row);
@@ -91,9 +108,9 @@ export function TransactionContent({
       </Section>
       <TransactionModal
         item={selectedItem}
-        lot={null}
+        lot={unstackableLots.data?.[0] ?? null}
         action={transactionAction}
-        open={selectedItem !== null}
+        open={selectedItem !== null && (transactionAction === 'buy' || Boolean(unstackableLots.data?.[0]))}
         onOpenChange={(open) => {
           if (!open) {
             setSelectedItem(null);

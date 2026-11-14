@@ -10,6 +10,10 @@ import {
   usePostApiV1TransactionBuyUnstackable,
   usePostApiV1TransactionSellStackable,
   usePostApiV1TransactionSellUnstackable,
+  getGetApiV1ExcavatorsStockQueryKey,
+  getGetApiV1FinderAmplifiersStockQueryKey,
+  getGetApiV1FindersStockQueryKey,
+  getGetApiV1RefinersStockQueryKey,
 } from '@/api/generated/miningManagerAPI';
 import { isStackableItem } from '@/shared/utils';
 import type {
@@ -121,6 +125,13 @@ export function TransactionModal({
         }),
       );
     }
+
+    await Promise.all([
+      getGetApiV1FindersStockQueryKey(),
+      getGetApiV1ExcavatorsStockQueryKey(),
+      getGetApiV1RefinersStockQueryKey(),
+      getGetApiV1FinderAmplifiersStockQueryKey(),
+    ].map((queryKey) => queryClient.invalidateQueries({ queryKey })));
 
     onOpenChange(false);
   };

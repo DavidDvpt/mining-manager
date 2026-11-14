@@ -145,6 +145,30 @@ class LotRepository:
         lot = await self._session.scalar(statement)
         return lot
 
+    async def get_unstackable_lots_for_item(
+        self, *, user_id: UUID, item_id: UUID
+    ) -> list[Lot]:
+        """Load active, available tool lots for one catalogue item."""
+
+        statement = (
+            select(Lot)
+            .join(SessionLine, cast(SessionLine.id, String) == Lot.origin_id)
+            .join(ToolLot, ToolLot.lot_id == Lot.id)
+            .options(
+                joinedload(Lot.origin).joinedload(SessionLine.item),
+                joinedload(Lot.tool_lot),
+            )
+            .where(
+                Lot.user_id == user_id,
+                SessionLine.item_id == item_id,
+                Lot.is_active.is_(True),
+                Lot.qty - Lot.reserved > 0,
+            )
+            .order_by(Lot.created_at.asc(), Lot.id.asc())
+        )
+        result = await self._session.scalars(statement)
+        return list(result.unique().all())
+
     async def set_default_tool_lot(self, *, lot: Lot) -> Lot:
         """Persist the default flag on a validated, locked tool lot."""
 

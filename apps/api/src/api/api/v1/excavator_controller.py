@@ -6,6 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.api.deps import CurrentUser
 from api.core.exceptions import AppError
 from api.db import get_session
 from api.schemas import ExcavatorResponse
@@ -26,6 +27,16 @@ async def get_all_excavators(
     service: Annotated[ExcavatorService, Depends(get_excavator_service)],
 ):
     return await service.get_all()
+
+
+@router.get("/stock", response_model=dict[UUID, int])
+async def get_excavator_stock(
+    current_user: CurrentUser,
+    service: Annotated[ExcavatorService, Depends(get_excavator_service)],
+) -> dict[UUID, int]:
+    """Return available excavator stock grouped by catalogue item ID."""
+
+    return await service.get_stock(user_id=current_user["id"])
 
 
 @router.get("/{item_id}", response_model=ExcavatorResponse)

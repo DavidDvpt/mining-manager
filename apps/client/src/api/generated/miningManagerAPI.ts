@@ -36,6 +36,10 @@ import type {
   ExcavatorResponse,
   FinderAmplifierResponse,
   FinderResponse,
+  GetApiV1ExcavatorsStock200,
+  GetApiV1FinderAmplifiersStock200,
+  GetApiV1FindersStock200,
+  GetApiV1RefinersStock200,
   GetApiV1StorageMaterialMaterialIdStock200,
   GetApiV1StorageMaterialStock200,
   GetApiV1ValuationsEnhancerEnhancerIdLotsParams,
@@ -572,6 +576,76 @@ export function useGetApiV1Excavators<TData = Awaited<ReturnType<typeof getApiV1
 
 
 /**
+ * Return available excavator stock grouped by catalogue item ID.
+ * @summary Get Excavator Stock
+ */
+export const getApiV1ExcavatorsStock = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<GetApiV1ExcavatorsStock200>(
+      {url: `/api/v1/excavators/stock`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1ExcavatorsStockQueryKey = () => {
+    return [
+    `/api/v1/excavators/stock`
+    ] as const;
+    }
+
+
+export const getGetApiV1ExcavatorsStockQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1ExcavatorsStock>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1ExcavatorsStock>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1ExcavatorsStockQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1ExcavatorsStock>>> = ({ signal }) => getApiV1ExcavatorsStock(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1ExcavatorsStock>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetApiV1ExcavatorsStockQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1ExcavatorsStock>>>
+export type GetApiV1ExcavatorsStockQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get Excavator Stock
+ */
+
+export function useGetApiV1ExcavatorsStock<TData = Awaited<ReturnType<typeof getApiV1ExcavatorsStock>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1ExcavatorsStock>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetApiV1ExcavatorsStockQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
  * @summary Get Excavator By Id
  */
 export const getApiV1ExcavatorsItemId = (
@@ -711,6 +785,76 @@ export function useGetApiV1Finders<TData = Awaited<ReturnType<typeof getApiV1Fin
 
 
 /**
+ * Return available finder stock grouped by catalogue item ID.
+ * @summary Get Finder Stock
+ */
+export const getApiV1FindersStock = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<GetApiV1FindersStock200>(
+      {url: `/api/v1/finders/stock`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1FindersStockQueryKey = () => {
+    return [
+    `/api/v1/finders/stock`
+    ] as const;
+    }
+
+
+export const getGetApiV1FindersStockQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1FindersStock>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1FindersStock>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1FindersStockQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1FindersStock>>> = ({ signal }) => getApiV1FindersStock(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1FindersStock>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetApiV1FindersStockQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1FindersStock>>>
+export type GetApiV1FindersStockQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get Finder Stock
+ */
+
+export function useGetApiV1FindersStock<TData = Awaited<ReturnType<typeof getApiV1FindersStock>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1FindersStock>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetApiV1FindersStockQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
  * Return one finder from the catalogue.
  * @summary Get Finder By Id
  */
@@ -837,6 +981,76 @@ export function useGetApiV1FinderAmplifiers<TData = Awaited<ReturnType<typeof ge
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetApiV1FinderAmplifiersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Return available amplifier stock grouped by catalogue item ID.
+ * @summary Get Finder Amplifier Stock
+ */
+export const getApiV1FinderAmplifiersStock = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<GetApiV1FinderAmplifiersStock200>(
+      {url: `/api/v1/finder-amplifiers/stock`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1FinderAmplifiersStockQueryKey = () => {
+    return [
+    `/api/v1/finder-amplifiers/stock`
+    ] as const;
+    }
+
+
+export const getGetApiV1FinderAmplifiersStockQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1FinderAmplifiersStock>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1FinderAmplifiersStock>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1FinderAmplifiersStockQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1FinderAmplifiersStock>>> = ({ signal }) => getApiV1FinderAmplifiersStock(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1FinderAmplifiersStock>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetApiV1FinderAmplifiersStockQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1FinderAmplifiersStock>>>
+export type GetApiV1FinderAmplifiersStockQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get Finder Amplifier Stock
+ */
+
+export function useGetApiV1FinderAmplifiersStock<TData = Awaited<ReturnType<typeof getApiV1FinderAmplifiersStock>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1FinderAmplifiersStock>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetApiV1FinderAmplifiersStockQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -1252,6 +1466,76 @@ export function useGetApiV1MaterialTypes<TData = Awaited<ReturnType<typeof getAp
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetApiV1MaterialTypesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Return detailed available lots for one unstackable catalogue item.
+ * @summary Get Unstackable Lots For Item
+ */
+export const getApiV1LotsUnstackableItemItemId = (
+    itemId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<UnstackableLotResponse[]>(
+      {url: `/api/v1/lots/unstackable/item/${itemId}`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1LotsUnstackableItemItemIdQueryKey = (itemId: string,) => {
+    return [
+    `/api/v1/lots/unstackable/item/${itemId}`
+    ] as const;
+    }
+
+
+export const getGetApiV1LotsUnstackableItemItemIdQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1LotsUnstackableItemItemId>>, TError = ErrorType<HTTPValidationError>>(itemId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1LotsUnstackableItemItemId>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1LotsUnstackableItemItemIdQueryKey(itemId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1LotsUnstackableItemItemId>>> = ({ signal }) => getApiV1LotsUnstackableItemItemId(itemId, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: itemId !== null && itemId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1LotsUnstackableItemItemId>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetApiV1LotsUnstackableItemItemIdQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1LotsUnstackableItemItemId>>>
+export type GetApiV1LotsUnstackableItemItemIdQueryError = ErrorType<HTTPValidationError>
+
+
+/**
+ * @summary Get Unstackable Lots For Item
+ */
+
+export function useGetApiV1LotsUnstackableItemItemId<TData = Awaited<ReturnType<typeof getApiV1LotsUnstackableItemItemId>>, TError = ErrorType<HTTPValidationError>>(
+ itemId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1LotsUnstackableItemItemId>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetApiV1LotsUnstackableItemItemIdQueryOptions(itemId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -2369,6 +2653,76 @@ export function useGetApiV1Refiners<TData = Awaited<ReturnType<typeof getApiV1Re
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetApiV1RefinersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Return available refiner stock grouped by catalogue item ID.
+ * @summary Get Refiner Stock
+ */
+export const getApiV1RefinersStock = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<GetApiV1RefinersStock200>(
+      {url: `/api/v1/refiners/stock`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1RefinersStockQueryKey = () => {
+    return [
+    `/api/v1/refiners/stock`
+    ] as const;
+    }
+
+
+export const getGetApiV1RefinersStockQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1RefinersStock>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1RefinersStock>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1RefinersStockQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1RefinersStock>>> = ({ signal }) => getApiV1RefinersStock(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1RefinersStock>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetApiV1RefinersStockQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1RefinersStock>>>
+export type GetApiV1RefinersStockQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get Refiner Stock
+ */
+
+export function useGetApiV1RefinersStock<TData = Awaited<ReturnType<typeof getApiV1RefinersStock>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1RefinersStock>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetApiV1RefinersStockQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

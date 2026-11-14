@@ -21,6 +21,41 @@ from api.services import get_lot_service
 router = APIRouter(tags=["lots"])
 
 
+@router.get(
+    "/unstackable/item/{item_id}",
+    response_model=list[UnstackableLotResponse],
+)
+async def get_unstackable_lots_for_item(
+    item_id: UUID,
+    current_user: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> list[UnstackableLotResponse]:
+    """Return detailed available lots for one unstackable catalogue item."""
+
+    lots = await get_lot_service(session).get_unstackable_lots_for_item(
+        user_id=current_user["id"],
+        item_id=item_id,
+    )
+    return [
+        UnstackableLotResponse(
+            id=lot.id,
+            user_id=lot.user_id,
+            type=lot.type.value,
+            item=ItemSummaryResponse.model_validate(lot.origin.item),
+            qty=lot.qty,
+            reserved=lot.reserved,
+            tier=lot.tool_lot.tier,
+            tt=lot.tool_lot.tt,
+            is_default=lot.tool_lot.is_default,
+            created_at=lot.created_at,
+            updated_at=lot.updated_at,
+            is_active=lot.is_active,
+        )
+        for lot in lots
+        if lot.origin is not None and lot.origin.item is not None and lot.tool_lot is not None
+    ]
+
+
 @router.get("/unstackable/{lot_id}", response_model=UnstackableLotResponse)
 async def get_unstackable_lot(
     lot_id: UUID,

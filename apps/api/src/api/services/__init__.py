@@ -1,7 +1,7 @@
 """Application services."""
 
-from .deposit_size_service import DepositSizeService
 from .claim_service import ClaimService, get_claim_service
+from .deposit_size_service import DepositSizeService
 from .enhancer_service import EnhancerService, get_enhancer_service
 from .excavator_service import ExcavatorService, get_excavator_service
 from .finder_amplifier_service import (
@@ -14,8 +14,8 @@ from .lot_service import LotService, get_lot_service
 from .material_service import MaterialService
 from .material_type_service import MaterialTypeService
 from .mining_loot_service import MiningLootService, get_mining_loot_service
-from .refiner_service import RefinerService
 from .refinage_recipe_service import RefinageRecipeService
+from .refiner_service import RefinerService, get_refiner_service
 from .session_line_service import SessionLineService, get_session_line_service
 from .session_mining_service import (
     MiningSessionCreation,
@@ -34,35 +34,36 @@ __all__ = [
     "ClaimService",
     "DepositSizeService",
     "EnhancerService",
-    "get_enhancer_service",
     "ExcavatorService",
     "FinderAmplifierService",
     "FinderService",
-    "get_excavator_service",
-    "get_finder_amplifier_service",
-    "get_finder_service",
     "ItemService",
-    "is_limited_item",
     "LotService",
     "MaterialService",
     "MaterialTypeService",
     "MiningLootService",
     "MiningSessionCreation",
-    "RefinerService",
     "RefinageRecipeService",
+    "RefinerService",
     "SessionLineService",
     "SessionMiningService",
     "SessionService",
     "SessionTransactionService",
     "StorageService",
     "ValuationService",
-    "get_lot_service",
     "get_claim_service",
+    "get_enhancer_service",
+    "get_excavator_service",
+    "get_finder_amplifier_service",
+    "get_finder_service",
+    "get_lot_service",
     "get_mining_loot_service",
+    "get_refiner_service",
     "get_session_line_service",
     "get_session_mining_service",
     "get_session_service",
     "get_session_transaction_service",
     "get_storage_service",
     "get_valuation_service",
+    "is_limited_item",
 ]

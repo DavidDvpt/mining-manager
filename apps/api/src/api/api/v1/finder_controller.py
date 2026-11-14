@@ -6,6 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.api.deps import CurrentUser
 from api.core.exceptions import AppError
 from api.db import get_session
 from api.schemas import FinderResponse
@@ -30,6 +31,16 @@ async def get_all_finders(
     """Return all finders from the catalogue."""
 
     return await service.get_all()
+
+
+@router.get("/stock", response_model=dict[UUID, int])
+async def get_finder_stock(
+    current_user: CurrentUser,
+    service: Annotated[FinderService, Depends(get_finder_service)],
+) -> dict[UUID, int]:
+    """Return available finder stock grouped by catalogue item ID."""
+
+    return await service.get_stock(user_id=current_user["id"])
 
 
 @router.get("/{item_id}", response_model=FinderResponse)

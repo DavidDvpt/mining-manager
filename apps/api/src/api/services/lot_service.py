@@ -168,6 +168,16 @@ class LotService:
             raise UnprocessingError("Lot is not an unstackable tool lot")
         return lot
 
+    async def get_unstackable_lots_for_item(
+        self, *, user_id: UUID, item_id: UUID
+    ) -> list[Lot]:
+        """Return available unstackable lots for one catalogue item."""
+
+        return await self._repository.get_unstackable_lots_for_item(
+            user_id=user_id,
+            item_id=item_id,
+        )
+
     async def set_default_tool_lot(self, *, user_id: UUID, lot_id: UUID) -> Lot:
         """Set an owned finder, excavator, or refiner lot as the default.
 

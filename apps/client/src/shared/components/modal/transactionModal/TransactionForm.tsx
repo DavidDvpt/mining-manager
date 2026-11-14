@@ -97,6 +97,7 @@ export function TransactionForm({
         min={1}
         step={1}
         readOnly={!isStackable}
+        autoFocus={isStackable}
         onChange={(event) => handleChange('quantity', event.target.value)}
       />
       <InputRHF
@@ -104,8 +105,9 @@ export function TransactionForm({
         label="TT"
         type="number"
         min={0}
-        step={1}
+        step="0.01"
         readOnly={isStackable}
+        autoFocus={!isStackable}
         onChange={(event) => handleChange('tt', event.target.value)}
       />
       <InputRHF

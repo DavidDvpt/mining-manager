@@ -33,8 +33,12 @@ export function TransactionSummary({ stackable }: TransactionSummaryProps) {
 
   return (
     <div className={styles.summary}>
-      <span>Plus-value</span>
-      <span className={styles.value}>{formatDecimalValue(ttc - tt)}</span>
+      <div>
+        <span>Plus-value</span>
+        <span className={styles.value}>
+          {formatDecimalValue(ttc - tt)} Peds
+        </span>
+      </div>
     </div>
   );
 }

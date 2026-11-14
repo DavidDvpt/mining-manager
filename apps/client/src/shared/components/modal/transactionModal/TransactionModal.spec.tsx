@@ -30,6 +30,12 @@ const mutationMocks = vi.hoisted(() => ({
 const stockQueryKey = ['/api/v1/storage/material/stock'] as const;
 
 vi.mock('@/api/generated/miningManagerAPI', () => ({
+  getGetApiV1ExcavatorsStockQueryKey: () => ['/api/v1/excavators/stock'],
+  getGetApiV1FinderAmplifiersStockQueryKey: () => [
+    '/api/v1/finder-amplifiers/stock',
+  ],
+  getGetApiV1FindersStockQueryKey: () => ['/api/v1/finders/stock'],
+  getGetApiV1RefinersStockQueryKey: () => ['/api/v1/refiners/stock'],
   getGetApiV1StorageMaterialStockQueryKey: () => [
     '/api/v1/storage/material/stock',
   ],
@@ -78,6 +84,38 @@ describe('TransactionModal', () => {
     mutationMocks.sellUnstackable.mockResolvedValue(undefined);
   });
 
+  it('focuses quantity for stackable transactions', async () => {
+    renderTransactionModal(
+      <TransactionModal
+        item={stackableItem}
+        lot={null}
+        action="buy"
+        open
+        onOpenChange={vi.fn()}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByLabelText('Quantity')),
+    );
+  });
+
+  it('focuses TT for unstackable transactions', async () => {
+    renderTransactionModal(
+      <TransactionModal
+        item={unstackableItem}
+        lot={null}
+        action="buy"
+        open
+        onOpenChange={vi.fn()}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByLabelText('TT')),
+    );
+  });
+
   it('creates a stackable buy transaction and closes after success', async () => {
     const onOpenChange = vi.fn();
 
@@ -118,6 +156,9 @@ describe('TransactionModal', () => {
       />,
     );
 
+    fireEvent.change(screen.getByLabelText('TT'), {
+      target: { value: '9.5' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Valider' }));
 
     await waitFor(() => expect(mutationMocks.buyUnstackable).toHaveBeenCalledOnce());
@@ -125,6 +166,7 @@ describe('TransactionModal', () => {
       item_id: 'finder-1',
       kind: 'tool',
       quantity: 1,
+      tt: 9.5,
     });
   });
 

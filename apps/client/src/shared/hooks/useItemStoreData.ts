@@ -1,12 +1,16 @@
 import { useMemo } from 'react';
 
 import {
+  useGetApiV1ExcavatorsStock,
   useGetApiV1Enhancers,
   useGetApiV1Excavators,
   useGetApiV1FinderAmplifiers,
+  useGetApiV1FinderAmplifiersStock,
   useGetApiV1Finders,
+  useGetApiV1FindersStock,
   useGetApiV1Materials,
   useGetApiV1Refiners,
+  useGetApiV1RefinersStock,
   useGetApiV1StorageMaterialStock,
 } from '@/api/generated/miningManagerAPI';
 import { getItemImageUrl } from '@/config/images';
@@ -44,16 +48,24 @@ export function useItemStoreData() {
   const enhancers = useGetApiV1Enhancers();
   const materials = useGetApiV1Materials();
   const materialStock = useGetApiV1StorageMaterialStock();
+  const finderStock = useGetApiV1FindersStock();
+  const excavatorStock = useGetApiV1ExcavatorsStock();
+  const refinerStock = useGetApiV1RefinersStock();
+  const finderAmplifierStock = useGetApiV1FinderAmplifiersStock();
 
   const rows = useMemo(
     () => ({
-      finder: (finders.data ?? []).map((item) => toStoreRow(item, 'finder')),
-      excavator: (excavators.data ?? []).map((item) =>
-        toStoreRow(item, 'excavator'),
+      finder: (finders.data ?? []).map((item) =>
+        toStoreRow(item, 'finder', finderStock.data?.[item.id] ?? 0),
       ),
-      refiner: (refiners.data ?? []).map((item) => toStoreRow(item, 'refiner')),
+      excavator: (excavators.data ?? []).map((item) =>
+        toStoreRow(item, 'excavator', excavatorStock.data?.[item.id] ?? 0),
+      ),
+      refiner: (refiners.data ?? []).map((item) =>
+        toStoreRow(item, 'refiner', refinerStock.data?.[item.id] ?? 0),
+      ),
       'finder-amplifier': (finderAmplifiers.data ?? []).map((item) =>
-        toStoreRow(item, 'finder-amplifier'),
+        toStoreRow(item, 'finder-amplifier', finderAmplifierStock.data?.[item.id] ?? 0),
       ),
       enhancer: (enhancers.data ?? []).map((item) =>
         toStoreRow(item, 'enhancer'),
@@ -70,6 +82,10 @@ export function useItemStoreData() {
       enhancers.data,
       materials.data,
       materialStock.data,
+      finderStock.data,
+      excavatorStock.data,
+      refinerStock.data,
+      finderAmplifierStock.data,
     ],
   );
 
@@ -83,6 +99,10 @@ export function useItemStoreData() {
       enhancers,
       materials,
       materialStock,
+      finderStock,
+      excavatorStock,
+      refinerStock,
+      finderAmplifierStock,
     ].some((query) => query.isLoading),
     isError: [
       finders,
@@ -92,6 +112,10 @@ export function useItemStoreData() {
       enhancers,
       materials,
       materialStock,
+      finderStock,
+      excavatorStock,
+      refinerStock,
+      finderAmplifierStock,
     ].some((query) => query.isError),
   };
 }
