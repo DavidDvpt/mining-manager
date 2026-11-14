@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-type QueryContext = Record<string, string | undefined>;
+type QueryContext = Record<string, unknown>;
 type QueryContextUpdates<T extends QueryContext> = Partial<{
   [Key in keyof T]: T[Key] | null;
 }>;

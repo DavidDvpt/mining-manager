@@ -36,6 +36,7 @@ export type TranslationSchema = {
     RUNNING_TRANSACTIONS: string;
     ACTIVE_VIEW: string;
     DESCRIPTION: string;
+    OWNED_ONLY: string;
     QUANTITY_EXCEEDS_STOCK: string;
     TT_EXCEEDS_BASE: string;
   };

@@ -2,6 +2,7 @@ import { useTranslations } from '@/i18n/useTranslations';
 import { useEffect } from 'react';
 import { useSidebarLayoutContext } from '@/layouts/sidebarLayout';
 import { Panel, Section, TransactionModal } from '@/shared/components';
+import { Switch } from '@/components/ui/switch';
 import { ItemStoreList } from './itemStoreList';
 import type { MaterialTypeResponse } from '@/api/generated/model/materialTypeResponse';
 import { getItemStoreKind, isStackableItem } from '@/shared/utils';
@@ -32,6 +33,7 @@ export function TransactionContent({
 }: TransactionContentProps) {
   const { activeButtonId } = useSidebarLayoutContext();
   const { t } = useTranslations();
+  const ownedOnly = context.owned_only ?? false;
   const { rows, isLoading, isError } = useItemStoreData();
   const selectedItem =
     Object.values(rows)
@@ -87,9 +89,12 @@ export function TransactionContent({
           row.details.type === materialType?.id,
       )
     : [];
+  const ownedRows = ownedOnly
+    ? visibleRows.filter((row) => (row.stock ?? 0) > 0)
+    : visibleRows;
   const displayRows =
     activeKind === 'material'
-      ? visibleRows.map((row) => ({
+      ? ownedRows.map((row) => ({
           ...row,
           details: {
             ...row.details,
@@ -98,7 +103,7 @@ export function TransactionContent({
               row.details.type,
           },
         }))
-      : visibleRows;
+      : ownedRows;
 
   return (
     <Panel className={styles.page}>
@@ -110,6 +115,14 @@ export function TransactionContent({
           {activeViewSuffix}
         </p>
         <p>{t('TRANSACTIONS.DESCRIPTION')}</p>
+        <div className={styles.ownedFilter}>
+          <span>{t('TRANSACTIONS.OWNED_ONLY')}</span>
+          <Switch
+            checked={ownedOnly}
+            onCheckedChange={(checked) => updateContext({ owned_only: checked })}
+            aria-label={t('TRANSACTIONS.OWNED_ONLY')}
+          />
+        </div>
         {activeKind ? (
           <ItemStoreList
             kind={activeKind}

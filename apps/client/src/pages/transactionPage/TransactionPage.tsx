@@ -13,13 +13,13 @@ export function TransactionPage() {
   const { t } = useTranslations();
   const { data: materialTypes = [] } = useGetApiV1MaterialTypes();
   const { context, updateContext } = useTransactionContext();
-  const activePage = context.page ?? 'running-transactions';
+  const activePage = context.page ?? 'materials';
 
   return (
     <MainLayout>
       <SidebarLayout
         buttons={transactionButtons(t, materialTypes)}
-        defaultButtonId="running-transactions"
+        defaultButtonId="materials"
         activeButtonId={activePage}
         onButtonChange={(page) => {
           if (page === 'running-transactions') {

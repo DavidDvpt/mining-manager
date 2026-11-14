@@ -42,6 +42,7 @@ export const fr_FR: TranslationSchema = {
     ACTIVE_VIEW: 'Vue active : {view}',
     DESCRIPTION:
       'Sélectionnez une catégorie à gauche pour afficher les achats, ventes et éléments possédés dans cette même vue.',
+    OWNED_ONLY: 'Afficher uniquement les objets possédés',
     QUANTITY_EXCEEDS_STOCK:
       'La quantité ne peut pas dépasser le stock disponible.',
     TT_EXCEEDS_BASE:

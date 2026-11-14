@@ -10,6 +10,7 @@ export type TransactionContext = {
   lot_id?: string;
   page?: TransactionButtonId;
   modal?: TransactionModalContext;
+  owned_only?: boolean;
 };
 export type TransactionContextUpdate = Partial<{
   [Key in keyof TransactionContext]: TransactionContext[Key] | null;
@@ -55,6 +56,7 @@ export function parseTransactionContext(
       params.get('context_modal') === 'running-transactions'
         ? 'running-transactions'
         : undefined,
+    owned_only: params.get('context_owned_only') !== 'false',
   };
 }
 
