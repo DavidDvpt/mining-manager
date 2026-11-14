@@ -1,10 +1,13 @@
 """Request and response schemas for named transaction sessions."""
 
+from datetime import date
 from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
+
+from .item_schema import ItemSummaryResponse
 
 
 class CreateStackableBuyRequest(BaseModel):
@@ -62,7 +65,29 @@ class CreateUnstackableSellRequest(BaseModel):
 class UpdateTransactionStatusRequest(BaseModel):
     """Payload for closing or cancelling a running transaction session."""
 
-    status: Literal["SOLDED", "RETURNED", "CANCELLED"]
+    status: Literal["RUNNING", "SOLDED", "RETURNED", "CANCELLED"]
+
+
+class RunningTransactionLotResponse(BaseModel):
+    """Serialized lot reservation belonging to a running transaction."""
+
+    lot_id: UUID
+    quantity: int
+
+
+class RunningTransactionResponse(BaseModel):
+    """Serialized row displayed by the running transaction manager."""
+
+    session_id: UUID
+    type: str
+    status: Literal["RUNNING", "SOLDED", "RETURNED", "CANCELLED"]
+    kind: Literal["tool", "resource"]
+    item: ItemSummaryResponse
+    quantity: int
+    lots: list[RunningTransactionLotResponse]
+    created_at: date
+    tt: Decimal
+    ttc: Decimal
 
 
 class SessionTransactionResponse(BaseModel):

@@ -17,6 +17,7 @@ from api.db.models import (
 )
 from api.db.repositories import SessionTransactionRepository
 from api.db.repositories.material_repository import MaterialRepository
+from api.schemas import RunningTransactionLotResponse, RunningTransactionResponse
 
 from .item_service import ItemService, get_item_service, is_limited_item
 from .lot_service import LotService, get_lot_service
@@ -288,6 +289,44 @@ class SessionTransactionService:
             raise AppError(404, "Transaction not found")
         return transaction
 
+    async def get_running_transactions(
+        self, *, user_id: UUID
+    ) -> list[RunningTransactionResponse]:
+        """Return running SELL transactions grouped as rows for the manager UI."""
+
+        transactions = await self._repository.get_running_transactions(user_id=user_id)
+        responses: list[RunningTransactionResponse] = []
+        for transaction in transactions:
+            lines = transaction.session.lines
+            first_line = lines[0] if lines else None
+            lot = first_line.lot if first_line is not None else None
+            origin = lot.origin if lot is not None else None
+            item = origin.item if origin is not None else None
+            if item is None:
+                continue
+            responses.append(
+                RunningTransactionResponse(
+                    session_id=transaction.session_id,
+                    type=transaction.type.value,
+                    status=transaction.status.value,
+                    kind="tool" if lot is not None and lot.tool_lot is not None else "resource",
+                    item=item,
+                    quantity=sum(line.quantity or 0 for line in lines),
+                    lots=[
+                        RunningTransactionLotResponse(
+                            lot_id=line.lot_id,
+                            quantity=line.quantity or 0,
+                        )
+                        for line in lines
+                        if line.lot_id is not None
+                    ],
+                    created_at=transaction.session.started_at,
+                    tt=transaction.tt,
+                    ttc=transaction.ttc,
+                )
+            )
+        return responses
+
     async def patch_status(
         self,
         *,
@@ -310,6 +349,9 @@ class SessionTransactionService:
                 raise UnprocessingError("Only SELL transactions can change status")
             if transaction.status is not SessionTransactionStatus.RUNNING:
                 raise UnprocessingError("Only RUNNING transactions can change status")
+
+            if status is SessionTransactionStatus.RUNNING:
+                return transaction
 
             for line in transaction.session.lines:
                 if line.lot_id is None or line.quantity is None:

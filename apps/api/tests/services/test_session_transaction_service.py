@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
@@ -466,3 +467,49 @@ async def test_get_transaction_by_id_scopes_lookup_and_maps_missing(service):
     service._repository.get_transaction_by_id.return_value = None
     with pytest.raises(AppError, match="Transaction not found"):
         await service.get_transaction_by_id(user_id=user_id, session_id=session_id)
+
+
+async def test_get_running_transactions_exposes_reserved_lots(service):
+    """Serialize reserved transaction lots with their aggregated running row."""
+
+    session_id = uuid4()
+    lot_id = uuid4()
+    item = SimpleNamespace(
+        id=uuid4(),
+        name="Finder",
+        img_id=None,
+        nexus_id=None,
+        weight=None,
+        is_untradeable=False,
+        is_rare=False,
+        is_active=True,
+        nexus_url=None,
+        description=None,
+        created_at=None,
+        updated_at=None,
+    )
+    line = SimpleNamespace(
+        lot_id=lot_id,
+        quantity=2,
+        lot=SimpleNamespace(
+            origin=SimpleNamespace(item=item),
+            tool_lot=SimpleNamespace(tier=0),
+        ),
+    )
+    transaction = SimpleNamespace(
+        session_id=session_id,
+        type=SessionTransactionType.SELL,
+        status=SessionTransactionStatus.RUNNING,
+        tt=Decimal("10"),
+        ttc=Decimal("12"),
+        session=SimpleNamespace(started_at=date(2026, 1, 2), lines=[line]),
+    )
+    service._repository.get_running_transactions.return_value = [transaction]
+
+    result = await service.get_running_transactions(user_id=uuid4())
+
+    assert result[0].session_id == session_id
+    assert result[0].kind == "tool"
+    assert result[0].quantity == 2
+    assert result[0].lots[0].lot_id == lot_id
+    assert result[0].lots[0].quantity == 2

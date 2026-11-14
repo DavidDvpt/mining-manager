@@ -10,17 +10,30 @@ from api.api.deps import CurrentUser
 from api.db import get_session
 from api.db.models import SessionTransactionStatus, SessionTransactionTypeDetail
 from api.schemas import (
-    CreateStackableBuyRequest,
     CreateConsumedMaterialRequest,
+    CreateStackableBuyRequest,
     CreateStackableSellRequest,
     CreateUnstackableBuyRequest,
     CreateUnstackableSellRequest,
+    RunningTransactionResponse,
     SessionTransactionResponse,
     UpdateTransactionStatusRequest,
 )
 from api.services import get_session_transaction_service
 
 router = APIRouter(tags=["transactions"])
+
+
+@router.get("/running", response_model=list[RunningTransactionResponse])
+async def get_running_transactions(
+    current_user: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> list[RunningTransactionResponse]:
+    """Return all running transaction rows owned by the authenticated user."""
+
+    return await get_session_transaction_service(session).get_running_transactions(
+        user_id=current_user["id"]
+    )
 
 
 @router.post("/consumed/material", response_model=SessionTransactionResponse, status_code=201)

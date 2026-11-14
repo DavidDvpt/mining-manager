@@ -3,11 +3,12 @@
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from api.db.models import (
+    Lot,
     Session,
     SessionLine,
     SessionLineType,
@@ -146,6 +147,33 @@ class SessionTransactionRepository:
             .with_for_update(of=SessionTransaction)
         )
         return await self._session.scalar(statement)
+
+    async def get_running_transactions(
+        self, *, user_id: UUID
+    ) -> list[SessionTransaction]:
+        """Load the user's running transactions with their item and lot origins."""
+
+        statement = (
+            select(SessionTransaction)
+            .join(Session, Session.id == SessionTransaction.session_id)
+            .options(
+                joinedload(SessionTransaction.session)
+                .selectinload(Session.lines)
+                .selectinload(SessionLine.lot)
+                .selectinload(Lot.origin)
+                .selectinload(SessionLine.item),
+                joinedload(SessionTransaction.session)
+                .selectinload(Session.lines)
+                .selectinload(SessionLine.lot)
+                .selectinload(Lot.tool_lot),
+            )
+            .where(
+                Session.user_id == user_id,
+                SessionTransaction.status == SessionTransactionStatus.RUNNING,
+            )
+            .order_by(Session.started_at.desc())
+        )
+        return list((await self._session.scalars(statement)).unique().all())
 
     async def patch_status(
         self, *, transaction: SessionTransaction, status: SessionTransactionStatus
