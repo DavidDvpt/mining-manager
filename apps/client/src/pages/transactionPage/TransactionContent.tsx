@@ -1,9 +1,19 @@
 import { useTranslations } from '@/i18n/useTranslations';
+import { useState } from 'react';
 import { useSidebarLayoutContext } from '@/layouts/sidebarLayout';
-import { Panel, Section } from '@/shared/components';
+import {
+  usePostApiV1TransactionBuyStackable,
+  usePostApiV1TransactionBuyUnstackable,
+} from '@/api/generated/miningManagerAPI';
+import {
+  Panel,
+  Section,
+  TransactionModal,
+} from '@/shared/components';
+import type { TransactionFormValues } from '@/shared/types/modal';
 import { ItemStoreList } from '@/shared/components/itemStoreList';
-import type { ItemStoreKind } from '@/shared/types/listItem';
 import type { MaterialTypeResponse } from '@/api/generated/model/materialTypeResponse';
+import { getItemStoreKind, isStackableItem } from '@/shared/utils';
 
 import { FIXED_TRANSACTION_BUTTONS } from './constants';
 import styles from './transaction-page.module.scss';
@@ -13,26 +23,6 @@ type TransactionContentProps = {
   materialTypes?: MaterialTypeResponse[];
 };
 
-/** Resolve the active sidebar button to the catalogue group shown in the store list. */
-function getItemStoreKind(buttonId: string): ItemStoreKind | undefined {
-  switch (buttonId) {
-    case 'finder':
-      return 'finder';
-    case 'excavator':
-      return 'excavator';
-    case 'refiner':
-      return 'refiner';
-    case 'finder-enhancers':
-      return 'enhancer';
-    case 'finder-excavators':
-      return 'finder-amplifier';
-    case 'materials':
-      return 'material';
-    default:
-      return buttonId.startsWith('material-type-') ? 'material' : undefined;
-  }
-}
-
 /** Render transaction content using the sidebar selection and loaded material types. */
 export function TransactionContent({
   materialTypes = [],
@@ -40,6 +30,9 @@ export function TransactionContent({
   const { activeButtonId } = useSidebarLayoutContext();
   const { t } = useTranslations();
   const { rows, isLoading, isError } = useItemStoreData();
+  const [selectedItem, setSelectedItem] = useState<(typeof rows.material)[number] | null>(null);
+  const buyStackable = usePostApiV1TransactionBuyStackable();
+  const buyUnstackable = usePostApiV1TransactionBuyUnstackable();
   const fixedButton = FIXED_TRANSACTION_BUTTONS.find(
     ({ id }) => id === activeButtonId,
   );
@@ -77,6 +70,39 @@ export function TransactionContent({
         }))
       : visibleRows;
 
+  /** Submit the selected catalogue row through the stackability-specific API. */
+  const handleBuy = async (values: TransactionFormValues) => {
+    if (!selectedItem) return;
+
+    const kind = selectedItem.kind === 'material' ? 'material' :
+      selectedItem.kind === 'enhancer' ? 'enhancer' : 'tool';
+    if (isStackableItem(selectedItem)) {
+      await buyStackable.mutateAsync({
+        data: {
+          quantity: values.quantity,
+          kind,
+          type_detail: 'TT',
+          item_id: selectedItem.id,
+          fee: values.fee,
+          ttc: values.ttc,
+        },
+      });
+      return;
+    }
+
+    await buyUnstackable.mutateAsync({
+      data: {
+        quantity: 1,
+        tt: values.tt,
+        kind,
+        type_detail: 'TT',
+        item_id: selectedItem.id,
+        fee: values.fee,
+        ttc: values.ttc,
+      },
+    });
+  };
+
   return (
     <Panel className={styles.page}>
       <Section>
@@ -94,9 +120,20 @@ export function TransactionContent({
             isLoading={isLoading}
             isError={isError}
             showMaterialType={activeButtonId === 'materials'}
+            onBuy={setSelectedItem}
           />
         ) : null}
       </Section>
+      <TransactionModal
+        item={selectedItem}
+        lot={null}
+        action="buy"
+        open={selectedItem !== null}
+        onSubmit={handleBuy}
+        onOpenChange={(open) => {
+          if (!open) setSelectedItem(null);
+        }}
+      />
     </Panel>
   );
 }

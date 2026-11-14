@@ -8,6 +8,11 @@ export function isStackableItem(item: ItemStoreRow): boolean {
   return item.kind === 'material' || item.kind === 'enhancer';
 }
 
+/** Return whether a catalogue item is limited according to its display name. */
+export function isLimitedItem(item: ItemStoreRow): boolean {
+  return item.name.endsWith('(L)');
+}
+
 /** Resolve a sidebar button identifier to its catalogue store group. */
 export function getItemStoreKind(buttonId: string): ItemStoreKind | undefined {
   switch (buttonId) {

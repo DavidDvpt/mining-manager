@@ -15,6 +15,12 @@ export function formatDecimalValue(value: unknown): string {
   return `${integerPart},${paddedFraction}`;
 }
 
+/** Format a finite percentage value with a configurable number of decimal places. */
+export function formatPercentageValue(value: number, decimalPlaces = 2): string {
+  const safeDecimalPlaces = Math.min(100, Math.max(0, Math.trunc(decimalPlaces)));
+  return (Number.isFinite(value) ? value : 0).toFixed(safeDecimalPlaces);
+}
+
 /** Convert a possibly-null numeric value into a finite number with a zero fallback. */
 export function numericValue(value: string | null): number {
   const parsed = Number(value);
