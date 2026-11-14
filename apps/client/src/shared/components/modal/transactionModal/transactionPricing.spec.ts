@@ -35,6 +35,15 @@ describe('TransactionPricing', () => {
 
     const afterLowerTtc = await pricing.update('ttc', 11);
 
-    expect(afterLowerTtc).toMatchObject({ tt: 10, fee: 3, ttc: 13 });
+    expect(afterLowerTtc).toMatchObject({ tt: 10, fee: 3, ttc: 11 });
+  });
+
+  it('keeps a temporarily low TTC while editing a sale', async () => {
+    const pricing = new TransactionPricing('sell', item, null);
+
+    const afterFee = await pricing.update('fee', 3);
+    const values = await pricing.update('ttc', 11);
+
+    expect(values).toMatchObject({ tt: 10, fee: afterFee.fee, ttc: 11 });
   });
 });

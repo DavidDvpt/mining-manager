@@ -43,6 +43,11 @@
   border-color: var(--danger);
 }
 
+.readOnly {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
 .error {
   margin: 0;
   color: var(--error-300);

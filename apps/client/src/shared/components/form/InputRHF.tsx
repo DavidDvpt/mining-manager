@@ -38,6 +38,7 @@ export function InputRHF({ name, label, className, id, ...props }: InputRHFProps
           className={cn(
             fieldState.error && styles.invalid,
             isPasswordField && styles.passwordInput,
+            props.readOnly && styles.readOnly,
             className,
           )}
         />

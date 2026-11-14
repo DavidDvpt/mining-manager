@@ -85,6 +85,7 @@ export class TransactionPricing {
       } else {
         this.values = { ...this.values, [field]: normalizedValue };
       }
+      if (field === 'ttc') return this.values;
       const result = this.getValuesFromUpdate(this.values);
       this.values = { ...this.values, ...result };
       return this.values;
@@ -119,10 +120,10 @@ export class TransactionPricing {
           });
           break;
         case 'ttc':
-          result = this.getValuesFromUpdate({
+          result = {
             ...this.getValues(),
             ttc: value,
-          });
+          };
           break;
         default:
           result = this.values;
