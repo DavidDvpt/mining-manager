@@ -20,7 +20,7 @@ export const createCommonItemColumns = (
     {
       key: 'image',
       label: '',
-      flex: '0 0 3.5rem',
+      flex: '0 0 4rem',
       cellClassName: appListStyles.imageColumn,
       render: (row) => (
         <EntropiaImage
@@ -31,7 +31,7 @@ export const createCommonItemColumns = (
         />
       ),
     },
-    { key: 'name', label: t('ITEM_STORE.NAME'), flex: '2 1 14rem', render: (row) => row.name },
+    { key: 'name', label: t('ITEM_STORE.NAME'), flex: '1 1 14rem', render: (row) => row.name },
     {
       key: 'tt',
       label: 'TT',
