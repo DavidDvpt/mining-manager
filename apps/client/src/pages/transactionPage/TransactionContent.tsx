@@ -4,6 +4,7 @@ import { useSidebarLayoutContext } from '@/layouts/sidebarLayout';
 import {
   usePostApiV1TransactionBuyStackable,
   usePostApiV1TransactionBuyUnstackable,
+  usePostApiV1TransactionSellStackable,
 } from '@/api/generated/miningManagerAPI';
 import {
   Panel,
@@ -31,8 +32,10 @@ export function TransactionContent({
   const { t } = useTranslations();
   const { rows, isLoading, isError } = useItemStoreData();
   const [selectedItem, setSelectedItem] = useState<(typeof rows.material)[number] | null>(null);
+  const [transactionAction, setTransactionAction] = useState<'buy' | 'sell'>('buy');
   const buyStackable = usePostApiV1TransactionBuyStackable();
   const buyUnstackable = usePostApiV1TransactionBuyUnstackable();
+  const sellStackable = usePostApiV1TransactionSellStackable();
   const fixedButton = FIXED_TRANSACTION_BUTTONS.find(
     ({ id }) => id === activeButtonId,
   );
@@ -70,9 +73,22 @@ export function TransactionContent({
         }))
       : visibleRows;
 
-  /** Submit the selected catalogue row through the stackability-specific API. */
-  const handleBuy = async (values: TransactionFormValues) => {
+  /** Submit the selected catalogue row through the action- and stackability-specific API. */
+  const handleTransaction = async (values: TransactionFormValues) => {
     if (!selectedItem) return;
+
+    if (transactionAction === 'sell') {
+      if (!isStackableItem(selectedItem)) return;
+      await sellStackable.mutateAsync({
+        data: {
+          quantity: values.quantity,
+          item_id: selectedItem.id,
+          tt: values.tt,
+          ttc: values.ttc,
+        },
+      });
+      return;
+    }
 
     const kind = selectedItem.kind === 'material' ? 'material' :
       selectedItem.kind === 'enhancer' ? 'enhancer' : 'tool';
@@ -121,17 +137,24 @@ export function TransactionContent({
             isError={isError}
             showMaterialType={activeButtonId === 'materials'}
             onBuy={setSelectedItem}
+            onSell={(row) => {
+              setTransactionAction('sell');
+              setSelectedItem(row);
+            }}
           />
         ) : null}
       </Section>
       <TransactionModal
         item={selectedItem}
         lot={null}
-        action="buy"
+        action={transactionAction}
         open={selectedItem !== null}
-        onSubmit={handleBuy}
+        onSubmit={handleTransaction}
         onOpenChange={(open) => {
-          if (!open) setSelectedItem(null);
+          if (!open) {
+            setSelectedItem(null);
+            setTransactionAction('buy');
+          }
         }}
       />
     </Panel>

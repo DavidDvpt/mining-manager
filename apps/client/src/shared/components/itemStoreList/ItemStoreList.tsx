@@ -8,7 +8,12 @@ import {
   createMaterialColumns,
   createRefinerColumns,
 } from './columns';
-import { createBuyColumn, createSummaryColumn } from './columns/common';
+import {
+  createBuyColumn,
+  createSellColumn,
+  createStockColumn,
+  createSummaryColumn,
+} from './columns/common';
 import type {
   ItemStoreColumn,
   ItemStoreListProps,
@@ -23,6 +28,7 @@ export function ItemStoreList({
   isError = false,
   showMaterialType = false,
   onBuy,
+  onSell,
 }: ItemStoreListProps) {
   const columns = useMemo<ItemStoreColumn[]>(() => {
     let typeColumns: ItemStoreColumn[] = [];
@@ -40,10 +46,12 @@ export function ItemStoreList({
 
     return [
       ...typeColumns,
+      createStockColumn(),
+      createSellColumn(onSell),
       createSummaryColumn(),
       createBuyColumn(onBuy),
     ];
-  }, [kind, onBuy, showMaterialType]);
+  }, [kind, onBuy, onSell, showMaterialType]);
 
   if (isLoading) return <div className={styles.empty}>Loading items…</div>;
   if (isError) return <div className={styles.empty}>Unable to load items.</div>;

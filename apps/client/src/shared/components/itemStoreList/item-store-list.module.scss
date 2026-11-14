@@ -80,6 +80,18 @@
   padding: 0;
 }
 
+.sellButton {
+  border-color: var(--success);
+  background: var(--success);
+  color: var(--white);
+
+  &:hover:not(:disabled),
+  &:active:not(:disabled) {
+    border-color: var(--success);
+    background: var(--success);
+  }
+}
+
 .image {
   width: 2.5rem;
   height: 2.5rem;

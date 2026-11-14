@@ -19,6 +19,7 @@ export type ItemStoreRow = {
   isUntradeable: boolean | null;
   tt: string | null;
   decay: string | null;
+  stock: number | null;
   details: Record<string, unknown>;
 };
 
@@ -44,6 +45,7 @@ export type ItemStoreListProps = {
   isError?: boolean;
   showMaterialType?: boolean;
   onBuy?: (row: ItemStoreRow) => void;
+  onSell?: (row: ItemStoreRow) => void;
 };
 
 /** Common shape required from each generated catalogue response. */

@@ -7,6 +7,7 @@ import {
   useGetApiV1Finders,
   useGetApiV1Materials,
   useGetApiV1Refiners,
+  useGetApiV1StorageMaterialStock,
 } from '@/api/generated/miningManagerAPI';
 import { getItemImageUrl } from '@/config/images';
 import type {
@@ -19,6 +20,7 @@ import type {
 const toStoreRow = (
   item: ItemStoreCatalogueItem,
   kind: ItemStoreKind,
+  stock: number | null = null,
 ): ItemStoreRow => ({
   id: item.id,
   name: item.name,
@@ -28,6 +30,7 @@ const toStoreRow = (
   isUntradeable: item.is_untradeable,
   tt: item.economy.tt,
   decay: item.economy.decay,
+  stock,
   details: item.details as Record<string, unknown>,
 });
 
@@ -39,6 +42,7 @@ export function useItemStoreData() {
   const finderAmplifiers = useGetApiV1FinderAmplifiers();
   const enhancers = useGetApiV1Enhancers();
   const materials = useGetApiV1Materials();
+  const materialStock = useGetApiV1StorageMaterialStock();
 
   const rows = useMemo(
     () => ({
@@ -54,7 +58,7 @@ export function useItemStoreData() {
         toStoreRow(item, 'enhancer'),
       ),
       material: (materials.data ?? []).map((item) =>
-        toStoreRow(item, 'material'),
+        toStoreRow(item, 'material', materialStock.data?.[item.id] ?? 0),
       ),
     }),
     [
@@ -64,6 +68,7 @@ export function useItemStoreData() {
       finderAmplifiers.data,
       enhancers.data,
       materials.data,
+      materialStock.data,
     ],
   );
 
@@ -76,6 +81,7 @@ export function useItemStoreData() {
       finderAmplifiers,
       enhancers,
       materials,
+      materialStock,
     ].some((query) => query.isLoading),
     isError: [
       finders,
@@ -84,6 +90,7 @@ export function useItemStoreData() {
       finderAmplifiers,
       enhancers,
       materials,
+      materialStock,
     ].some((query) => query.isError),
   };
 }

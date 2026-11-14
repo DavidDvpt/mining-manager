@@ -54,6 +54,15 @@ export const createCommonItemColumns = (
   return columns;
 };
 
+/** Create the stock column shared by every catalogue row. */
+export const createStockColumn = (): ItemStoreColumn => ({
+  key: 'stock',
+  label: 'Stock',
+  flex: '0 1 6rem',
+  align: 'right',
+  render: (row) => row.stock ?? '—',
+});
+
 /** Format a normalized item detail for a compact catalogue cell. */
 export const itemDetail = (key: string) => (row: ItemStoreRow) =>
   valueOrDash(row.details[key]);
@@ -80,6 +89,38 @@ export const createBuyColumn = (
       onClick={() => onBuy?.(row)}
     />
   ),
+});
+
+/** Create the fixed-width sell action column, hiding the action when stock is empty. */
+export const createSellColumn = (
+  onSell?: (row: ItemStoreRow) => void,
+): ItemStoreColumn => ({
+  key: 'sell',
+  label: '',
+  kind: 'button',
+  flex: '0 0 2.75rem',
+  align: 'center',
+  render: (row) => {
+    const hasStock = (row.stock ?? 0) > 0;
+    return (
+      <Button
+        type="button"
+        variant="ternary"
+        size="small"
+        className={`${styles.buyButton} ${styles.sellButton}`}
+        icon={AppIconName.HandCoins}
+        iconOnly
+        aria-label="Sell"
+        title={hasStock ? 'Sell' : undefined}
+        tabIndex={hasStock ? undefined : -1}
+        aria-hidden={!hasStock}
+        style={{ visibility: hasStock ? 'visible' : 'hidden' }}
+        onClick={() => {
+          if (hasStock) onSell?.(row);
+        }}
+      />
+    );
+  },
 });
 /** Create the item financial-summary action column shared by every item-store list. */
 export const createSummaryColumn = (): ItemStoreColumn => ({

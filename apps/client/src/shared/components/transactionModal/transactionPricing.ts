@@ -1,15 +1,9 @@
 import { ItemStoreRow } from '@/shared/types';
 import type { TransactionAction, TransactionLot } from '@/shared/types/modal';
-import { isLimitedItem, isStackableItem, numericValue } from '@/shared/utils';
+import { isStackableItem, numericValue } from '@/shared/utils';
 
 export type PricingAction = TransactionAction;
 export type TransactionPricingField = 'quantity' | 'tt' | 'fee' | 'ttc';
-
-export type PricingValues = {
-  quantity: number;
-  fee: number;
-  ttc: number;
-};
 
 /** Draft values maintained by the transaction pricing form. */
 export type TransactionPricingValues = {
@@ -19,54 +13,9 @@ export type TransactionPricingValues = {
   ttc: number;
 };
 
-/** Apply recalculated pricing values while preserving the draft TT value. */
-export function applyPricingValues(
-  previousValues: TransactionPricingValues,
-  pricingValues: PricingValues,
-  stackable: boolean,
-): TransactionPricingValues {
-  return {
-    ...previousValues,
-    quantity: stackable ? pricingValues.quantity : 1,
-    fee: pricingValues.fee,
-    ttc: pricingValues.ttc,
-  };
-}
-
-/** Recalculate auction values and apply them to the transaction draft. */
-export function calculateTransactionValues(
-  action: PricingAction,
-  field: TransactionPricingField,
-  nextValue: number,
-  currentValues: TransactionPricingValues,
-): TransactionPricingValues {
-  const stackable = currentValues.isStackable;
-  const nextQuantity =
-    field === 'quantity' ? nextValue : (currentValues.quantity ?? 0);
-  const nextTt = field === 'tt' ? nextValue : (currentValues.tt ?? 0);
-  const unitPrice = stackable ? currentValues.tt : nextTt;
-  const currentFee = currentValues.fee ?? 0;
-  const currentTtc = currentValues.ttc ?? 0;
-  const pricingValues =
-    field === 'quantity' || field === 'tt'
-      ? computeQuantityPricing(
-          action,
-          stackable ? nextQuantity : 1,
-          unitPrice,
-          currentFee,
-          currentTtc,
-        )
-      : field === 'fee'
-        ? computeFeePricing(action, nextQuantity, unitPrice, currentTtc)
-        : computeTtcPricing(action, nextQuantity, unitPrice, nextValue);
-
-  return applyPricingValues(currentValues, pricingValues, stackable);
-}
-
 /** Own transaction values and apply all auction-pricing transitions. */
 export class TransactionPricing {
   private isAuction = true;
-  private isLimited = false;
   private itemTtValue = 0;
   private isStackable = false;
   private values: TransactionPricingValues;
@@ -79,7 +28,6 @@ export class TransactionPricing {
     if (item && lot) throw new Error();
 
     this.isStackable = Boolean(item && isStackableItem(item) && !lot);
-    this.isLimited = item ? isLimitedItem(item) : false;
     this.itemTtValue = numericValue(item?.tt ?? '');
 
     const tt = lot

@@ -21,6 +21,7 @@ export function TransactionModalInfo({ item, lot }: TransactionModalInfoProps) {
       <div className={styles.itemDetails}>
         <strong>{name}</strong>
         <span>TT : {formatDecimalValue(tt)}</span>
+        <span>Stock : {item?.stock ?? '—'}</span>
       </div>
     </div>
   );
