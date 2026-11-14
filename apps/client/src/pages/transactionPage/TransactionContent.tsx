@@ -33,7 +33,7 @@ export function TransactionContent({
 }: TransactionContentProps) {
   const { activeButtonId } = useSidebarLayoutContext();
   const { t } = useTranslations();
-  const ownedOnly = context.owned_only ?? false;
+  const ownedOnly = context.owned_only !== 'false';
   const { rows, isLoading, isError } = useItemStoreData();
   const selectedItem =
     Object.values(rows)
@@ -119,7 +119,9 @@ export function TransactionContent({
           <span>{t('TRANSACTIONS.OWNED_ONLY')}</span>
           <Switch
             checked={ownedOnly}
-            onCheckedChange={(checked) => updateContext({ owned_only: checked })}
+            onCheckedChange={(checked) =>
+              updateContext({ owned_only: checked ? 'true' : 'false' })
+            }
             aria-label={t('TRANSACTIONS.OWNED_ONLY')}
           />
         </div>
