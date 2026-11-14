@@ -25,6 +25,7 @@ export type SidebarLayoutContextValue = {
 export type SidebarLayoutProps = PropsWithChildren<{
   buttons: SidebarButton[];
   defaultButtonId?: string;
+  activeButtonId?: string;
   onButtonChange?: (buttonId: string) => void;
   sidebarLabel?: string;
 }>;

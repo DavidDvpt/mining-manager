@@ -13,20 +13,25 @@ import styles from './sidebar-layout.module.scss';
 export function SidebarLayout({
   buttons,
   defaultButtonId,
+  activeButtonId: controlledActiveButtonId,
   onButtonChange,
   sidebarLabel = 'Sidebar navigation',
   children,
 }: SidebarLayoutProps) {
   const firstButtonId = buttons[0]?.id ?? '';
-  const [activeButtonId, setActiveButtonId] = useState(
+  const [internalActiveButtonId, setInternalActiveButtonId] = useState(
     defaultButtonId ?? firstButtonId,
   );
+  const activeButtonId = controlledActiveButtonId ?? internalActiveButtonId;
 
   /** Update the selected sidebar button and notify the owning page. */
-  const selectButton = useCallback((buttonId: string) => {
-    setActiveButtonId(buttonId);
-    onButtonChange?.(buttonId);
-  }, [onButtonChange]);
+  const selectButton = useCallback(
+    (buttonId: string) => {
+      setInternalActiveButtonId(buttonId);
+      onButtonChange?.(buttonId);
+    },
+    [onButtonChange],
+  );
 
   const contextValue = useMemo(
     () => ({ activeButtonId, selectButton }),
@@ -39,11 +44,7 @@ export function SidebarLayout({
         <aside className={styles.sidebar} aria-label={sidebarLabel}>
           <nav className={styles.navigation}>
             {buttons.map((button) => (
-              <SidebarButtonItem
-                key={button.id}
-                button={button}
-                level={0}
-              />
+              <SidebarButtonItem key={button.id} button={button} level={0} />
             ))}
           </nav>
         </aside>
