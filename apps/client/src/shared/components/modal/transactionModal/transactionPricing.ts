@@ -56,7 +56,8 @@ export class TransactionPricing {
     this.isAuction = value;
   }
 
-  normalizeValue(field: TransactionPricingField, value: number) {
+  /** Normalize a numeric input while preserving decimal values except quantity. */
+  private normalizeValue(field: TransactionPricingField, value: number): number {
     return field === 'quantity' ? Math.max(1, Math.floor(value)) : value;
   }
 
@@ -65,101 +66,99 @@ export class TransactionPricing {
     field: TransactionPricingField,
     value: number | undefined,
   ): Promise<TransactionPricingValues> {
-    if (
-      value === undefined ||
-      !field ||
-      (!this.isAuction && this.action !== 'buy')
-    ) {
+    if (value === undefined || !this.canUpdate(field, value)) {
       return this.values;
     }
 
     const normalizedValue = this.normalizeValue(field, value);
+    this.values =
+      this.action === 'buy'
+        ? this.updateBuy(field, normalizedValue)
+        : this.updateSell(field, normalizedValue);
 
-    if (this.action === 'buy') {
-      if (field === 'quantity') {
-        this.values = {
-          ...this.values,
-          [field]: normalizedValue,
-          tt: normalizedValue * this.itemTtValue,
-        };
-      } else {
-        this.values = { ...this.values, [field]: normalizedValue };
-      }
-      if (field === 'ttc') return this.values;
-      const result = this.getValuesFromUpdate(this.values);
-      this.values = { ...this.values, ...result };
-      return this.values;
-    } else {
-      let result: Omit<TransactionPricingValues, 'quantity'> = this.values;
-
-      switch (field) {
-        case 'quantity':
-          {
-            if (!this.isStackable) {
-              return this.values;
-            }
-            const tt = normalizedValue * this.itemTtValue;
-            result = this.getValuesFromUpdate({
-              ...this.getValues(),
-              tt,
-            });
-          }
-          break;
-        case 'tt':
-          if (this.isStackable) return this.values;
-
-          result = this.getValuesFromUpdate({
-            ...this.getValues(),
-            tt: value,
-          });
-          break;
-        case 'fee':
-          result = this.getValuesFromUpdate({
-            ...this.getValues(),
-            fee: value,
-          });
-          break;
-        case 'ttc':
-          result = {
-            ...this.getValues(),
-            ttc: value,
-          };
-          break;
-        default:
-          result = this.values;
-          break;
-      }
-
-      this.values = {
-        ...this.values,
-        ...(field === 'quantity' ? { quantity: normalizedValue } : {}),
-        ...result,
-      };
-
-      return this.values;
-    }
+    return this.values;
   }
 
-  /** Recalculate fee and TTC while keeping the sale financially valid. */
-  getValuesFromUpdate({
-    tt,
-    fee,
-    ttc,
-  }: Omit<TransactionPricingValues, 'quantity'>) {
-    let feeInternal = fee === 0 ? this.feeFromMarkup(ttc - tt) : fee;
+  /** Return whether a field can update the pricing session in its current mode. */
+  private canUpdate(
+    field: TransactionPricingField,
+    value: number | undefined,
+  ): boolean {
+    return Boolean(
+      field &&
+        value !== undefined &&
+        (this.isAuction || this.action === 'buy'),
+    );
+  }
 
-    while (ttc - feeInternal - tt < 0) {
+  /** Apply a buy input and keep TTC valid when TT or fee changes. */
+  private updateBuy(
+    field: TransactionPricingField,
+    value: number,
+  ): TransactionPricingValues {
+    const nextValues =
+      field === 'quantity'
+        ? {
+            ...this.values,
+            quantity: value,
+            tt: value * this.itemTtValue,
+          }
+        : { ...this.values, [field]: value };
+
+    return field === 'ttc'
+      ? nextValues
+      : this.ensureTtcCoversAmount(nextValues);
+  }
+
+  /** Apply a sale input while respecting stackability and temporary TTC edits. */
+  private updateSell(
+    field: TransactionPricingField,
+    value: number,
+  ): TransactionPricingValues {
+    if (field === 'quantity' && !this.isStackable) return this.values;
+    if (field === 'tt' && this.isStackable) return this.values;
+
+    const nextValues =
+      field === 'quantity'
+        ? {
+            ...this.values,
+            quantity: value,
+            tt: value * this.itemTtValue,
+          }
+        : { ...this.values, [field]: value };
+
+    return field === 'ttc'
+      ? nextValues
+      : this.ensureTtcCoversAmount(nextValues);
+  }
+
+  /** Keep TTC above TT plus fee, recalculating auction fees when needed. */
+  private ensureTtcCoversAmount(
+    values: TransactionPricingValues,
+  ): TransactionPricingValues {
+    const { fee } = values;
+    let { ttc } = values;
+    let calculatedFee = this.calculateFee(values.tt, fee, ttc);
+
+    while (ttc - calculatedFee - values.tt < 0) {
       ttc += 1;
-      feeInternal = this.feeFromMarkup(ttc - tt);
+      calculatedFee =
+        this.action === 'buy'
+          ? calculatedFee
+          : this.feeFromMarkup(ttc - values.tt);
     }
 
-    const result = { tt, fee: feeInternal, ttc };
-    return result;
+    return { ...values, fee: calculatedFee, ttc };
+  }
+
+  /** Calculate the fee according to the transaction mode and current markup. */
+  private calculateFee(tt: number, fee: number, ttc: number): number {
+    if (this.action === 'buy' || fee !== 0) return fee;
+    return this.feeFromMarkup(ttc - tt);
   }
 
   /** Calculate the auction fee from the markup above TT. */
-  feeFromMarkup(value: number): number {
-    if (this.action === 'buy' || !this.isAuction) return this.values.fee;
+  private feeFromMarkup(value: number): number {
 
     if (value <= 0) return 0.5;
 
