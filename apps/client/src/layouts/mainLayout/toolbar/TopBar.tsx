@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import brand from '@/assets/images/brand.png';
 import { useTranslations } from '@/i18n/useTranslations';
 import ProfileMenu from './ProfileMenu';
+import LanguageSelector from './LanguageSelector';
 import TopBarNav from './TopBarNav';
 import styles from './toolbar.module.scss';
 
@@ -20,7 +21,10 @@ export function TopBar() {
         <img src={brand} alt="Mining Manager" />
       </NavLink>
       <TopBarNav />
-      <ProfileMenu />
+      <div className={styles.toolbarActions}>
+        <LanguageSelector />
+        <ProfileMenu />
+      </div>
     </header>
   );
 }

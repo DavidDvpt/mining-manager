@@ -11,11 +11,17 @@ const localeTranslations: Record<Locale, TranslationSchema> = {
 };
 
 const LANGUAGE_CHANGE_EVENT = 'mining-manager:languagechange';
+const LOCALE_STORAGE_KEY = 'mining-manager:locale';
 
 /** Resolve the application locale from the document language attribute. */
 export function getLocaleFromDocument(): Locale {
   if (typeof document === 'undefined') {
     return DEFAULT_LOCALE;
+  }
+
+  const storedLocale = window.localStorage.getItem(LOCALE_STORAGE_KEY);
+  if (storedLocale === 'fr_FR' || storedLocale === 'en_EN') {
+    return storedLocale;
   }
 
   return document.documentElement.lang.toLowerCase().startsWith('fr')
@@ -60,6 +66,7 @@ export function setDocumentLocale(locale: Locale): void {
   }
 
   document.documentElement.lang = locale === 'fr_FR' ? 'fr-FR' : 'en-US';
+  window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
   document.dispatchEvent(new Event(LANGUAGE_CHANGE_EVENT));
 }
 

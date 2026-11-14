@@ -26,6 +26,9 @@ export type TranslationSchema = {
     PRIMARY_NAVIGATION: string;
     IMAGE_UNAVAILABLE: string;
     PROFILE_MENU: string;
+    LANGUAGE: string;
+    FRENCH_FLAG: string;
+    ENGLISH_FLAG: string;
     PROFILE: string;
     LOGOUT: string;
   };
