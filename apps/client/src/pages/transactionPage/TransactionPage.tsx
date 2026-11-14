@@ -21,16 +21,20 @@ export function TransactionPage() {
         buttons={transactionButtons(t, materialTypes)}
         defaultButtonId="running-transactions"
         activeButtonId={activePage}
-        onButtonChange={(page) =>
+        onButtonChange={(page) => {
+          if (page === 'running-transactions') {
+            updateContext({ modal: 'running-transactions' });
+            return;
+          }
+
           updateContext({
             page: page as typeof activePage,
-            modal:
-              page === 'running-transactions' ? 'running-transactions' : null,
+            modal: null,
             type: null,
             item_id: null,
             lot_id: null,
-          })
-        }
+          });
+        }}
         sidebarLabel={t('TRANSACTIONS.SIDEBAR_LABEL')}
       >
         <TransactionContent
