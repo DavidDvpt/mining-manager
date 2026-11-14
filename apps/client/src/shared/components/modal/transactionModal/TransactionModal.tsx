@@ -1,6 +1,12 @@
 import { GenericForm } from '@/shared/components/form/GenericForm';
 import { FormButtonsSection } from '@/shared/components/form/FormButtonsSection';
 import { Modal } from '@/shared/components/modal';
+import {
+  usePostApiV1TransactionBuyStackable,
+  usePostApiV1TransactionBuyUnstackable,
+  usePostApiV1TransactionSellStackable,
+  usePostApiV1TransactionSellUnstackable,
+} from '@/api/generated/miningManagerAPI';
 import { isStackableItem } from '@/shared/utils';
 import type {
   TransactionFormValues,
@@ -19,17 +25,67 @@ export function TransactionModal({
   action,
   open,
   onOpenChange,
-  onSubmit,
 }: TransactionModalProps) {
-  /** Submit normalized values received from React Hook Form. */
+  const buyStackable = usePostApiV1TransactionBuyStackable();
+  const buyUnstackable = usePostApiV1TransactionBuyUnstackable();
+  const sellStackable = usePostApiV1TransactionSellStackable();
+  const sellUnstackable = usePostApiV1TransactionSellUnstackable();
+
+  /** Persist the transaction through the mutation matching its action and stackability. */
   const handleSubmit = async (formValues: TransactionFormValues) => {
-    await onSubmit?.({
-      quantity: formValues.quantity,
-      tt: formValues.tt,
-      fee: formValues.fee,
-      ttc: formValues.ttc,
-      auction: formValues.auction,
-    });
+    if (!item) return;
+
+    const kind = item.kind === 'material'
+      ? 'material'
+      : item.kind === 'enhancer'
+        ? 'enhancer'
+        : 'tool';
+
+    if (action === 'sell') {
+      if (isStackable) {
+        await sellStackable.mutateAsync({
+          data: {
+            quantity: formValues.quantity,
+            item_id: item.id,
+            tt: formValues.tt,
+            ttc: formValues.ttc,
+          },
+        });
+      } else if (lot) {
+        await sellUnstackable.mutateAsync({
+          data: {
+            quantity: 1,
+            lot_id: lot.id,
+            tt: formValues.tt,
+            ttc: formValues.ttc,
+          },
+        });
+      }
+    } else if (isStackable) {
+      await buyStackable.mutateAsync({
+        data: {
+          quantity: formValues.quantity,
+          kind,
+          type_detail: 'TT',
+          item_id: item.id,
+          fee: formValues.fee,
+          ttc: formValues.ttc,
+        },
+      });
+    } else {
+      await buyUnstackable.mutateAsync({
+        data: {
+          quantity: 1,
+          kind,
+          type_detail: 'TT',
+          item_id: item.id,
+          tt: formValues.tt,
+          fee: formValues.fee,
+          ttc: formValues.ttc,
+        },
+      });
+    }
+
     onOpenChange(false);
   };
 

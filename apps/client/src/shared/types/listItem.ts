@@ -24,17 +24,18 @@ export type ItemStoreRow = {
 };
 
 /** Declarative definition for one flex-list column. */
-export type ItemStoreColumn = {
+export type ItemStoreColumn<TRow extends object = ItemStoreRow> = {
   key: string;
   label: string;
   kind?: 'text' | 'select' | 'button';
   flex?: string;
   align?: 'left' | 'center' | 'right';
-  render: (row: ItemStoreRow) => ReactNode;
+  cellClassName?: string;
+  render: (row: TRow) => ReactNode;
   selectOptions?: Array<{ label: string; value: string }>;
-  selectValue?: (row: ItemStoreRow) => string;
-  onSelectChange?: (row: ItemStoreRow, value: string) => void;
-  onClick?: (row: ItemStoreRow) => void;
+  selectValue?: (row: TRow) => string;
+  onSelectChange?: (row: TRow, value: string) => void;
+  onClick?: (row: TRow) => void;
 };
 
 /** Props accepted by the normalized item-store list component. */

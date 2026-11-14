@@ -25,5 +25,4 @@ export type TransactionModalProps = {
   action: TransactionAction;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (values: TransactionFormValues) => void | Promise<void>;
 };

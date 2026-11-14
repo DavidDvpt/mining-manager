@@ -55,15 +55,14 @@
   white-space: nowrap;
 }
 
-.imageCell {
-  display: flex;
-  flex: 0 0 40px;
-  align-items: center;
-  justify-content: center;
-}
-
 .imageColumn {
   padding-block: 2px;
+}
+
+.imageColumn > :first-child {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .actionCell {
@@ -71,38 +70,6 @@
   flex: 0 0 2.75rem;
   align-items: center;
   justify-content: center;
-}
-
-.buyButton {
-  width: 2.25rem;
-  min-width: 2.25rem;
-  height: 2.25rem;
-  padding: 0;
-}
-
-.sellButton {
-  border-color: var(--success);
-  background: var(--success);
-  color: var(--white);
-
-  &:hover:not(:disabled),
-  &:active:not(:disabled) {
-    border-color: var(--success);
-    background: var(--success);
-  }
-}
-
-.image {
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--white);
-  object-fit: contain;
-}
-
-.muted {
-  color: var(--text-muted);
 }
 
 .empty {

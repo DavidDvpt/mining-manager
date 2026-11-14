@@ -37,6 +37,26 @@ export type TranslationSchema = {
     ACTIVE_VIEW: string;
     DESCRIPTION: string;
   };
+  ITEM_STORE: {
+    LOADING: string;
+    ERROR: string;
+    EMPTY: string;
+    NAME: string;
+    TT: string;
+    DECAY: string;
+    STOCK: string;
+    BUY: string;
+    SELL: string;
+    FINANCIAL_SUMMARY: string;
+    TYPE: string;
+    BONUS: string;
+    EFFICIENCY: string;
+    LEVEL_MIN: string;
+    DEPTH: string;
+    RANGE: string;
+    AMMO_BURN: string;
+    USE_PER_MINUTE: string;
+  };
 };
 
 type StringKey<T> = Extract<keyof T, string>;
