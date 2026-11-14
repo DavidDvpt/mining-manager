@@ -17,8 +17,8 @@ export type ItemStoreRow = {
   imageUrl: string | null;
   isRare: boolean | null;
   isUntradeable: boolean | null;
-  tt: string | null;
-  decay: string | null;
+  tt: number | null;
+  decay: number | null;
   stock: number | null;
   details: Record<string, unknown>;
 };

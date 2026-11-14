@@ -10,7 +10,7 @@ const createRow = (stock: number): ItemStoreRow => ({
   imageUrl: null,
   isRare: false,
   isUntradeable: false,
-  tt: '1.00',
+  tt: 1,
   decay: null,
   stock,
   details: {},

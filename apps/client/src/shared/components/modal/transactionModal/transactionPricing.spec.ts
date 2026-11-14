@@ -9,21 +9,21 @@ const item: ItemStoreRow = {
   imageUrl: null,
   isRare: false,
   isUntradeable: false,
-  tt: '10.00',
+  tt: 10,
   decay: null,
   stock: 4,
   details: {},
 };
 
 describe('TransactionPricing', () => {
-  it('starts buy transactions without auction pricing and can synchronize it', () => {
+  it('starts buy transactions without automatic pricing and can synchronize it', () => {
     const pricing = new TransactionPricing('buy', item, null);
 
-    expect(pricing.getIsAuction()).toBe(false);
+    expect(pricing.getAutoCompute()).toBe(false);
 
-    pricing.setAuction(true);
+    pricing.setAutoCompute(true);
 
-    expect(pricing.getIsAuction()).toBe(true);
+    expect(pricing.getAutoCompute()).toBe(true);
   });
 
   it('allows editing the buy fee and keeps TTC above TT plus fee', async () => {

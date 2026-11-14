@@ -6,5 +6,5 @@ export const transactionFormSchema = z.object({
   tt: z.number().min(0),
   fee: z.number().min(0),
   ttc: z.number().min(0),
-  auction: z.boolean(),
+  autoCompute: z.boolean(),
 });

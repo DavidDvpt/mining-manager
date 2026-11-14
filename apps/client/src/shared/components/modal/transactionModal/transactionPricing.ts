@@ -13,9 +13,9 @@ export type TransactionPricingValues = {
   ttc: number;
 };
 
-/** Own transaction values and apply all auction-pricing transitions. */
+/** Own transaction values and apply automatic pricing transitions. */
 export class TransactionPricing {
-  private isAuction = true;
+  private autoCompute = true;
   private itemTtValue = 0;
   private isStackable = false;
   private values: TransactionPricingValues;
@@ -25,13 +25,13 @@ export class TransactionPricing {
     item: ItemStoreRow | null,
     lot: TransactionLot | null,
   ) {
-    this.isAuction = action !== 'buy';
+    this.autoCompute = action !== 'buy';
     this.isStackable = Boolean(item && isStackableItem(item) && !lot);
-    this.itemTtValue = numericValue(item?.tt ?? '');
+    this.itemTtValue = item?.tt ?? 0;
 
     const tt = lot
       ? numericValue(lot.tt_remaining ?? '')
-      : numericValue(item?.tt ?? '');
+      : item?.tt ?? 0;
 
     this.values = {
       quantity: 1,
@@ -46,14 +46,14 @@ export class TransactionPricing {
     return this.values;
   }
 
-  /** Return whether auction pricing is enabled for the current transaction. */
-  getIsAuction(): boolean {
-    return this.isAuction;
+  /** Return whether automatic pricing is enabled for the current transaction. */
+  getAutoCompute(): boolean {
+    return this.autoCompute;
   }
 
-  /** Enable or disable auction fee recalculation for subsequent edits. */
-  setAuction(value: boolean) {
-    this.isAuction = value;
+  /** Enable or disable automatic pricing for subsequent edits. */
+  setAutoCompute(value: boolean) {
+    this.autoCompute = value;
   }
 
   /** Normalize a numeric input while preserving decimal values except quantity. */
@@ -87,7 +87,7 @@ export class TransactionPricing {
     return Boolean(
       field &&
         value !== undefined &&
-        (this.isAuction || this.action === 'buy'),
+        (this.autoCompute || this.action === 'buy'),
     );
   }
 
@@ -132,7 +132,7 @@ export class TransactionPricing {
       : this.ensureTtcCoversAmount(nextValues);
   }
 
-  /** Keep TTC above TT plus fee, recalculating auction fees when needed. */
+  /** Keep TTC above TT plus fee, recalculating fees when needed. */
   private ensureTtcCoversAmount(
     values: TransactionPricingValues,
   ): TransactionPricingValues {
@@ -157,7 +157,7 @@ export class TransactionPricing {
     return this.feeFromMarkup(ttc - tt);
   }
 
-  /** Calculate the auction fee from the markup above TT. */
+  /** Calculate the fee from the markup above TT. */
   private feeFromMarkup(value: number): number {
 
     if (value <= 0) return 0.5;

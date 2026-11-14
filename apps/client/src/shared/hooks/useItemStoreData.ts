@@ -10,6 +10,7 @@ import {
   useGetApiV1StorageMaterialStock,
 } from '@/api/generated/miningManagerAPI';
 import { getItemImageUrl } from '@/config/images';
+import { parseNumber } from '@/shared/utils';
 import type {
   ItemStoreCatalogueItem,
   ItemStoreKind,
@@ -28,8 +29,8 @@ const toStoreRow = (
   imageUrl: getItemImageUrl(item.img_id),
   isRare: item.is_rare,
   isUntradeable: item.is_untradeable,
-  tt: item.economy.tt,
-  decay: item.economy.decay,
+  tt: parseNumber(item.economy.tt),
+  decay: parseNumber(item.economy.decay),
   stock,
   details: item.details as Record<string, unknown>,
 });

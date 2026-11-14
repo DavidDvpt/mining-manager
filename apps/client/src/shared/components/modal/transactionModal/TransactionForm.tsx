@@ -14,6 +14,7 @@ import {
 } from './transactionPricing';
 import styles from './transaction-modal.module.scss';
 import { ItemStoreRow } from '@/shared/types';
+import { useTranslations } from '@/i18n/useTranslations';
 
 type TransactionFormProps = {
   action: 'buy' | 'sell';
@@ -31,7 +32,11 @@ export function TransactionForm({
 }: TransactionFormProps) {
   const pricingRef = useRef<TransactionPricing | null>(null);
   const { setValue } = useFormContext<TransactionFormValues>();
-  const isAuction = useWatch({ name: 'auction', defaultValue: true });
+  const { t } = useTranslations();
+  const autoCompute = useWatch({
+    name: 'autoCompute',
+    defaultValue: true,
+  });
 
   const setValueOptions = useMemo(() => {
     return { shouldDirty: true, shouldValidate: true };
@@ -55,7 +60,7 @@ export function TransactionForm({
     const pricing = new TransactionPricing(action, item, lot);
     pricingRef.current = pricing;
     setCalculatedValues(pricing.getValues());
-    setValue('auction', pricing.getIsAuction(), { shouldValidate: true });
+    setValue('autoCompute', pricing.getAutoCompute(), { shouldValidate: true });
   }, [action, setCalculatedValues, item, lot, setValue]);
 
   /** Update one pricing field from a numeric input event. */
@@ -76,18 +81,18 @@ export function TransactionForm({
     void updateField(key, parsedValue);
   };
 
-  /** Toggle auction pricing and synchronize recalculated values. */
-  const handleAuctionChange = (checked: boolean) => {
+  /** Toggle automatic pricing and synchronize recalculated values. */
+  const handleAutoComputeChange = (checked: boolean) => {
     if (!pricingRef.current) return;
-    pricingRef.current.setAuction(checked);
-    setValue('auction', pricingRef.current.getIsAuction(), setValueOptions);
+    pricingRef.current.setAutoCompute(checked);
+    setValue('autoCompute', pricingRef.current.getAutoCompute(), setValueOptions);
   };
 
   return (
     <div className={styles.fields}>
       <InputRHF
         name="quantity"
-        label="Quantité"
+        label={t('TRANSACTION_MODAL.QUANTITY')}
         type="number"
         min={1}
         step={1}
@@ -109,7 +114,7 @@ export function TransactionForm({
         type="number"
         min={0}
         step="0.01"
-        readOnly={action === 'sell' && isAuction}
+        readOnly={action === 'sell' && autoCompute}
         onChange={(event) => handleChange('fee', event.target.value)}
       />
       <InputRHF
@@ -121,10 +126,10 @@ export function TransactionForm({
         onChange={(event) => handleChange('ttc', event.target.value)}
       />
       <CheckboxRHF
-        name="auction"
-        label="Auction"
-        wrapperClassName={styles.auctionToggle}
-        onCheckedChange={(checked) => void handleAuctionChange(checked)}
+        name="autoCompute"
+        label={t('TRANSACTION_MODAL.AUTO_COMPUTE')}
+        wrapperClassName={styles.autoComputeToggle}
+        onCheckedChange={(checked) => void handleAutoComputeChange(checked)}
       />
     </div>
   );

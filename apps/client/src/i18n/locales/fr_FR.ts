@@ -45,12 +45,15 @@ export const fr_FR: TranslationSchema = {
     QUANTITY_EXCEEDS_STOCK: 'La quantité ne peut pas dépasser le stock disponible.',
     TT_EXCEEDS_BASE: 'Le TT ne peut pas dépasser la valeur TT de base de l’objet.',
   },
+  TRANSACTION_MODAL: {
+    QUANTITY: 'Quantité',
+    AUTO_COMPUTE: 'Calcul automatique',
+  },
   ITEM_STORE: {
     LOADING: 'Chargement des objets…',
     ERROR: 'Impossible de charger les objets.',
     EMPTY: 'Aucun objet trouvé.',
     NAME: 'Nom',
-    TT: 'TT',
     DECAY: 'Dégradation',
     STOCK: 'Stock',
     BUY: 'Acheter',

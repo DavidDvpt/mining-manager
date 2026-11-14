@@ -2,14 +2,16 @@ import { GenericForm } from '@/shared/components/form/GenericForm';
 import { FormButtonsSection } from '@/shared/components/form/FormButtonsSection';
 import { Modal } from '@/shared/components/modal';
 import { useTranslations } from '@/i18n/useTranslations';
+import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import {
+  getGetApiV1StorageMaterialStockQueryKey,
   usePostApiV1TransactionBuyStackable,
   usePostApiV1TransactionBuyUnstackable,
   usePostApiV1TransactionSellStackable,
   usePostApiV1TransactionSellUnstackable,
 } from '@/api/generated/miningManagerAPI';
-import { isStackableItem, numericValue } from '@/shared/utils';
+import { isStackableItem } from '@/shared/utils';
 import type {
   TransactionFormValues,
   TransactionModalProps,
@@ -29,6 +31,7 @@ export function TransactionModal({
   onOpenChange,
 }: TransactionModalProps) {
   const { t } = useTranslations();
+  const queryClient = useQueryClient();
   const [validationError, setValidationError] = useState<string | null>(null);
   const buyStackable = usePostApiV1TransactionBuyStackable();
   const buyUnstackable = usePostApiV1TransactionBuyUnstackable();
@@ -48,7 +51,7 @@ export function TransactionModal({
     if (
       action === 'sell' &&
       !isStackable &&
-      formValues.tt > numericValue(item.tt ?? '')
+      formValues.tt > (item.tt ?? 0)
     ) {
       setValidationError(t('TRANSACTIONS.TT_EXCEEDS_BASE'));
       return;
@@ -107,6 +110,18 @@ export function TransactionModal({
       });
     }
 
+    if (item.kind === 'material' && isStackable) {
+      const stockDelta = action === 'buy' ? formValues.quantity : -formValues.quantity;
+      const stockQueryKey = getGetApiV1StorageMaterialStockQueryKey();
+      queryClient.setQueryData<Record<string, number>>(
+        stockQueryKey,
+        (stock = {}) => ({
+          ...stock,
+          [item.id]: Math.max(0, (stock[item.id] ?? item.stock ?? 0) + stockDelta),
+        }),
+      );
+    }
+
     onOpenChange(false);
   };
 
@@ -122,7 +137,13 @@ export function TransactionModal({
       <GenericForm
         key={`${item.id}-${lot?.id ?? 'new'}-${open}`}
         schema={transactionFormSchema}
-        defaultValues={{ quantity: 1, tt: 0, fee: 0, ttc: 0, auction: true }}
+        defaultValues={{
+          quantity: 1,
+          tt: 0,
+          fee: 0,
+          ttc: 0,
+          autoCompute: true,
+        }}
         onSubmit={handleSubmit}
         className={styles.form}
       >

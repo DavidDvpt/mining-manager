@@ -34,7 +34,7 @@ export const createCommonItemColumns = (
     { key: 'name', label: t('ITEM_STORE.NAME'), flex: '2 1 14rem', render: (row) => row.name },
     {
       key: 'tt',
-      label: t('ITEM_STORE.TT'),
+      label: 'TT',
       flex: '0 1 6rem',
       align: 'right',
       render: (row) => formatDecimalValue(row.tt),

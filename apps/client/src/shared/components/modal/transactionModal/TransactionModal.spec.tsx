@@ -1,5 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ReactNode } from 'react';
 import { TransactionModal } from './TransactionModal';
 import type { ItemStoreRow } from '@/shared/types/listItem';
 
@@ -25,12 +27,27 @@ const mutationMocks = vi.hoisted(() => ({
   sellUnstackable: vi.fn(),
 }));
 
+const stockQueryKey = ['/api/v1/storage/material/stock'] as const;
+
 vi.mock('@/api/generated/miningManagerAPI', () => ({
+  getGetApiV1StorageMaterialStockQueryKey: () => [
+    '/api/v1/storage/material/stock',
+  ],
   usePostApiV1TransactionBuyStackable: () => ({ mutateAsync: mutationMocks.buyStackable }),
   usePostApiV1TransactionBuyUnstackable: () => ({ mutateAsync: mutationMocks.buyUnstackable }),
   usePostApiV1TransactionSellStackable: () => ({ mutateAsync: mutationMocks.sellStackable }),
   usePostApiV1TransactionSellUnstackable: () => ({ mutateAsync: mutationMocks.sellUnstackable }),
 }));
+
+const renderTransactionModal = (
+  children: ReactNode,
+  queryClient = new QueryClient(),
+) =>
+  render(
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>,
+  );
 
 const stackableItem: ItemStoreRow = {
   id: 'material-1',
@@ -39,7 +56,7 @@ const stackableItem: ItemStoreRow = {
   imageUrl: null,
   isRare: false,
   isUntradeable: false,
-  tt: '10.00',
+  tt: 10,
   decay: null,
   stock: 4,
   details: {},
@@ -64,7 +81,7 @@ describe('TransactionModal', () => {
   it('creates a stackable buy transaction and closes after success', async () => {
     const onOpenChange = vi.fn();
 
-    render(
+    renderTransactionModal(
       <TransactionModal
         item={stackableItem}
         lot={null}
@@ -73,6 +90,11 @@ describe('TransactionModal', () => {
         onOpenChange={onOpenChange}
       />,
     );
+
+    const autoComputeCheckbox = screen.getByRole('checkbox', {
+      name: 'Automatic calculation',
+    });
+    expect(autoComputeCheckbox.getAttribute('aria-checked')).toBe('false');
 
     fireEvent.click(screen.getByRole('button', { name: 'Valider' }));
 
@@ -86,7 +108,7 @@ describe('TransactionModal', () => {
   });
 
   it('creates an unstackable buy transaction', async () => {
-    render(
+    renderTransactionModal(
       <TransactionModal
         item={unstackableItem}
         lot={null}
@@ -106,8 +128,33 @@ describe('TransactionModal', () => {
     });
   });
 
+  it('updates the material stock cache after a successful stackable buy', async () => {
+    const queryClient = new QueryClient();
+    queryClient.setQueryData<Record<string, number>>(stockQueryKey, {
+      'material-1': 4,
+    });
+
+    renderTransactionModal(
+      <TransactionModal
+        item={stackableItem}
+        lot={null}
+        action="buy"
+        open
+        onOpenChange={vi.fn()}
+      />,
+      queryClient,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Valider' }));
+
+    await waitFor(() => expect(mutationMocks.buyStackable).toHaveBeenCalledOnce());
+    expect(queryClient.getQueryData(stockQueryKey)).toEqual({
+      'material-1': 5,
+    });
+  });
+
   it('allows replacing a buy field through an empty intermediate value', async () => {
-    render(
+    renderTransactionModal(
       <TransactionModal
         item={stackableItem}
         lot={null}
@@ -129,7 +176,7 @@ describe('TransactionModal', () => {
   });
 
   it('creates a stackable sell transaction', async () => {
-    render(
+    renderTransactionModal(
       <TransactionModal
         item={stackableItem}
         lot={null}
@@ -151,7 +198,7 @@ describe('TransactionModal', () => {
   it('rejects a stackable sale above available stock before mutation', async () => {
     const onOpenChange = vi.fn();
 
-    render(
+    renderTransactionModal(
       <TransactionModal
         item={stackableItem}
         lot={null}
@@ -161,11 +208,11 @@ describe('TransactionModal', () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText('Quantité'), {
+    fireEvent.change(screen.getByLabelText('Quantity'), {
       target: { value: '5' },
     });
     await waitFor(() =>
-      expect((screen.getByLabelText('Quantité') as HTMLInputElement).value).toBe('5'),
+      expect((screen.getByLabelText('Quantity') as HTMLInputElement).value).toBe('5'),
     );
     fireEvent.click(screen.getByRole('button', { name: 'Valider' }));
 
@@ -177,13 +224,13 @@ describe('TransactionModal', () => {
   });
 
   it('creates an unstackable sell transaction from its lot', async () => {
-    render(
+    renderTransactionModal(
       <TransactionModal
         item={unstackableItem}
         lot={{
           id: 'lot-1',
           item: { id: 'finder-1', name: 'Finder' },
-          tt: '10',
+          tt: 10,
           tt_remaining: '10',
         } as never}
         action="sell"
@@ -204,7 +251,7 @@ describe('TransactionModal', () => {
   it('rejects an unstackable sale above the item base TT before mutation', async () => {
     const onOpenChange = vi.fn();
 
-    render(
+    renderTransactionModal(
       <TransactionModal
         item={unstackableItem}
         lot={null}

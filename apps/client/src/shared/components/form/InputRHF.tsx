@@ -23,13 +23,16 @@ export function InputRHF({ name, label, className, id, ...props }: InputRHFProps
   const isPasswordField = props.type === 'password';
   const inputType =
     isPasswordField && isPasswordVisible ? 'text' : props.type;
+  const registration = form.register(name, {
+    valueAsNumber: props.type === 'number',
+  });
 
   return (
     <div className={styles.field}>
       <Label htmlFor={inputId}>{label}</Label>
       <div className={styles.control}>
         <Input
-          {...form.register(name)}
+          {...registration}
           {...props}
           id={inputId}
           type={inputType}

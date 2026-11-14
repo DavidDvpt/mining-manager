@@ -8,6 +8,7 @@ type CheckboxRHFProps = {
   name: string;
   label?: string;
   checkedValue?: string;
+  disabled?: boolean;
   wrapperClassName?: string;
   labelClassName?: string;
   onCheckedChange?: (checked: boolean) => void;
@@ -18,6 +19,7 @@ export function CheckboxRHF({
   name,
   label,
   checkedValue,
+  disabled = false,
   wrapperClassName,
   labelClassName,
   onCheckedChange,
@@ -57,7 +59,12 @@ export function CheckboxRHF({
   const id = checkedValue ? `${name}-${checkedValue}` : name;
   return (
     <div className={cn(styles.wrapper, wrapperClassName)}>
-      <Checkbox id={id} checked={value} onCheckedChange={handleCheckedChange} />
+      <Checkbox
+        id={id}
+        checked={value}
+        disabled={disabled}
+        onCheckedChange={handleCheckedChange}
+      />
       {label ? (
         <label htmlFor={id} className={cn(styles.label, labelClassName)}>
           {label}

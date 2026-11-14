@@ -21,10 +21,18 @@ export function formatPercentageValue(value: number, decimalPlaces = 2): string 
   return (Number.isFinite(value) ? value : 0).toFixed(safeDecimalPlaces);
 }
 
-/** Convert a possibly-null numeric value into a finite number with a zero fallback. */
-export function numericValue(value: string | null): number {
+/** Convert an API numeric value into a finite number while preserving null. */
+export function parseNumber(
+  value: string | number | null | undefined,
+): number | null {
+  if (value === null || value === undefined || value === '') return null;
   const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+/** Convert a possibly-null numeric value into a finite number with a zero fallback. */
+export function numericValue(value: string | number | null | undefined): number {
+  return parseNumber(value) ?? 0;
 }
 
 /** Preserve an empty numeric input while the user replaces it. */

@@ -15,7 +15,7 @@ export type TransactionFormValues = {
   tt: number;
   fee: number;
   ttc: number;
-  auction: boolean;
+  autoCompute: boolean;
 };
 
 /** Props required to render and submit the transaction modal. */

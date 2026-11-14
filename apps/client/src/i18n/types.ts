@@ -39,12 +39,15 @@ export type TranslationSchema = {
     QUANTITY_EXCEEDS_STOCK: string;
     TT_EXCEEDS_BASE: string;
   };
+  TRANSACTION_MODAL: {
+    QUANTITY: string;
+    AUTO_COMPUTE: string;
+  };
   ITEM_STORE: {
     LOADING: string;
     ERROR: string;
     EMPTY: string;
     NAME: string;
-    TT: string;
     DECAY: string;
     STOCK: string;
     BUY: string;
