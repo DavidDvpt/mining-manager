@@ -106,6 +106,28 @@ describe('TransactionModal', () => {
     });
   });
 
+  it('allows replacing a buy field through an empty intermediate value', async () => {
+    render(
+      <TransactionModal
+        item={stackableItem}
+        lot={null}
+        action="buy"
+        open
+        onOpenChange={vi.fn()}
+      />,
+    );
+
+    const feeInput = screen.getByLabelText('Fee');
+    fireEvent.change(feeInput, { target: { value: '' } });
+    fireEvent.change(feeInput, { target: { value: '3' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Valider' }));
+
+    await waitFor(() => expect(mutationMocks.buyStackable).toHaveBeenCalledOnce());
+    expect(mutationMocks.buyStackable.mock.calls[0][0].data).toMatchObject({
+      fee: 3,
+    });
+  });
+
   it('creates a stackable sell transaction', async () => {
     render(
       <TransactionModal

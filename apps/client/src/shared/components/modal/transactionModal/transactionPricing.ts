@@ -25,6 +25,7 @@ export class TransactionPricing {
     item: ItemStoreRow | null,
     lot: TransactionLot | null,
   ) {
+    this.isAuction = action !== 'buy';
     this.isStackable = Boolean(item && isStackableItem(item) && !lot);
     this.itemTtValue = numericValue(item?.tt ?? '');
 
@@ -45,8 +46,18 @@ export class TransactionPricing {
     return this.values;
   }
 
+  /** Return whether auction pricing is enabled for the current transaction. */
+  getIsAuction(): boolean {
+    return this.isAuction;
+  }
+
+  /** Enable or disable auction fee recalculation for subsequent edits. */
   setAuction(value: boolean) {
     this.isAuction = value;
+  }
+
+  normalizeValue(field: TransactionPricingField, value: number) {
+    return field === 'quantity' ? Math.max(1, Math.floor(value)) : value;
   }
 
   /** Update one field and asynchronously return the recalculated transaction values. */
@@ -54,20 +65,38 @@ export class TransactionPricing {
     field: TransactionPricingField,
     value: number | undefined,
   ): Promise<TransactionPricingValues> {
-    if (value === undefined || !field || !this.isAuction) return this.values;
+    if (
+      value === undefined ||
+      !field ||
+      (!this.isAuction && this.action !== 'buy')
+    ) {
+      return this.values;
+    }
 
-    const normalizedValue =
-      field === 'quantity' ? Math.max(1, Math.floor(value)) : value;
+    const normalizedValue = this.normalizeValue(field, value);
 
     if (this.action === 'buy') {
-      this.values = { ...this.values, [field]: normalizedValue };
+      if (field === 'quantity') {
+        this.values = {
+          ...this.values,
+          [field]: normalizedValue,
+          tt: normalizedValue * this.itemTtValue,
+        };
+      } else {
+        this.values = { ...this.values, [field]: normalizedValue };
+      }
+      const result = this.getValuesFromUpdate(this.values);
+      this.values = { ...this.values, ...result };
       return this.values;
     } else {
       let result: Omit<TransactionPricingValues, 'quantity'> = this.values;
+
       switch (field) {
         case 'quantity':
           {
-            if (!this.isStackable) return this.values;
+            if (!this.isStackable) {
+              return this.values;
+            }
             const tt = normalizedValue * this.itemTtValue;
             result = this.getValuesFromUpdate({
               ...this.getValues(),
@@ -77,6 +106,7 @@ export class TransactionPricing {
           break;
         case 'tt':
           if (this.isStackable) return this.values;
+
           result = this.getValuesFromUpdate({
             ...this.getValues(),
             tt: value,
@@ -109,6 +139,7 @@ export class TransactionPricing {
     }
   }
 
+  /** Recalculate fee and TTC while keeping the sale financially valid. */
   getValuesFromUpdate({
     tt,
     fee,
@@ -121,13 +152,18 @@ export class TransactionPricing {
       feeInternal = this.feeFromMarkup(ttc - tt);
     }
 
-    return { tt, fee: feeInternal, ttc };
+    const result = { tt, fee: feeInternal, ttc };
+    return result;
   }
 
   /** Calculate the auction fee from the markup above TT. */
   feeFromMarkup(value: number): number {
+    if (this.action === 'buy' || !this.isAuction) return this.values.fee;
+
     if (value <= 0) return 0.5;
+
     const fee = (99.5 * value + 995) / (value + 1990);
-    return Math.min(100, Math.floor(fee * 100) / 100);
+    const result = Math.min(100, Math.floor(fee * 100) / 100);
+    return result;
   }
 }

@@ -55,29 +55,32 @@ export function TransactionForm({
     const pricing = new TransactionPricing(action, item, lot);
     pricingRef.current = pricing;
     setCalculatedValues(pricing.getValues());
-  }, [action, setCalculatedValues, item, lot]);
+    setValue('auction', pricing.getIsAuction(), { shouldValidate: true });
+  }, [action, setCalculatedValues, item, lot, setValue]);
 
   /** Update one pricing field from a numeric input event. */
   const updateField = async (
     field: TransactionPricingField,
     value: EditableNumber,
   ) => {
-    if (!pricingRef.current) return;
+    if (!pricingRef.current || value === undefined) return;
     setCalculatedValues(await pricingRef.current.update(field, value));
   };
 
   /** Keep React Hook Form synchronized before recalculating dependent values. */
   const handleChange = (key: TransactionPricingField, value: string) => {
     const parsedValue = parseInputValue(value);
-    if (parsedValue !== undefined) {
-      setValue(key, parsedValue, setValueOptions);
-    }
+    // Keep the field empty while the user replaces a value; the schema will
+    // prevent submission until a valid numeric value is entered again.
+    setValue(key, parsedValue as never, setValueOptions);
     void updateField(key, parsedValue);
   };
 
   /** Toggle auction pricing and synchronize recalculated values. */
   const handleAuctionChange = (checked: boolean) => {
-    if (pricingRef.current) pricingRef.current.setAuction(checked);
+    if (!pricingRef.current) return;
+    pricingRef.current.setAuction(checked);
+    setValue('auction', pricingRef.current.getIsAuction(), setValueOptions);
   };
 
   return (
@@ -106,7 +109,7 @@ export function TransactionForm({
         type="number"
         min={0}
         step="0.01"
-        readOnly={action === 'buy' || (action === 'sell' && isAuction)}
+        readOnly={action === 'sell' && isAuction}
         onChange={(event) => handleChange('fee', event.target.value)}
       />
       <InputRHF
