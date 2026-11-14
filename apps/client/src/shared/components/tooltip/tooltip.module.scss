@@ -1,0 +1,17 @@
+.content {
+  z-index: 100;
+  max-width: 18rem;
+  border: 1px solid var(--blue-400);
+  border-radius: var(--radius);
+  background: var(--blue-400);
+  color: var(--text);
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8rem;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
+}
+
+.arrow {
+  fill: var(--blue-400);
+  stroke: var(--blue-400);
+  stroke-width: 1px;
+}

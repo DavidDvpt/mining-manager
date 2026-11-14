@@ -1,5 +1,6 @@
 import type { ChangeEvent } from 'react';
 import type { ItemStoreColumn } from '@/shared/types/listItem';
+import { TooltipProvider } from '@/shared/components/tooltip';
 import styles from './app-list.module.scss';
 
 export type AppListProps<TRow extends { id: string }> = {
@@ -34,7 +35,8 @@ export function AppList<TRow extends { id: string }>({
   ) => column.onSelectChange?.(row, event.target.value);
 
   return (
-    <div className={styles.list} role="table">
+    <TooltipProvider>
+      <div className={styles.list} role="table">
       <div className={styles.header} role="row">
         {columns.map((column) => (
           <div
@@ -77,7 +79,8 @@ export function AppList<TRow extends { id: string }>({
           </div>
         ))}
       </div>
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }
 

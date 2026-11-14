@@ -25,8 +25,6 @@ export class TransactionPricing {
     item: ItemStoreRow | null,
     lot: TransactionLot | null,
   ) {
-    if (item && lot) throw new Error();
-
     this.isStackable = Boolean(item && isStackableItem(item) && !lot);
     this.itemTtValue = numericValue(item?.tt ?? '');
 

@@ -5,7 +5,7 @@ import type { ItemStoreColumn, ItemStoreRow } from '@/shared/types/listItem';
 import { formatDecimalValue } from '@/shared/utils';
 import type { TranslationKey } from '@/i18n/types';
 import styles from '@/pages/transactionPage/itemStoreList/item-store-list.module.scss';
-import appListStyles from './app-list.module.scss';
+import appListStyles from '../app-list.module.scss';
 
 const valueOrDash = (value: unknown) =>
   value === null || value === undefined || value === '' ? '—' : String(value);

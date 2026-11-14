@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button/button';
 import type { AppIconName as AppIconNameType } from '@/shared/components/icon';
+import { Tooltip } from '@/shared/components/tooltip';
 
 /** Create a reusable fixed-width icon action column for any table row shape. */
 export const createIconColumn = <TRow extends object>({
@@ -29,7 +30,7 @@ export const createIconColumn = <TRow extends object>({
   render: (row: TRow) => {
     const visible = isVisible?.(row) ?? true;
 
-    return (
+    const button = (
       <Button
         type="button"
         variant={variant}
@@ -38,7 +39,6 @@ export const createIconColumn = <TRow extends object>({
         icon={icon}
         iconOnly
         aria-label={ariaLabel}
-        title={visible ? title : undefined}
         tabIndex={visible ? undefined : -1}
         aria-hidden={!visible}
         style={{ visibility: visible ? 'visible' : 'hidden' }}
@@ -47,5 +47,7 @@ export const createIconColumn = <TRow extends object>({
         }}
       />
     );
+
+    return visible ? <Tooltip content={title}>{button}</Tooltip> : button;
   },
 });
