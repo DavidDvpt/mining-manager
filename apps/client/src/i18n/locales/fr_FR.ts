@@ -52,6 +52,18 @@ export const fr_FR: TranslationSchema = {
     INSTANCE: 'Outil',
     AUTO_COMPUTE: 'Calcul automatique',
   },
+  RUNNING_TRANSACTIONS_MODAL: {
+    TITLE: 'Transactions en cours',
+    TOOLS: 'Outils',
+    RESOURCES: 'Ressources',
+    NAME: 'Nom',
+    QUANTITY: 'Quantité',
+    CREATED_AT: 'Créée le',
+    STATUS: 'Statut',
+    LOADING: 'Chargement…',
+    ERROR: 'Impossible de charger les transactions en cours.',
+    EMPTY: 'Aucune transaction en cours.',
+  },
   ITEM_STORE: {
     LOADING: 'Chargement des objets…',
     ERROR: 'Impossible de charger les objets.',

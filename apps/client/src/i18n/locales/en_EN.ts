@@ -47,6 +47,18 @@ export const en_EN: TranslationSchema = {
     INSTANCE: 'Tool',
     AUTO_COMPUTE: 'Automatic calculation',
   },
+  RUNNING_TRANSACTIONS_MODAL: {
+    TITLE: 'Running transactions',
+    TOOLS: 'Tools',
+    RESOURCES: 'Resources',
+    NAME: 'Name',
+    QUANTITY: 'Quantity',
+    CREATED_AT: 'Created at',
+    STATUS: 'Status',
+    LOADING: 'Loading…',
+    ERROR: 'Unable to load running transactions.',
+    EMPTY: 'No running transactions.',
+  },
   ITEM_STORE: {
     LOADING: 'Loading items…',
     ERROR: 'Unable to load items.',

@@ -1,0 +1,27 @@
+.modal {
+  width: min(1100px, calc(100vw - 2rem));
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-x: auto;
+}
+
+.content section {
+  min-width: 900px;
+}
+
+.content h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.statusCell {
+  padding-right: 1rem;
+}
+
+.statusCell :global(select) {
+  width: 100%;
+}

@@ -82,6 +82,10 @@
   border: 1px solid var(--border-active);
   border-radius: var(--radius);
   background: var(--input-bg);
+  background-image: url('../../assets/icons/chevron-down.svg');
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
   color: var(--text);
-  padding: 0.25rem 0.5rem;
+  appearance: none;
+  padding: 0.25rem 2.5rem 0.25rem 0.5rem;
 }

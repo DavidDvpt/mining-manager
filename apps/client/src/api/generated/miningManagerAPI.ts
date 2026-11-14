@@ -59,6 +59,7 @@ import type {
   ProfileResponse,
   RefinageRecipeResponse,
   RefinerResponse,
+  RunningTransactionResponse,
   SessionLineResponse,
   SessionLotsValuationResponse,
   SessionResponse,
@@ -2862,6 +2863,76 @@ export function useGetApiV1RefinageRecipeOriginId<TData = Awaited<ReturnType<typ
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetApiV1RefinageRecipeOriginIdQueryOptions(originId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Return all running transaction rows owned by the authenticated user.
+ * @summary Get Running Transactions
+ */
+export const getApiV1TransactionRunning = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<RunningTransactionResponse[]>(
+      {url: `/api/v1/transaction/running`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1TransactionRunningQueryKey = () => {
+    return [
+    `/api/v1/transaction/running`
+    ] as const;
+    }
+
+
+export const getGetApiV1TransactionRunningQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1TransactionRunning>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1TransactionRunning>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1TransactionRunningQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1TransactionRunning>>> = ({ signal }) => getApiV1TransactionRunning(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1TransactionRunning>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetApiV1TransactionRunningQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1TransactionRunning>>>
+export type GetApiV1TransactionRunningQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get Running Transactions
+ */
+
+export function useGetApiV1TransactionRunning<TData = Awaited<ReturnType<typeof getApiV1TransactionRunning>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1TransactionRunning>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetApiV1TransactionRunningQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

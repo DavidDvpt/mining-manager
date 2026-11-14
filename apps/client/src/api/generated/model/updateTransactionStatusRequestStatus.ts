@@ -7,6 +7,7 @@ export type UpdateTransactionStatusRequestStatus = typeof UpdateTransactionStatu
 
 
 export const UpdateTransactionStatusRequestStatus = {
+  RUNNING: 'RUNNING',
   SOLDED: 'SOLDED',
   RETURNED: 'RETURNED',
   CANCELLED: 'CANCELLED',

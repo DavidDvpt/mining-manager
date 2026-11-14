@@ -3,11 +3,13 @@ import { useQueryContext } from '@/shared/hooks';
 import type { TransactionButtonId } from './constants';
 
 export type TransactionAction = 'buy' | 'sell';
+export type TransactionModalContext = 'running-transactions';
 export type TransactionContext = {
   type?: TransactionAction;
   item_id?: string;
   lot_id?: string;
   page?: TransactionButtonId;
+  modal?: TransactionModalContext;
 };
 export type TransactionContextUpdate = Partial<{
   [Key in keyof TransactionContext]: TransactionContext[Key] | null;
@@ -49,6 +51,10 @@ export function parseTransactionContext(
     item_id: params.get('context_item_id') ?? undefined,
     lot_id: params.get('context_lot_id') ?? undefined,
     page: parseTransactionPage(params.get('context_page')),
+    modal:
+      params.get('context_modal') === 'running-transactions'
+        ? 'running-transactions'
+        : undefined,
   };
 }
 

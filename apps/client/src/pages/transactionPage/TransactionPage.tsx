@@ -6,6 +6,7 @@ import { useGetApiV1MaterialTypes } from '@/api/generated/miningManagerAPI';
 import { transactionButtons } from './constants';
 import TransactionContent from './TransactionContent';
 import { useTransactionContext } from './transactionContext';
+import { RunningTransactionsModal } from '@/shared/components';
 
 /** Render the transactions workspace with inventory and transaction filters. */
 export function TransactionPage() {
@@ -23,6 +24,8 @@ export function TransactionPage() {
         onButtonChange={(page) =>
           updateContext({
             page: page as typeof activePage,
+            modal:
+              page === 'running-transactions' ? 'running-transactions' : null,
             type: null,
             item_id: null,
             lot_id: null,
@@ -36,6 +39,12 @@ export function TransactionPage() {
           updateContext={updateContext}
         />
       </SidebarLayout>
+      <RunningTransactionsModal
+        open={context.modal === 'running-transactions'}
+        onOpenChange={(open) => {
+          if (!open) updateContext({ modal: null });
+        }}
+      />
     </MainLayout>
   );
 }

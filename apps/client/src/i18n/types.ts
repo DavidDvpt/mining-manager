@@ -44,6 +44,18 @@ export type TranslationSchema = {
     INSTANCE: string;
     AUTO_COMPUTE: string;
   };
+  RUNNING_TRANSACTIONS_MODAL: {
+    TITLE: string;
+    TOOLS: string;
+    RESOURCES: string;
+    NAME: string;
+    QUANTITY: string;
+    CREATED_AT: string;
+    STATUS: string;
+    LOADING: string;
+    ERROR: string;
+    EMPTY: string;
+  };
   ITEM_STORE: {
     LOADING: string;
     ERROR: string;
