@@ -41,6 +41,7 @@ export type TranslationSchema = {
   };
   TRANSACTION_MODAL: {
     QUANTITY: string;
+    INSTANCE: string;
     AUTO_COMPUTE: string;
   };
   ITEM_STORE: {

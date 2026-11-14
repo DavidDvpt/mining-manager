@@ -1,5 +1,8 @@
 import { useWatch } from 'react-hook-form';
-import { formatDecimalValue, formatPercentageValue } from '@/shared/utils';
+import {
+  formatPercentageValue,
+  formatRoundedDecimalValue,
+} from '@/shared/utils';
 import type { TransactionFormValues } from '@/shared/types/modal';
 import styles from './transaction-modal.module.scss';
 
@@ -36,7 +39,7 @@ export function TransactionSummary({ stackable }: TransactionSummaryProps) {
       <div>
         <span>Plus-value</span>
         <span className={styles.value}>
-          {formatDecimalValue(ttc - tt)} Peds
+          {formatRoundedDecimalValue(ttc - tt)} Peds
         </span>
       </div>
     </div>

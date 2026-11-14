@@ -19,7 +19,7 @@ export function TransactionModalInfo({ item, lot }: TransactionModalInfoProps) {
     <div className={styles.itemInfo}>
       <EntropiaImage url={imageUrl} alt={name} size="small" />
       <div className={styles.itemDetails}>
-        <strong>{name}</strong>
+        <strong>{lot ? `${name} T${lot.tier ?? 0}` : name}</strong>
         <span>TT : {formatDecimalValue(tt)}</span>
         <span>Stock : {item?.stock ?? '—'}</span>
       </div>

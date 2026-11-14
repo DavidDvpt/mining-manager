@@ -50,6 +50,29 @@
   flex: 1 1 0;
 }
 
+.fields > .lotSelector {
+  flex: 1 0 100%;
+}
+
+.lotOptionLabel {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.lotOptionLabel span:last-child {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.lotOptionLabel span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .fields label {
   display: flex;
   flex-direction: column;

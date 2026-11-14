@@ -1,11 +1,7 @@
 import { useTranslations } from '@/i18n/useTranslations';
 import { useState } from 'react';
 import { useSidebarLayoutContext } from '@/layouts/sidebarLayout';
-import {
-  Panel,
-  Section,
-  TransactionModal,
-} from '@/shared/components';
+import { Panel, Section, TransactionModal } from '@/shared/components';
 import { ItemStoreList } from './itemStoreList';
 import type { MaterialTypeResponse } from '@/api/generated/model/materialTypeResponse';
 import { getItemStoreKind } from '@/shared/utils';
@@ -29,18 +25,19 @@ export function TransactionContent({
   const { activeButtonId } = useSidebarLayoutContext();
   const { t } = useTranslations();
   const { rows, isLoading, isError } = useItemStoreData();
-  const [selectedItem, setSelectedItem] = useState<(typeof rows.material)[number] | null>(null);
-  const [transactionAction, setTransactionAction] = useState<'buy' | 'sell'>('buy');
-  const selectedItemId = selectedItem?.id ?? '';
-  const unstackableLots = useGetApiV1LotsUnstackableItemItemId(
-    selectedItemId,
-    {
-      query: {
-        queryKey: getGetApiV1LotsUnstackableItemItemIdQueryKey(selectedItemId),
-        enabled: transactionAction === 'sell' && selectedItem !== null,
-      },
-    },
+  const [selectedItem, setSelectedItem] = useState<
+    (typeof rows.material)[number] | null
+  >(null);
+  const [transactionAction, setTransactionAction] = useState<'buy' | 'sell'>(
+    'buy',
   );
+  const selectedItemId = selectedItem?.id ?? '';
+  const unstackableLots = useGetApiV1LotsUnstackableItemItemId(selectedItemId, {
+    query: {
+      queryKey: getGetApiV1LotsUnstackableItemItemIdQueryKey(selectedItemId),
+      enabled: transactionAction === 'sell' && selectedItem !== null,
+    },
+  });
   const fixedButton = FIXED_TRANSACTION_BUTTONS.find(
     ({ id }) => id === activeButtonId,
   );
@@ -53,10 +50,10 @@ export function TransactionContent({
       ? t('TRANSACTIONS.MATERIALS')
       : activeButtonId === 'running-transactions'
         ? t('TRANSACTIONS.RUNNING_TRANSACTIONS')
-      : materialType?.name ?? activeButtonId);
-  const [activeViewPrefix, activeViewSuffix] = t('TRANSACTIONS.ACTIVE_VIEW').split(
-    '{view}',
-  );
+        : (materialType?.name ?? activeButtonId));
+  const [activeViewPrefix, activeViewSuffix] = t(
+    'TRANSACTIONS.ACTIVE_VIEW',
+  ).split('{view}');
   const activeKind = getItemStoreKind(activeButtonId);
   const visibleRows = activeKind
     ? rows[activeKind].filter(
@@ -109,8 +106,12 @@ export function TransactionContent({
       <TransactionModal
         item={selectedItem}
         lot={unstackableLots.data?.[0] ?? null}
+        lots={unstackableLots.data ?? []}
         action={transactionAction}
-        open={selectedItem !== null && (transactionAction === 'buy' || Boolean(unstackableLots.data?.[0]))}
+        open={
+          selectedItem !== null &&
+          (transactionAction === 'buy' || Boolean(unstackableLots.data?.[0]))
+        }
         onOpenChange={(open) => {
           if (!open) {
             setSelectedItem(null);

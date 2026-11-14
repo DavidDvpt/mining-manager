@@ -3,7 +3,7 @@ import { FormButtonsSection } from '@/shared/components/form/FormButtonsSection'
 import { Modal } from '@/shared/components/modal';
 import { useTranslations } from '@/i18n/useTranslations';
 import { useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   getGetApiV1StorageMaterialStockQueryKey,
   usePostApiV1TransactionBuyStackable,
@@ -30,6 +30,7 @@ import styles from './transaction-modal.module.scss';
 export function TransactionModal({
   item,
   lot,
+  lots = [],
   action,
   open,
   onOpenChange,
@@ -37,37 +38,50 @@ export function TransactionModal({
   const { t } = useTranslations();
   const queryClient = useQueryClient();
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [selectedLotId, setSelectedLotId] = useState<string | null>(null);
+  const availableLots = lots.length > 0 ? lots : lot ? [lot] : [];
+  const selectedLot =
+    availableLots.find(({ id }) => id === selectedLotId) ??
+    availableLots[0] ??
+    null;
+
+  /** Select the first available instance whenever a transaction is opened or its item changes. */
+  useEffect(() => {
+    setSelectedLotId(availableLots[0]?.id ?? null);
+  }, [item?.id, action, open, lots]);
+
   const buyStackable = usePostApiV1TransactionBuyStackable();
   const buyUnstackable = usePostApiV1TransactionBuyUnstackable();
   const sellStackable = usePostApiV1TransactionSellStackable();
   const sellUnstackable = usePostApiV1TransactionSellUnstackable();
-  const isStackable = Boolean(item && isStackableItem(item) && !lot);
+  const isStackable = Boolean(item && isStackableItem(item) && !selectedLot);
 
   /** Persist the transaction through the mutation matching its action and stackability. */
   const handleSubmit = async (formValues: TransactionFormValues) => {
     if (!item) return;
 
-    if (action === 'sell' && isStackable && formValues.quantity > (item.stock ?? 0)) {
+    if (
+      action === 'sell' &&
+      isStackable &&
+      formValues.quantity > (item.stock ?? 0)
+    ) {
       setValidationError(t('TRANSACTIONS.QUANTITY_EXCEEDS_STOCK'));
       return;
     }
 
-    if (
-      action === 'sell' &&
-      !isStackable &&
-      formValues.tt > (item.tt ?? 0)
-    ) {
+    if (action === 'sell' && !isStackable && formValues.tt > (item.tt ?? 0)) {
       setValidationError(t('TRANSACTIONS.TT_EXCEEDS_BASE'));
       return;
     }
 
     setValidationError(null);
 
-    const kind = item.kind === 'material'
-      ? 'material'
-      : item.kind === 'enhancer'
-        ? 'enhancer'
-        : 'tool';
+    const kind =
+      item.kind === 'material'
+        ? 'material'
+        : item.kind === 'enhancer'
+          ? 'enhancer'
+          : 'tool';
 
     if (action === 'sell') {
       if (isStackable) {
@@ -79,11 +93,11 @@ export function TransactionModal({
             ttc: formValues.ttc,
           },
         });
-      } else if (lot) {
+      } else if (selectedLot) {
         await sellUnstackable.mutateAsync({
           data: {
             quantity: 1,
-            lot_id: lot.id,
+            lot_id: selectedLot.id,
             tt: formValues.tt,
             ttc: formValues.ttc,
           },
@@ -115,23 +129,29 @@ export function TransactionModal({
     }
 
     if (item.kind === 'material' && isStackable) {
-      const stockDelta = action === 'buy' ? formValues.quantity : -formValues.quantity;
+      const stockDelta =
+        action === 'buy' ? formValues.quantity : -formValues.quantity;
       const stockQueryKey = getGetApiV1StorageMaterialStockQueryKey();
       queryClient.setQueryData<Record<string, number>>(
         stockQueryKey,
         (stock = {}) => ({
           ...stock,
-          [item.id]: Math.max(0, (stock[item.id] ?? item.stock ?? 0) + stockDelta),
+          [item.id]: Math.max(
+            0,
+            (stock[item.id] ?? item.stock ?? 0) + stockDelta,
+          ),
         }),
       );
     }
 
-    await Promise.all([
-      getGetApiV1FindersStockQueryKey(),
-      getGetApiV1ExcavatorsStockQueryKey(),
-      getGetApiV1RefinersStockQueryKey(),
-      getGetApiV1FinderAmplifiersStockQueryKey(),
-    ].map((queryKey) => queryClient.invalidateQueries({ queryKey })));
+    await Promise.all(
+      [
+        getGetApiV1FindersStockQueryKey(),
+        getGetApiV1ExcavatorsStockQueryKey(),
+        getGetApiV1RefinersStockQueryKey(),
+        getGetApiV1FinderAmplifiersStockQueryKey(),
+      ].map((queryKey) => queryClient.invalidateQueries({ queryKey })),
+    );
 
     onOpenChange(false);
   };
@@ -146,7 +166,7 @@ export function TransactionModal({
       description={`${item.name} · ${isStackable ? 'Stackable' : 'Unstackable'}`}
     >
       <GenericForm
-        key={`${item.id}-${lot?.id ?? 'new'}-${open}`}
+        key={`${item.id}-${selectedLot?.id ?? 'new'}-${open}`}
         schema={transactionFormSchema}
         defaultValues={{
           quantity: 1,
@@ -158,7 +178,7 @@ export function TransactionModal({
         onSubmit={handleSubmit}
         className={styles.form}
       >
-        <TransactionModalInfo item={item} lot={lot} />
+        <TransactionModalInfo item={item} lot={selectedLot} />
         {validationError ? (
           <p className={styles.validationError} role="alert">
             {validationError}
@@ -168,7 +188,10 @@ export function TransactionModal({
           action={action}
           isStackable={isStackable}
           item={item}
-          lot={lot}
+          lot={selectedLot}
+          lots={availableLots}
+          selectedLotId={selectedLot?.id ?? null}
+          onLotChange={setSelectedLotId}
         />
         <TransactionSummary stackable={isStackable} />
         <FormButtonsSection

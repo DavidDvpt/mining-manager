@@ -15,13 +15,30 @@ import {
 import styles from './transaction-modal.module.scss';
 import { ItemStoreRow } from '@/shared/types';
 import { useTranslations } from '@/i18n/useTranslations';
+import { Label } from '@/components/ui/label/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select/select';
 
 type TransactionFormProps = {
   action: 'buy' | 'sell';
   isStackable: boolean;
   item: ItemStoreRow | null;
   lot: TransactionLot | null;
+  lots: TransactionLot[];
+  selectedLotId: string | null;
+  onLotChange: (lotId: string) => void;
 };
+
+/** Format a lot's TT with exactly two decimal places for consistent instance labels. */
+function formatLotTt(tt: string | null): string {
+  const numericTt = Number(tt);
+  return Number.isFinite(numericTt) ? numericTt.toFixed(2) : '—';
+}
 
 /** Render transaction inputs and synchronize every edit with transaction pricing. */
 export function TransactionForm({
@@ -29,6 +46,9 @@ export function TransactionForm({
   isStackable,
   item,
   lot,
+  lots,
+  selectedLotId,
+  onLotChange,
 }: TransactionFormProps) {
   const pricingRef = useRef<TransactionPricing | null>(null);
   const { setValue } = useFormContext<TransactionFormValues>();
@@ -85,11 +105,42 @@ export function TransactionForm({
   const handleAutoComputeChange = (checked: boolean) => {
     if (!pricingRef.current) return;
     pricingRef.current.setAutoCompute(checked);
-    setValue('autoCompute', pricingRef.current.getAutoCompute(), setValueOptions);
+    setValue(
+      'autoCompute',
+      pricingRef.current.getAutoCompute(),
+      setValueOptions,
+    );
   };
 
   return (
     <div className={styles.fields}>
+      {action === 'sell' && lots.length > 1 ? (
+        <div className={styles.lotSelector}>
+          <Label htmlFor="transaction-lot">
+            {t('TRANSACTION_MODAL.INSTANCE')}
+          </Label>
+          <Select
+            value={selectedLotId ?? lots[0]?.id ?? ''}
+            onValueChange={onLotChange}
+          >
+            <SelectTrigger id="transaction-lot">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {lots.map((availableLot) => (
+                <SelectItem key={availableLot.id} value={availableLot.id}>
+                  <span className={styles.lotOptionLabel}>
+                    <span>
+                      {availableLot.item.name} T{availableLot.tier ?? 0}
+                    </span>
+                    <span>TT {formatLotTt(availableLot.tt)}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      ) : null}
       <InputRHF
         name="quantity"
         label={t('TRANSACTION_MODAL.QUANTITY')}

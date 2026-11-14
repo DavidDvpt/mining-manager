@@ -30,7 +30,7 @@ export class TransactionPricing {
     this.itemTtValue = item?.tt ?? 0;
 
     const tt = lot
-      ? numericValue(lot.tt_remaining ?? '')
+      ? numericValue(lot.tt_remaining ?? lot.tt ?? '')
       : item?.tt ?? 0;
 
     this.values = {

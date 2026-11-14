@@ -22,6 +22,7 @@ export type TransactionFormValues = {
 export type TransactionModalProps = {
   item: ItemStoreRow | null;
   lot: TransactionLot | null;
+  lots?: TransactionLot[];
   action: TransactionAction;
   open: boolean;
   onOpenChange: (open: boolean) => void;

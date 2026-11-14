@@ -15,9 +15,20 @@ export function formatDecimalValue(value: unknown): string {
   return `${integerPart},${paddedFraction}`;
 }
 
+/** Round a decimal to five places and remove insignificant trailing zeroes. */
+export function formatRoundedDecimalValue(value: number): string {
+  return Number(value.toFixed(5)).toString().replace('.', ',');
+}
+
 /** Format a finite percentage value with a configurable number of decimal places. */
-export function formatPercentageValue(value: number, decimalPlaces = 2): string {
-  const safeDecimalPlaces = Math.min(100, Math.max(0, Math.trunc(decimalPlaces)));
+export function formatPercentageValue(
+  value: number,
+  decimalPlaces = 2,
+): string {
+  const safeDecimalPlaces = Math.min(
+    100,
+    Math.max(0, Math.trunc(decimalPlaces)),
+  );
   return (Number.isFinite(value) ? value : 0).toFixed(safeDecimalPlaces);
 }
 
@@ -31,7 +42,9 @@ export function parseNumber(
 }
 
 /** Convert a possibly-null numeric value into a finite number with a zero fallback. */
-export function numericValue(value: string | number | null | undefined): number {
+export function numericValue(
+  value: string | number | null | undefined,
+): number {
   return parseNumber(value) ?? 0;
 }
 
