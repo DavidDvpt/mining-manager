@@ -136,8 +136,8 @@ class SessionTransactionService:
     ) -> Session:
         """Create a stackable SELL from active owned lots in FIFO order.
 
-        The sale is accepted only when active available lots for the item have
-        a strictly greater total quantity than the requested quantity. One
+        The sale is accepted when active available lots have at least the
+        requested quantity. One
         consumed session line is persisted per source lot so every lot used by
         the sale remains identifiable.
         """
@@ -154,7 +154,7 @@ class SessionTransactionService:
             _item, lots, total_quantity = await self._lot_service.get_fifo_lots(
                 user_id=user_id, item_id=item_id
             )
-            if total_quantity <= quantity:
+            if total_quantity < quantity:
                 raise UnprocessingError("Insufficient active quantity available to sell")
 
             allocations = await self._lot_service.allocate_fifo_quantity(
@@ -184,9 +184,8 @@ class SessionTransactionService:
     ) -> Session:
         """Create a SELL for one owned active unstackable lot.
 
-        The lot must represent exactly one item. A positive TT is required for
-        limited tools; non-limited values are accepted as the caller-provided
-        TT/TTC pair because pricing representation is a front-end concern.
+        The lot must represent exactly one item. The sale TT cannot exceed the
+        catalogue TT value; limited tools also require a positive TT.
         """
 
         async with _transaction_scope(self._session):
@@ -196,14 +195,18 @@ class SessionTransactionService:
             if not lot.is_active or lot.qty != 1:
                 raise UnprocessingError("Only one active unstackable lot can be sold")
             origin = getattr(lot, "origin", None)
-            if (
-                origin is not None
-                and origin.item is not None
-                and is_limited_item(origin.item)
-                and tt <= 0
-            ):
+            if origin is None or origin.item is None:
+                raise AppError(404, "Item not found")
+            item = await self._item_service.get_item_with_economy(
+                item_id=origin.item.id
+            )
+            if item is None or item.economy is None or item.economy.tt is None:
+                raise UnprocessingError("Item has no TT value")
+            if tt > item.economy.tt:
+                raise UnprocessingError("TT cannot exceed the item's base TT value")
+            if is_limited_item(origin.item) and tt <= 0:
                 raise UnprocessingError("TT must be greater than 0 for a limited lot")
-            
+
             await self._lot_service.reserve_unstackable_for_sale(lot=lot)
             transaction_session, _lines = await self._repository.create_sell(
                 user_id=user_id,

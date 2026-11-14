@@ -42,6 +42,8 @@ export const fr_FR: TranslationSchema = {
     ACTIVE_VIEW: 'Vue active : {view}',
     DESCRIPTION:
       'Sélectionnez une catégorie à gauche pour afficher les achats, ventes et éléments possédés dans cette même vue.',
+    QUANTITY_EXCEEDS_STOCK: 'La quantité ne peut pas dépasser le stock disponible.',
+    TT_EXCEEDS_BASE: 'Le TT ne peut pas dépasser la valeur TT de base de l’objet.',
   },
   ITEM_STORE: {
     LOADING: 'Chargement des objets…',

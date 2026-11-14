@@ -39,7 +39,7 @@ const stackableItem: ItemStoreRow = {
   imageUrl: null,
   isRare: false,
   isUntradeable: false,
-  tt: '1.00',
+  tt: '10.00',
   decay: null,
   stock: 4,
   details: {},
@@ -126,6 +126,34 @@ describe('TransactionModal', () => {
     });
   });
 
+  it('rejects a stackable sale above available stock before mutation', async () => {
+    const onOpenChange = vi.fn();
+
+    render(
+      <TransactionModal
+        item={stackableItem}
+        lot={null}
+        action="sell"
+        open
+        onOpenChange={onOpenChange}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Quantité'), {
+      target: { value: '5' },
+    });
+    await waitFor(() =>
+      expect((screen.getByLabelText('Quantité') as HTMLInputElement).value).toBe('5'),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Valider' }));
+
+    expect((await screen.findByRole('alert')).textContent).toContain(
+      'quantity cannot exceed available stock',
+    );
+    expect(mutationMocks.sellStackable).not.toHaveBeenCalled();
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  });
+
   it('creates an unstackable sell transaction from its lot', async () => {
     render(
       <TransactionModal
@@ -149,5 +177,33 @@ describe('TransactionModal', () => {
       lot_id: 'lot-1',
       quantity: 1,
     });
+  });
+
+  it('rejects an unstackable sale above the item base TT before mutation', async () => {
+    const onOpenChange = vi.fn();
+
+    render(
+      <TransactionModal
+        item={unstackableItem}
+        lot={null}
+        action="sell"
+        open
+        onOpenChange={onOpenChange}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('TT'), {
+      target: { value: '11' },
+    });
+    await waitFor(() =>
+      expect((screen.getByLabelText('TT') as HTMLInputElement).value).toBe('11'),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Valider' }));
+
+    expect((await screen.findByRole('alert')).textContent).toContain(
+      'TT cannot exceed the item base TT value',
+    );
+    expect(mutationMocks.sellUnstackable).not.toHaveBeenCalled();
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
   });
 });

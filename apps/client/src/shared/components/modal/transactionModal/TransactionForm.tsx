@@ -66,9 +66,14 @@ export function TransactionForm({
     setCalculatedValues(await pricingRef.current.update(field, value));
   };
 
-  /** Update quantity and recalculate dependent values. */
-  const handleChange = (key: TransactionPricingField, value: string) =>
-    void updateField(key, parseInputValue(value));
+  /** Keep React Hook Form synchronized before recalculating dependent values. */
+  const handleChange = (key: TransactionPricingField, value: string) => {
+    const parsedValue = parseInputValue(value);
+    if (parsedValue !== undefined) {
+      setValue(key, parsedValue, setValueOptions);
+    }
+    void updateField(key, parsedValue);
+  };
 
   /** Toggle auction pricing and synchronize recalculated values. */
   const handleAuctionChange = (checked: boolean) => {

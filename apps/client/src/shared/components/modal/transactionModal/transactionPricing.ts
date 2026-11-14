@@ -99,7 +99,11 @@ export class TransactionPricing {
           break;
       }
 
-      this.values = { ...this.values, ...result };
+      this.values = {
+        ...this.values,
+        ...(field === 'quantity' ? { quantity: normalizedValue } : {}),
+        ...result,
+      };
 
       return this.values;
     }

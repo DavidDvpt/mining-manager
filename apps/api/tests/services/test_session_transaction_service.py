@@ -215,15 +215,35 @@ async def test_create_sell_stackable_allocates_fifo_lots(service):
     )
 
 
-async def test_create_sell_stackable_rejects_insufficient_stock(service):
-    """Reject a sale when available stock is not strictly greater than quantity."""
+async def test_create_sell_stackable_allows_selling_all_available_stock(service):
+    """Allow a sale whose quantity exactly matches available stock."""
+
+    service._item_service.is_item_stackable.return_value = True
+    expected = transaction_session(
+        SessionTransactionType.SELL, SessionTransactionStatus.RUNNING
+    )
+    lot = SimpleNamespace(id=uuid4(), qty=3, reserved=0)
+    service._lot_service.get_fifo_lots.return_value = (SimpleNamespace(), [lot], 3)
+    service._lot_service.allocate_fifo_quantity.return_value = [(lot, 3)]
+    service._repository.create_sell.return_value = (expected, [])
+
+    result = await service.create_sell_stackable(
+        user_id=uuid4(), item_id=uuid4(), quantity=3,
+        tt=Decimal("1"), ttc=Decimal("1"),
+    )
+
+    assert result is expected
+
+
+async def test_create_sell_stackable_rejects_quantity_above_stock(service):
+    """Reject a sale when the requested quantity exceeds available stock."""
 
     service._item_service.is_item_stackable.return_value = True
     service._lot_service.get_fifo_lots.return_value = (SimpleNamespace(), [], 3)
 
     with pytest.raises(UnprocessingError, match="Insufficient"):
         await service.create_sell_stackable(
-            user_id=uuid4(), item_id=uuid4(), quantity=3,
+            user_id=uuid4(), item_id=uuid4(), quantity=4,
             tt=Decimal("1"), ttc=Decimal("1"),
         )
 
@@ -236,12 +256,19 @@ async def test_create_sell_unstackable_reserves_lot(service):
     lot_id = uuid4()
     user_id = uuid4()
     lot = SimpleNamespace(
-        id=lot_id, is_active=True, qty=1, tool_lot=SimpleNamespace(tt=Decimal("10"))
+        id=lot_id,
+        is_active=True,
+        qty=1,
+        origin=SimpleNamespace(item=SimpleNamespace(id=uuid4(), name="Test Tool")),
+        tool_lot=SimpleNamespace(tt=Decimal("10")),
     )
     expected = transaction_session(
         SessionTransactionType.SELL, SessionTransactionStatus.RUNNING
     )
     service._lot_service.get_unstackable_lot.return_value = lot
+    service._item_service.get_item_with_economy.return_value = SimpleNamespace(
+        economy=SimpleNamespace(tt=Decimal("10"))
+    )
     service._repository.create_sell.return_value = (expected, [])
 
     result = await service.create_sell_unstackable(
@@ -264,14 +291,40 @@ async def test_create_sell_unstackable_rejects_limited_lot_with_zero_tt(service)
         id=uuid4(),
         is_active=True,
         qty=1,
-        origin=SimpleNamespace(item=SimpleNamespace(name="Test Tool (L)")),
+        origin=SimpleNamespace(item=SimpleNamespace(id=uuid4(), name="Test Tool (L)")),
         tool_lot=SimpleNamespace(tt=Decimal("10")),
     )
     service._lot_service.get_unstackable_lot.return_value = lot
+    service._item_service.get_item_with_economy.return_value = SimpleNamespace(
+        economy=SimpleNamespace(tt=Decimal("10"))
+    )
 
     with pytest.raises(UnprocessingError, match="greater than 0"):
         await service.create_sell_unstackable(
             user_id=uuid4(), lot_id=lot.id, tt=Decimal("0"), ttc=Decimal("1")
+        )
+
+    service._lot_service.reserve_unstackable_for_sale.assert_not_awaited()
+
+
+async def test_create_sell_unstackable_rejects_tt_above_item_base_value(service):
+    """Reject an unstackable sale whose TT exceeds catalogue base TT."""
+
+    lot = SimpleNamespace(
+        id=uuid4(),
+        is_active=True,
+        qty=1,
+        origin=SimpleNamespace(item=SimpleNamespace(id=uuid4(), name="Test Tool")),
+        tool_lot=SimpleNamespace(tt=Decimal("10")),
+    )
+    service._lot_service.get_unstackable_lot.return_value = lot
+    service._item_service.get_item_with_economy.return_value = SimpleNamespace(
+        economy=SimpleNamespace(tt=Decimal("10"))
+    )
+
+    with pytest.raises(UnprocessingError, match="base TT value"):
+        await service.create_sell_unstackable(
+            user_id=uuid4(), lot_id=lot.id, tt=Decimal("10.01"), ttc=Decimal("11")
         )
 
     service._lot_service.reserve_unstackable_for_sale.assert_not_awaited()

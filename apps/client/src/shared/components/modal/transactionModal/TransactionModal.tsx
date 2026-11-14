@@ -1,13 +1,15 @@
 import { GenericForm } from '@/shared/components/form/GenericForm';
 import { FormButtonsSection } from '@/shared/components/form/FormButtonsSection';
 import { Modal } from '@/shared/components/modal';
+import { useTranslations } from '@/i18n/useTranslations';
+import { useState } from 'react';
 import {
   usePostApiV1TransactionBuyStackable,
   usePostApiV1TransactionBuyUnstackable,
   usePostApiV1TransactionSellStackable,
   usePostApiV1TransactionSellUnstackable,
 } from '@/api/generated/miningManagerAPI';
-import { isStackableItem } from '@/shared/utils';
+import { isStackableItem, numericValue } from '@/shared/utils';
 import type {
   TransactionFormValues,
   TransactionModalProps,
@@ -26,14 +28,33 @@ export function TransactionModal({
   open,
   onOpenChange,
 }: TransactionModalProps) {
+  const { t } = useTranslations();
+  const [validationError, setValidationError] = useState<string | null>(null);
   const buyStackable = usePostApiV1TransactionBuyStackable();
   const buyUnstackable = usePostApiV1TransactionBuyUnstackable();
   const sellStackable = usePostApiV1TransactionSellStackable();
   const sellUnstackable = usePostApiV1TransactionSellUnstackable();
+  const isStackable = Boolean(item && isStackableItem(item) && !lot);
 
   /** Persist the transaction through the mutation matching its action and stackability. */
   const handleSubmit = async (formValues: TransactionFormValues) => {
     if (!item) return;
+
+    if (action === 'sell' && isStackable && formValues.quantity > (item.stock ?? 0)) {
+      setValidationError(t('TRANSACTIONS.QUANTITY_EXCEEDS_STOCK'));
+      return;
+    }
+
+    if (
+      action === 'sell' &&
+      !isStackable &&
+      formValues.tt > numericValue(item.tt ?? '')
+    ) {
+      setValidationError(t('TRANSACTIONS.TT_EXCEEDS_BASE'));
+      return;
+    }
+
+    setValidationError(null);
 
     const kind = item.kind === 'material'
       ? 'material'
@@ -91,7 +112,6 @@ export function TransactionModal({
 
   if (!item) return null;
 
-  const isStackable = isStackableItem(item);
   return (
     <Modal
       open={open}
@@ -107,6 +127,11 @@ export function TransactionModal({
         className={styles.form}
       >
         <TransactionModalInfo item={item} lot={lot} />
+        {validationError ? (
+          <p className={styles.validationError} role="alert">
+            {validationError}
+          </p>
+        ) : null}
         <TransactionForm
           action={action}
           isStackable={isStackable}
