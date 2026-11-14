@@ -252,7 +252,13 @@ class SessionMiningService:
                 lot = line.lot
                 if lot is None or lot.tool_lot is None:
                     raise UnprocessingError("Amplifier line has no tool lot")
-                lot.tool_lot.tt = amplifier_tts[line.id]
+                remaining_tt = amplifier_tts[line.id]
+                lot.tool_lot.tt = remaining_tt
+                item = lot.origin.item if lot.origin is not None else None
+                if item is not None and is_limited_item(item) and remaining_tt <= 0:
+                    lot.qty = 0
+                    lot.reserved = 0
+                    lot.is_active = False
 
             enhancer_lines: list[SessionLine] = []
             for line in lines:

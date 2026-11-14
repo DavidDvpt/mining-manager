@@ -74,7 +74,10 @@ class LotRepository:
         statement = (
             select(Lot)
             .join(SessionLine, cast(SessionLine.id, String) == Lot.origin_id)
-            .options(joinedload(Lot.origin).joinedload(SessionLine.item))
+            .options(
+                joinedload(Lot.origin).joinedload(SessionLine.item),
+                joinedload(Lot.tool_lot),
+            )
             .where(Lot.id == lot_id, Lot.user_id == user_id)
             .with_for_update(of=Lot)
         )

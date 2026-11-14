@@ -1,12 +1,13 @@
 from decimal import Decimal
 from types import SimpleNamespace
+from typing import cast
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
 
 from api.core.exceptions import AppError, UnprocessingError
-from api.db.models import LotKind, SessionLineType
+from api.db.models import Lot, LotKind, SessionLineType, ToolLot
 from api.services import lot_service
 
 
@@ -441,6 +442,22 @@ async def test_consume_reserved_quantity_deactivates_empty_lot(session):
     ).consume_reserved_quantity(
         user_id=uuid4(), lot_id=lot.id, quantity=10
     )
+
+    repository.update_quantities.assert_awaited_once_with(
+        lot=lot, quantity=0, reserved=0, is_active=False
+    )
+
+
+async def test_settle_sale_lot_consumes_tool_quantity_on_sale(session):
+    """Consume and deactivate a sold tool lot at quantity zero."""
+
+    repository = AsyncMock()
+    lot = cast(Lot, _lot_with_origin_item(quantity=1, reserved=1))
+    lot.tool_lot = cast(ToolLot, SimpleNamespace())
+
+    await lot_service.LotService(
+        session, repository, AsyncMock(), AsyncMock()
+    ).settle_sale_lot(lot=lot, quantity=1, sold=True)
 
     repository.update_quantities.assert_awaited_once_with(
         lot=lot, quantity=0, reserved=0, is_active=False

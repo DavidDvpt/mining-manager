@@ -105,8 +105,8 @@ def upgrade() -> None:
             ELSE
                 IF EXISTS (
                     SELECT 1 FROM tool_lot WHERE lot_id = NEW.id
-                ) AND NEW.qty <> 1 THEN
-                    RAISE EXCEPTION 'A lot referenced by tool_lot must have qty = 1';
+                ) AND NEW.qty NOT IN (0, 1) THEN
+                    RAISE EXCEPTION 'A lot referenced by tool_lot must have qty = 0 or 1';
                 END IF;
             END IF;
             RETURN NEW;

@@ -406,9 +406,10 @@ class LotService:
     ) -> None:
         """Settle or release a sale reservation on one locked lot.
 
-        SOLD reduces ``qty`` by the reserved line quantity. RETURNED and
-        CANCELLED leave ``qty`` untouched. All transitions release only this
-        transaction's reservation so concurrent reservations remain intact.
+        SOLD reduces ``qty`` by the reserved line quantity, including tools.
+        Tool lots may therefore transition from ``qty = 1`` to ``qty = 0``.
+        RETURNED and CANCELLED leave stock untouched. All transitions release
+        only this transaction's reservation.
         """
 
         if quantity < 1 or lot.reserved < quantity:
