@@ -1,11 +1,22 @@
 .page {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr);
+  gap: 0.5rem;
   min-height: 100%;
 }
 
-.page h1 {
+.page h1,
+.page h2 {
   margin: 0;
   color: var(--text);
+}
+
+.page h1 {
   font-size: 1.5rem;
+}
+
+.page h2 {
+  font-size: 1.25rem;
 }
 
 .page p {
@@ -15,4 +26,19 @@
 
 .page p + p {
   margin-top: 0.75rem;
+}
+
+.loots,
+.cockpit {
+  min-height: 0;
+}
+
+.createSession {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 900px) {
+  .page {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

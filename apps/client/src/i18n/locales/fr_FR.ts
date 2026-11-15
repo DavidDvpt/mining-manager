@@ -54,6 +54,11 @@ export const fr_FR: TranslationSchema = {
   MINING: {
     TITLE: 'Mining',
     SIDEBAR_LABEL: 'Navigation du mining',
+    LOOTS: 'Loots',
+    COCKPIT: 'Cockpit',
+    CREATE_SESSION: 'Créer une session',
+    CREATE_SESSION_DESCRIPTION:
+      'La configuration de la nouvelle session sera ajoutée ici.',
     CURRENT_SESSION: 'Session actuelle',
     CLOSE: 'Fermer',
     SESSIONS_LIST: 'Liste des sessions',

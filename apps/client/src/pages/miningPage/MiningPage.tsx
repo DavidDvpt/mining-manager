@@ -11,7 +11,13 @@ import styles from './mining-page.module.scss';
 export function MiningPage() {
   const { t } = useTranslations();
   const { context, updateContext } = useMiningContext();
-  const activePage = context.page ?? 'sessions-list';
+  const hasCurrentSession = Boolean(context.session_id);
+  const activePage =
+    context.page === 'create-session'
+      ? 'create-session'
+      : hasCurrentSession && context.page === 'current-session'
+        ? 'current-session'
+        : 'sessions-list';
   const activeView =
     activePage === 'current-session'
       ? t('MINING.CURRENT_SESSION')
@@ -25,24 +31,46 @@ export function MiningPage() {
   return (
     <MainLayout>
       <SidebarLayout
-        buttons={miningButtons(t)}
+        buttons={miningButtons(t, { hasCurrentSession })}
         defaultButtonId="sessions-list"
         activeButtonId={activePage}
-        onButtonChange={(page) => updateContext({ page: page as typeof activePage })}
+        onButtonChange={(page) =>
+          updateContext({ page: page as typeof activePage })
+        }
         sidebarLabel={t('MINING.SIDEBAR_LABEL')}
       >
         <Panel className={styles.page}>
-          <Section aria-labelledby="mining-title">
-            <h1 id="mining-title">{t('MINING.TITLE')}</h1>
-            <SubSection>
-              <p>
-                {activeViewPrefix}
-                <span className={styles.activeView}>{activeView}</span>
-                {activeViewSuffix}
-              </p>
-              <p>{t('MINING.DESCRIPTION')}</p>
-            </SubSection>
-          </Section>
+          {activePage === 'create-session' ? (
+            <Section
+              className={styles.createSession}
+              aria-labelledby="create-mining-session-title"
+            >
+              <h1 id="create-mining-session-title">
+                {t('MINING.CREATE_SESSION')}
+              </h1>
+              <p>{t('MINING.CREATE_SESSION_DESCRIPTION')}</p>
+            </Section>
+          ) : (
+            <>
+              <Section className={styles.loots} aria-labelledby="mining-title">
+                <h1 id="mining-title">{t('MINING.LOOTS')}</h1>
+                <SubSection>
+                  <p>
+                    {activeViewPrefix}
+                    <span className={styles.activeView}>{activeView}</span>
+                    {activeViewSuffix}
+                  </p>
+                  <p>{t('MINING.DESCRIPTION')}</p>
+                </SubSection>
+              </Section>
+              <Section
+                className={styles.cockpit}
+                aria-labelledby="cockpit-title"
+              >
+                <h2 id="cockpit-title">{t('MINING.COCKPIT')}</h2>
+              </Section>
+            </>
+          )}
         </Panel>
       </SidebarLayout>
     </MainLayout>

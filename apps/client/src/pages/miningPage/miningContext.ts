@@ -6,6 +6,7 @@ import type { MiningButtonId } from './constants';
 
 export type MiningContext = {
   page?: MiningButtonId;
+  session_id?: string;
 };
 
 export type MiningContextUpdate = Partial<{
@@ -15,6 +16,7 @@ export type MiningContextUpdate = Partial<{
 /** Return whether a URL value identifies a supported mining page. */
 function parseMiningPage(value: string | null): MiningButtonId | undefined {
   if (
+    value === 'create-session' ||
     value === 'current-session' ||
     value === 'close' ||
     value === 'sessions-list'
@@ -29,6 +31,7 @@ function parseMiningPage(value: string | null): MiningButtonId | undefined {
 export function parseMiningContext(params: URLSearchParams): MiningContext {
   return {
     page: parseMiningPage(params.get('context_page')),
+    session_id: params.get('context_session_id') ?? undefined,
   };
 }
 

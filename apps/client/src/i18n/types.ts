@@ -46,6 +46,10 @@ export type TranslationSchema = {
   MINING: {
     TITLE: string;
     SIDEBAR_LABEL: string;
+    LOOTS: string;
+    COCKPIT: string;
+    CREATE_SESSION: string;
+    CREATE_SESSION_DESCRIPTION: string;
     CURRENT_SESSION: string;
     CLOSE: string;
     SESSIONS_LIST: string;
