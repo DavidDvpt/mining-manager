@@ -14,6 +14,7 @@ from .lot_service import LotService, get_lot_service
 from .material_service import MaterialService
 from .material_type_service import MaterialTypeService
 from .mining_loot_service import MiningLootService, get_mining_loot_service
+from .planet_service import PlanetService, get_planet_service
 from .refinage_recipe_service import RefinageRecipeService
 from .refiner_service import RefinerService, get_refiner_service
 from .session_line_service import SessionLineService, get_session_line_service
@@ -42,6 +43,7 @@ __all__ = [
     "MaterialService",
     "MaterialTypeService",
     "MiningLootService",
+    "PlanetService",
     "MiningSessionCreation",
     "RefinageRecipeService",
     "RefinerService",
@@ -58,6 +60,7 @@ __all__ = [
     "get_finder_service",
     "get_lot_service",
     "get_mining_loot_service",
+    "get_planet_service",
     "get_refiner_service",
     "get_session_line_service",
     "get_session_mining_service",

@@ -12,6 +12,7 @@ from ..base import Base
 
 if TYPE_CHECKING:
     from .planet import Planet
+    from .user import User
 
 
 class SessionZone(Base):
@@ -30,9 +31,15 @@ class SessionZone(Base):
         ForeignKey("planet.id", ondelete="CASCADE"),
         nullable=False,
     )
+    user_id: Mapped[UUID] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("user.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     created_at: Mapped[date] = mapped_column(
         Date, nullable=False, server_default=text("now()")
     )
     updated_at: Mapped[date | None] = mapped_column(Date, nullable=True)
 
     planet: Mapped["Planet"] = relationship()
+    user: Mapped["User"] = relationship()

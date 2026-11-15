@@ -21,6 +21,7 @@ from .lot_schema import (
 )
 from .material_schema import MaterialResponse
 from .material_type_schema import MaterialTypeResponse
+from .planet_schema import CreateZoneRequest, PlanetResponse, ZoneResponse
 from .mining_session_schema import (
     CloseEnhancerLineRequest,
     CloseMiningSessionRequest,
@@ -92,6 +93,9 @@ __all__ = [
     "LotValuationResponse",
     "MaterialResponse",
     "MaterialTypeResponse",
+    "CreateZoneRequest",
+    "PlanetResponse",
+    "ZoneResponse",
     "MiningEnhancerResponse",
     "MiningSessionCostResponse",
     "RefinageRecipeResponse",

@@ -31,6 +31,7 @@ import type {
   CreateStackableSellRequest,
   CreateUnstackableBuyRequest,
   CreateUnstackableSellRequest,
+  CreateZoneRequest,
   DepositSizeResponse,
   EnhancerResponse,
   ExcavatorResponse,
@@ -55,6 +56,7 @@ import type {
   LotCollectionResponse,
   MaterialResponse,
   MaterialTypeResponse,
+  PlanetResponse,
   PostApiV1Signup201,
   ProfileResponse,
   RefinageRecipeResponse,
@@ -70,7 +72,8 @@ import type {
   UpdateProducedSessionLineRequest,
   UpdateTransactionStatusRequest,
   UpdateUnstackableLotRequest,
-  UserResponse
+  UserResponse,
+  ZoneResponse
 } from './model';
 
 import { customInstance } from '../mutator/customInstance.js';
@@ -495,6 +498,360 @@ export function useGetApiV1Profile<TData = Awaited<ReturnType<typeof getApiV1Pro
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetApiV1ProfileQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Return every planet in the catalogue.
+ * @summary Get All Planets
+ */
+export const getApiV1Planet = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<PlanetResponse[]>(
+      {url: `/api/v1/planet`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1PlanetQueryKey = () => {
+    return [
+    `/api/v1/planet`
+    ] as const;
+    }
+
+
+export const getGetApiV1PlanetQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1Planet>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1Planet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1PlanetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1Planet>>> = ({ signal }) => getApiV1Planet(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1Planet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetApiV1PlanetQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1Planet>>>
+export type GetApiV1PlanetQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get All Planets
+ */
+
+export function useGetApiV1Planet<TData = Awaited<ReturnType<typeof getApiV1Planet>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1Planet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetApiV1PlanetQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Return one planet or a not-found error.
+ * @summary Get Planet
+ */
+export const getApiV1PlanetPlanetId = (
+    planetId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<PlanetResponse>(
+      {url: `/api/v1/planet/${planetId}`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1PlanetPlanetIdQueryKey = (planetId: string,) => {
+    return [
+    `/api/v1/planet/${planetId}`
+    ] as const;
+    }
+
+
+export const getGetApiV1PlanetPlanetIdQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1PlanetPlanetId>>, TError = ErrorType<HTTPValidationError>>(planetId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1PlanetPlanetId>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1PlanetPlanetIdQueryKey(planetId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1PlanetPlanetId>>> = ({ signal }) => getApiV1PlanetPlanetId(planetId, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: planetId !== null && planetId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1PlanetPlanetId>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetApiV1PlanetPlanetIdQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1PlanetPlanetId>>>
+export type GetApiV1PlanetPlanetIdQueryError = ErrorType<HTTPValidationError>
+
+
+/**
+ * @summary Get Planet
+ */
+
+export function useGetApiV1PlanetPlanetId<TData = Awaited<ReturnType<typeof getApiV1PlanetPlanetId>>, TError = ErrorType<HTTPValidationError>>(
+ planetId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1PlanetPlanetId>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetApiV1PlanetPlanetIdQueryOptions(planetId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Return all zones belonging to one planet.
+ * @summary Get Planet Zones
+ */
+export const getApiV1PlanetPlanetIdZone = (
+    planetId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ZoneResponse[]>(
+      {url: `/api/v1/planet/${planetId}/zone`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1PlanetPlanetIdZoneQueryKey = (planetId: string,) => {
+    return [
+    `/api/v1/planet/${planetId}/zone`
+    ] as const;
+    }
+
+
+export const getGetApiV1PlanetPlanetIdZoneQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1PlanetPlanetIdZone>>, TError = ErrorType<HTTPValidationError>>(planetId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1PlanetPlanetIdZone>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1PlanetPlanetIdZoneQueryKey(planetId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1PlanetPlanetIdZone>>> = ({ signal }) => getApiV1PlanetPlanetIdZone(planetId, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: planetId !== null && planetId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1PlanetPlanetIdZone>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetApiV1PlanetPlanetIdZoneQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1PlanetPlanetIdZone>>>
+export type GetApiV1PlanetPlanetIdZoneQueryError = ErrorType<HTTPValidationError>
+
+
+/**
+ * @summary Get Planet Zones
+ */
+
+export function useGetApiV1PlanetPlanetIdZone<TData = Awaited<ReturnType<typeof getApiV1PlanetPlanetIdZone>>, TError = ErrorType<HTTPValidationError>>(
+ planetId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1PlanetPlanetIdZone>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetApiV1PlanetPlanetIdZoneQueryOptions(planetId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Create a zone for an existing planet on behalf of the authenticated user.
+ * @summary Create Planet Zone
+ */
+export const postApiV1PlanetPlanetIdZone = (
+    planetId: string,
+    createZoneRequest: BodyType<CreateZoneRequest>,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ZoneResponse>(
+      {url: `/api/v1/planet/${planetId}/zone`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createZoneRequest, signal
+    },
+      options);
+    }
+
+
+
+
+export const getPostApiV1PlanetPlanetIdZoneMutationKey = () => ['postApiV1PlanetPlanetIdZone'] as const;
+
+export const getPostApiV1PlanetPlanetIdZoneMutationOptions = <TError = ErrorType<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1PlanetPlanetIdZone>>, TError,PostApiV1PlanetPlanetIdZoneMutationVariables, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiV1PlanetPlanetIdZone>>, TError,PostApiV1PlanetPlanetIdZoneMutationVariables, TContext> => {
+
+const mutationKey = getPostApiV1PlanetPlanetIdZoneMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiV1PlanetPlanetIdZone>>, PostApiV1PlanetPlanetIdZoneMutationVariables> = (props) => {
+          const {planetId,data} = props ?? {};
+
+          return  postApiV1PlanetPlanetIdZone(planetId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiV1PlanetPlanetIdZoneMutationResult = NonNullable<Awaited<ReturnType<typeof postApiV1PlanetPlanetIdZone>>>
+    export type PostApiV1PlanetPlanetIdZoneMutationBody = BodyType<CreateZoneRequest>
+    export type PostApiV1PlanetPlanetIdZoneMutationError = ErrorType<HTTPValidationError>
+    export type PostApiV1PlanetPlanetIdZoneMutationVariables = {planetId: string;data: BodyType<CreateZoneRequest>}
+
+    /**
+ * @summary Create Planet Zone
+ */
+export const usePostApiV1PlanetPlanetIdZone = <TError = ErrorType<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1PlanetPlanetIdZone>>, TError,PostApiV1PlanetPlanetIdZoneMutationVariables, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof postApiV1PlanetPlanetIdZone>>,
+        TError,
+        PostApiV1PlanetPlanetIdZoneMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostApiV1PlanetPlanetIdZoneMutationOptions(options));
+    }
+
+/**
+ * Return one zone when it belongs to the requested planet.
+ * @summary Get Planet Zone
+ */
+export const getApiV1PlanetPlanetIdZoneZoneId = (
+    planetId: string,
+    zoneId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<ZoneResponse>(
+      {url: `/api/v1/planet/${planetId}/zone/${zoneId}`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1PlanetPlanetIdZoneZoneIdQueryKey = (planetId: string,
+    zoneId: string,) => {
+    return [
+    `/api/v1/planet/${planetId}/zone/${zoneId}`
+    ] as const;
+    }
+
+
+export const getGetApiV1PlanetPlanetIdZoneZoneIdQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1PlanetPlanetIdZoneZoneId>>, TError = ErrorType<HTTPValidationError>>(planetId: string,
+    zoneId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1PlanetPlanetIdZoneZoneId>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1PlanetPlanetIdZoneZoneIdQueryKey(planetId,zoneId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1PlanetPlanetIdZoneZoneId>>> = ({ signal }) => getApiV1PlanetPlanetIdZoneZoneId(planetId,zoneId, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: planetId !== null && planetId !== undefined && zoneId !== null && zoneId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1PlanetPlanetIdZoneZoneId>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetApiV1PlanetPlanetIdZoneZoneIdQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1PlanetPlanetIdZoneZoneId>>>
+export type GetApiV1PlanetPlanetIdZoneZoneIdQueryError = ErrorType<HTTPValidationError>
+
+
+/**
+ * @summary Get Planet Zone
+ */
+
+export function useGetApiV1PlanetPlanetIdZoneZoneId<TData = Awaited<ReturnType<typeof getApiV1PlanetPlanetIdZoneZoneId>>, TError = ErrorType<HTTPValidationError>>(
+ planetId: string,
+    zoneId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1PlanetPlanetIdZoneZoneId>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetApiV1PlanetPlanetIdZoneZoneIdQueryOptions(planetId,zoneId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

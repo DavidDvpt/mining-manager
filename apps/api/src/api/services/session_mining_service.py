@@ -97,7 +97,9 @@ class SessionMiningService:
             await self._repository.lock_user(user_id=user_id)
             if await self._repository.get_open_session(user_id=user_id) is not None:
                 raise UnprocessingError("A mining session is already open")
-            if zone_id is not None and await self._repository.get_zone(zone_id=zone_id) is None:
+            if zone_id is not None and await self._repository.get_zone(
+                zone_id=zone_id, user_id=user_id
+            ) is None:
                 raise AppError(404, "Session zone not found")
 
             finder_lots = [

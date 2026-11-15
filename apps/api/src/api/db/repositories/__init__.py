@@ -12,6 +12,7 @@ from .material_repository import MaterialRepository
 from .material_type_repository import MaterialTypeRepository
 from .mining_loot_repository import MiningLootRepository
 from .profile_repository import ProfileRepository
+from .planet_repository import PlanetRepository
 from .refiner_repository import RefinerRepository
 from .refinage_recipe_repository import RefinageRecipeRepository
 from .session_line_repository import SessionLineRepository
@@ -34,6 +35,7 @@ __all__ = [
     "MaterialTypeRepository",
     "MiningLootRepository",
     "ProfileRepository",
+    "PlanetRepository",
     "RefinerRepository",
     "RefinageRecipeRepository",
     "SessionLineRepository",

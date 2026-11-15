@@ -27,11 +27,16 @@ class SessionMiningRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def get_zone(self, *, zone_id: UUID) -> SessionZone | None:
-        """Return a session zone by id, or ``None`` when it does not exist."""
+    async def get_zone(
+        self, *, zone_id: UUID, user_id: UUID
+    ) -> SessionZone | None:
+        """Return a session zone when it belongs to the requesting user."""
 
         return await self._session.scalar(
-            select(SessionZone).where(SessionZone.id == zone_id)
+            select(SessionZone).where(
+                SessionZone.id == zone_id,
+                SessionZone.user_id == user_id,
+            )
         )
 
     async def lock_user(self, *, user_id: UUID) -> None:

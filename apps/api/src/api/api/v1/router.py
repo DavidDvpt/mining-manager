@@ -12,6 +12,7 @@ from .material_controller import router as material_router
 from .material_type_controller import router as material_type_router
 from .mining_router import mining_router
 from .profile_controller import router as profile_router
+from .planet_controller import router as planet_router
 from .refiner_controller import router as refiner_router
 from .refinage_recipe_controller import router as refinage_router
 from .storage_controller import router as storage_router
@@ -21,6 +22,7 @@ from .valuation_controller import router as valuation_router
 api_v1_router = APIRouter()
 api_v1_router.include_router(auth_router)
 api_v1_router.include_router(profile_router, prefix="/profile")
+api_v1_router.include_router(planet_router, prefix="/planet")
 api_v1_router.include_router(excavator_router, prefix="/excavators")
 api_v1_router.include_router(finder_router, prefix="/finders")
 api_v1_router.include_router(finder_amplifier_router, prefix="/finder-amplifiers")
