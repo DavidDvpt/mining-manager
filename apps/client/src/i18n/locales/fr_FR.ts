@@ -77,6 +77,7 @@ export const fr_FR: TranslationSchema = {
     STOCK: 'Stock',
     BUY: 'Acheter',
     SELL: 'Vendre',
+    EDIT: 'Modifier',
     FINANCIAL_SUMMARY: 'Résumé financier',
     TYPE: 'Type',
     BONUS: 'Bonus',
@@ -86,5 +87,13 @@ export const fr_FR: TranslationSchema = {
     RANGE: 'Portée',
     AMMO_BURN: 'Consommation de munitions',
     USE_PER_MINUTE: 'Utilisation / min',
+  },
+  TOOL_EDIT_MODAL: {
+    TITLE: 'Modifier l’outil',
+    CANCEL: 'Annuler',
+    SAVE: 'Enregistrer',
+    SAVING: 'Enregistrement…',
+    LOADING: 'Chargement de l’outil…',
+    ERROR: 'Impossible de charger l’outil.',
   },
 };

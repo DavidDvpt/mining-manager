@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes } from 'react';
+import type { InputHTMLAttributes, ReactNode } from 'react';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input/input';
 import { useTranslations } from '@/i18n/useTranslations';
@@ -10,7 +10,7 @@ import styles from './input-rhf.module.scss';
 
 type InputRHFProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'name'> & {
   name: string;
-  label: string;
+  label: ReactNode;
 };
 
 /** Bind a styled input and its accessible validation message to React Hook Form. */

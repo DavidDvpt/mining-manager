@@ -69,6 +69,7 @@ export type TranslationSchema = {
     STOCK: string;
     BUY: string;
     SELL: string;
+    EDIT: string;
     FINANCIAL_SUMMARY: string;
     TYPE: string;
     BONUS: string;
@@ -78,6 +79,14 @@ export type TranslationSchema = {
     RANGE: string;
     AMMO_BURN: string;
     USE_PER_MINUTE: string;
+  };
+  TOOL_EDIT_MODAL: {
+    TITLE: string;
+    CANCEL: string;
+    SAVE: string;
+    SAVING: string;
+    LOADING: string;
+    ERROR: string;
   };
 };
 

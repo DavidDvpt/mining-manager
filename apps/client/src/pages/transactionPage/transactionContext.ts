@@ -3,10 +3,11 @@ import { useQueryContext } from '@/shared/hooks';
 import type { TransactionButtonId } from './constants';
 
 export type TransactionAction = 'buy' | 'sell';
-export type TransactionModalContext = 'running-transactions';
+export type TransactionModalContext = 'running-transactions' | 'tool-edit';
 export type TransactionContext = {
   type?: TransactionAction;
   item_id?: string;
+  edit_item_id?: string;
   lot_id?: string;
   page?: TransactionButtonId;
   modal?: TransactionModalContext;
@@ -50,11 +51,13 @@ export function parseTransactionContext(
   return {
     type: parseTransactionAction(params.get('context_type')),
     item_id: params.get('context_item_id') ?? undefined,
+    edit_item_id: params.get('context_edit_item_id') ?? undefined,
     lot_id: params.get('context_lot_id') ?? undefined,
     page: parseTransactionPage(params.get('context_page')),
     modal:
-      params.get('context_modal') === 'running-transactions'
-        ? 'running-transactions'
+      params.get('context_modal') === 'running-transactions' ||
+      params.get('context_modal') === 'tool-edit'
+        ? (params.get('context_modal') as TransactionModalContext)
         : undefined,
     owned_only: params.get('context_owned_only') === 'false' ? 'false' : 'true',
   };

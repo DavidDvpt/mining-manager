@@ -47,6 +47,7 @@ class LotService:
         session_line_id: UUID,
         quantity: int,
         tt: Decimal | None,
+        tier: int | None = None,
     ) -> Lot:
         """Create a lot for an owned produced session line.
 
@@ -265,6 +266,7 @@ class LotService:
         kind: LotKind,
         quantity: int,
         tt: Decimal | None,
+        tier: int | None = None,
     ) -> Lot:
         """Create the lot produced by a BUY session line in its open transaction."""
 
@@ -278,6 +280,7 @@ class LotService:
             kind=kind.value,
             quantity=quantity,
             tt=tt if kind is LotKind.TOOL else None,
+            tier=tier if kind is LotKind.TOOL else None,
         )
 
 

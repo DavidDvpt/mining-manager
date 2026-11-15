@@ -1,7 +1,7 @@
 import { useTranslations } from '@/i18n/useTranslations';
 import { useEffect } from 'react';
 import { useSidebarLayoutContext } from '@/layouts/sidebarLayout';
-import { Panel, Section, TransactionModal } from '@/shared/components';
+import { Panel, Section, ToolEditModal, TransactionModal } from '@/shared/components';
 import { Switch } from '@/components/ui/switch';
 import { ItemStoreList } from './itemStoreList';
 import type { MaterialTypeResponse } from '@/api/generated/model/materialTypeResponse';
@@ -39,6 +39,10 @@ export function TransactionContent({
     Object.values(rows)
       .flat()
       .find((row) => row.id === context.item_id) ?? null;
+  const editItem =
+    Object.values(rows)
+      .flat()
+      .find((row) => row.id === context.edit_item_id) ?? null;
   const selectedItemId = context.item_id ?? '';
   const unstackableLots = useGetApiV1LotsUnstackableItemItemId(selectedItemId, {
     query: {
@@ -133,11 +137,32 @@ export function TransactionContent({
             isError={isError}
             showMaterialType={activeButtonId === 'materials'}
             onBuy={(row) => {
-              updateContext({ type: 'buy', item_id: row.id, lot_id: null });
+              updateContext({
+                modal: null,
+                edit_item_id: null,
+                type: 'buy',
+                item_id: row.id,
+                lot_id: null,
+              });
             }}
             onSell={(row) => {
-              updateContext({ type: 'sell', item_id: row.id, lot_id: null });
+              updateContext({
+                modal: null,
+                edit_item_id: null,
+                type: 'sell',
+                item_id: row.id,
+                lot_id: null,
+              });
             }}
+            onEdit={(row) =>
+              updateContext({
+                modal: 'tool-edit',
+                edit_item_id: row.id,
+                type: null,
+                item_id: null,
+                lot_id: null,
+              })
+            }
           />
         ) : null}
       </Section>
@@ -157,6 +182,13 @@ export function TransactionContent({
           if (!open) {
             updateContext({ type: null, item_id: null, lot_id: null });
           }
+        }}
+      />
+      <ToolEditModal
+        item={editItem}
+        open={context.modal === 'tool-edit' && editItem !== null}
+        onOpenChange={(open) => {
+          if (!open) updateContext({ modal: null, edit_item_id: null });
         }}
       />
     </Panel>

@@ -34,6 +34,7 @@ class LotRepository:
         kind: str,
         quantity: int,
         tt: Decimal | None,
+        tier: int | None = None,
     ) -> Lot:
         """Persist the base lot and exactly one specialized lot row.
 
@@ -53,7 +54,9 @@ class LotRepository:
         await self._session.flush()
 
         if kind == "TOOL":
-            self._session.add(ToolLot(lot_id=lot.id, tt=tt, is_default=False))
+            self._session.add(
+                ToolLot(lot_id=lot.id, tier=tier, tt=tt, is_default=False)
+            )
         elif kind == "ENHANCER":
             self._session.add(EnhancerLot(lot_id=lot.id))
         else:

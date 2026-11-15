@@ -111,19 +111,31 @@ class SessionTransactionService:
             raise AppError(404, "Item not found")
         if stackable:
             raise UnprocessingError("Item is stackable")
-        
+
+        tier = 0 if await self._item_service.is_item_tierable(item_id=item_id) else None
+
         async with _transaction_scope(self._session):
             transaction_session, line = await self._repository.create_buy(
                 user_id=user_id, item_id=item_id, lot_id=None, quantity=1,
                 tt=tt, fee=fee, ttc=ttc, type_detail=type_detail,
             )
-            await self._lot_service.create_transaction_lot(
-                user_id=user_id,
-                session_line=line,
-                kind=LotKind(kind.upper()),
-                quantity=1,
-                tt=tt,
-            )
+            if tier is not None:
+                await self._lot_service.create_transaction_lot(
+                    user_id=user_id,
+                    session_line=line,
+                    kind=LotKind(kind.upper()),
+                    quantity=1,
+                    tt=tt,
+                    tier=tier,
+                )
+            else:
+                await self._lot_service.create_transaction_lot(
+                    user_id=user_id,
+                    session_line=line,
+                    kind=LotKind(kind.upper()),
+                    quantity=1,
+                    tt=tt,
+                )
             return transaction_session
 
     async def create_sell_stackable(

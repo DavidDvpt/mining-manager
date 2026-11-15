@@ -72,6 +72,7 @@ export const en_EN: TranslationSchema = {
     STOCK: 'Stock',
     BUY: 'Buy',
     SELL: 'Sell',
+    EDIT: 'Edit',
     FINANCIAL_SUMMARY: 'Financial summary',
     TYPE: 'Type',
     BONUS: 'Bonus',
@@ -81,5 +82,13 @@ export const en_EN: TranslationSchema = {
     RANGE: 'Range',
     AMMO_BURN: 'Ammo burn',
     USE_PER_MINUTE: 'Use / min',
+  },
+  TOOL_EDIT_MODAL: {
+    TITLE: 'Edit tool',
+    CANCEL: 'Cancel',
+    SAVE: 'Save',
+    SAVING: 'Saving…',
+    LOADING: 'Loading tool…',
+    ERROR: 'Unable to load the tool.',
   },
 };

@@ -47,6 +47,7 @@ export type ItemStoreListProps = {
   showMaterialType?: boolean;
   onBuy?: (row: ItemStoreRow) => void;
   onSell?: (row: ItemStoreRow) => void;
+  onEdit?: (row: ItemStoreRow) => void;
 };
 
 /** Common shape required from each generated catalogue response. */

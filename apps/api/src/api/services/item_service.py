@@ -35,6 +35,15 @@ class ItemService:
 
         return await self._repository.is_item_material(item_id=item_id)
 
+    async def is_item_tierable(self, *, item_id: UUID) -> bool:
+        """Return whether an item is a finder or excavator with a tier."""
+
+        return await self._repository.is_item_of_type(
+            item_id=item_id, item_type="finder"
+        ) or await self._repository.is_item_of_type(
+            item_id=item_id, item_type="excavator"
+        )
+
 
 def get_item_service(session: AsyncSession) -> ItemService:
     """Build an item service for the current database session."""

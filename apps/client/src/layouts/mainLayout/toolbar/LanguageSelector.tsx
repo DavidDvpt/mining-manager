@@ -35,13 +35,13 @@ export function LanguageSelector() {
           <SelectItem value="fr_FR">
             <span role="img" aria-label={t('APP.FRENCH_FLAG')}>
               🇫🇷
-            </span>{' '}
+            </span>&nbsp;
             FR
           </SelectItem>
           <SelectItem value="en_EN">
             <span role="img" aria-label={t('APP.ENGLISH_FLAG')}>
               🇬🇧
-            </span>{' '}
+            </span>&nbsp;
             EN
           </SelectItem>
         </SelectContent>

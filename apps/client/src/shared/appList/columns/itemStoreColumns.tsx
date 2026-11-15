@@ -3,6 +3,7 @@ import { AppIconName } from '@/shared/components/icon';
 import { createIconColumn } from './createIconColumn';
 import type { ItemStoreColumn, ItemStoreRow } from '@/shared/types/listItem';
 import { formatDecimalValue } from '@/shared/utils';
+import { isLimitedItem } from '@/shared/utils';
 import type { TranslationKey } from '@/i18n/types';
 import styles from '@/pages/transactionPage/itemStoreList/item-store-list.module.scss';
 import appListStyles from '../app-list.module.scss';
@@ -96,6 +97,29 @@ export const createSellColumn = (
     className: `${styles.buyButton} ${styles.sellButton}`,
     isVisible: (row) => (row.stock ?? 0) > 0,
     onClick: onSell,
+  });
+
+/** Create the primary edit action for owned editable tool rows. */
+export const createEditColumn = (
+  t: Translate,
+  onEdit?: (row: ItemStoreRow) => void,
+): ItemStoreColumn =>
+  createIconColumn({
+    key: 'edit',
+    icon: AppIconName.Pencil,
+    variant: 'primary',
+    ariaLabel: t('ITEM_STORE.EDIT'),
+    title: t('ITEM_STORE.EDIT'),
+    className: styles.buyButton,
+    isVisible: (row) => {
+      const isEditableTool =
+        row.kind === 'finder' ||
+        row.kind === 'excavator' ||
+        (!isLimitedItem(row) &&
+          (row.kind === 'refiner' || row.kind === 'finder-amplifier'));
+      return isEditableTool && (row.stock ?? 0) > 0;
+    },
+    onClick: onEdit,
   });
 
 /** Create the item financial-summary column shared by every item-store list. */

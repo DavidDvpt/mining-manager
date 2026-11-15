@@ -40,6 +40,7 @@ def service():
     session.in_transaction.return_value = False
     repository = AsyncMock()
     item_service = AsyncMock()
+    item_service.is_item_tierable.return_value = False
     lot_service = AsyncMock()
     return SessionTransactionService(session, repository, item_service, lot_service)
 

@@ -23,7 +23,7 @@ export function TransactionPage() {
         activeButtonId={activePage}
         onButtonChange={(page) => {
           if (page === 'running-transactions') {
-            updateContext({ modal: 'running-transactions' });
+            updateContext({ modal: 'running-transactions', edit_item_id: null });
             return;
           }
 
@@ -33,6 +33,7 @@ export function TransactionPage() {
             type: null,
             item_id: null,
             lot_id: null,
+            edit_item_id: null,
           });
         }}
         sidebarLabel={t('TRANSACTIONS.SIDEBAR_LABEL')}

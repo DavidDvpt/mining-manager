@@ -4,6 +4,7 @@ import { useTranslations } from '@/i18n/useTranslations';
 import {
   createBuyColumn,
   createEnhancerColumns,
+  createEditColumn,
   createExcavatorColumns,
   createFinderAmplifierColumns,
   createFinderColumns,
@@ -24,6 +25,7 @@ export function ItemStoreList({
   showMaterialType = false,
   onBuy,
   onSell,
+  onEdit,
 }: ItemStoreListProps) {
   const { t } = useTranslations();
   const columns = useMemo<ItemStoreColumn[]>(() => {
@@ -40,14 +42,25 @@ export function ItemStoreList({
         break;
     }
 
+    const editColumn = createEditColumn(t, onEdit);
+    const nameColumnIndex = typeColumns.findIndex((column) => column.key === 'name');
+    const columnsWithEdit =
+      nameColumnIndex === -1
+        ? [...typeColumns, editColumn]
+        : [
+            ...typeColumns.slice(0, nameColumnIndex + 1),
+            editColumn,
+            ...typeColumns.slice(nameColumnIndex + 1),
+          ];
+
     return [
-      ...typeColumns,
+      ...columnsWithEdit,
       createStockColumn(t),
       createSellColumn(t, onSell),
       createSummaryColumn(t),
       createBuyColumn(t, onBuy),
     ];
-  }, [kind, onBuy, onSell, showMaterialType, t]);
+  }, [kind, onBuy, onEdit, onSell, showMaterialType, t]);
 
   return (
     <AppList
