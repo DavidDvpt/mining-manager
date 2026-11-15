@@ -51,6 +51,16 @@ export const fr_FR: TranslationSchema = {
     TT_EXCEEDS_BASE:
       'Le TT ne peut pas dépasser la valeur TT de base de l’objet.',
   },
+  MINING: {
+    TITLE: 'Mining',
+    SIDEBAR_LABEL: 'Navigation du mining',
+    CURRENT_SESSION: 'Session actuelle',
+    CLOSE: 'Fermer',
+    SESSIONS_LIST: 'Liste des sessions',
+    ACTIVE_VIEW: 'Vue active : {view}',
+    DESCRIPTION:
+      'Sélectionnez une vue à gauche pour gérer votre activité de mining.',
+  },
   TRANSACTION_MODAL: {
     QUANTITY: 'Quantité',
     INSTANCE: 'Outil',

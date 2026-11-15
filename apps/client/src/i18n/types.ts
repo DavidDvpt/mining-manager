@@ -43,6 +43,15 @@ export type TranslationSchema = {
     QUANTITY_EXCEEDS_STOCK: string;
     TT_EXCEEDS_BASE: string;
   };
+  MINING: {
+    TITLE: string;
+    SIDEBAR_LABEL: string;
+    CURRENT_SESSION: string;
+    CLOSE: string;
+    SESSIONS_LIST: string;
+    ACTIVE_VIEW: string;
+    DESCRIPTION: string;
+  };
   TRANSACTION_MODAL: {
     QUANTITY: string;
     INSTANCE: string;

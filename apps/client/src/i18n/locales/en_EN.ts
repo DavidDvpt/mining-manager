@@ -46,6 +46,15 @@ export const en_EN: TranslationSchema = {
     QUANTITY_EXCEEDS_STOCK: 'The quantity cannot exceed available stock.',
     TT_EXCEEDS_BASE: 'The TT cannot exceed the item base TT value.',
   },
+  MINING: {
+    TITLE: 'Mining',
+    SIDEBAR_LABEL: 'Mining navigation',
+    CURRENT_SESSION: 'Current session',
+    CLOSE: 'Close',
+    SESSIONS_LIST: 'Sessions list',
+    ACTIVE_VIEW: 'Active view: {view}',
+    DESCRIPTION: 'Select a view on the left to manage your mining activity.',
+  },
   TRANSACTION_MODAL: {
     QUANTITY: 'Quantity',
     INSTANCE: 'Tool',
