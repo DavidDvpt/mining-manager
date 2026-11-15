@@ -1,7 +1,10 @@
 .form {
-  gap: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   min-height: 100%;
   overflow: auto;
+  padding: 4px;
 
   > section {
     margin: 0;
@@ -10,7 +13,8 @@
   .baseFields {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
+    row-gap: 4px;
+    column-gap: 1rem;
 
     > div,
     > .fieldset {
@@ -23,8 +27,8 @@
     }
 
     .searchTypeField {
-      flex-grow: 1.4;
-      flex-basis: 15rem;
+      flex-grow: 0.9;
+      flex-basis: 12rem;
     }
 
     .wideInput {
