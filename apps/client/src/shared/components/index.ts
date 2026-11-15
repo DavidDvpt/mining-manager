@@ -3,6 +3,8 @@ export * from './entropiaImage';
 export * from './form/FormButtonsSection';
 export * from './form/GenericForm';
 export * from './form/InputRHF';
+export * from './form/CheckboxRHF';
+export * from './form/SelectRHF';
 export * from './icon';
 export * from './modal';
 export * from './tooltip';

@@ -4,26 +4,18 @@ import { useTranslations } from '@/i18n/useTranslations';
 import { Panel, Section, SubSection } from '@/shared/components';
 
 import { miningButtons } from './constants';
+import MiningSessionForm from './MiningSessionForm';
 import { useMiningContext } from './miningContext';
 import styles from './mining-page.module.scss';
+import { getMiningActivePage, getMiningActiveView } from './utils';
 
 /** Render the mining workspace with its current-session and session-list navigation. */
 export function MiningPage() {
   const { t } = useTranslations();
   const { context, updateContext } = useMiningContext();
   const hasCurrentSession = Boolean(context.session_id);
-  const activePage =
-    context.page === 'create-session'
-      ? 'create-session'
-      : hasCurrentSession && context.page === 'current-session'
-        ? 'current-session'
-        : 'sessions-list';
-  const activeView =
-    activePage === 'current-session'
-      ? t('MINING.CURRENT_SESSION')
-      : activePage === 'sessions-list'
-        ? t('MINING.SESSIONS_LIST')
-        : t('MINING.CLOSE');
+  const activePage = getMiningActivePage(context.page, hasCurrentSession);
+  const activeView = getMiningActiveView(activePage, t);
   const [activeViewPrefix, activeViewSuffix] = t('MINING.ACTIVE_VIEW').split(
     '{view}',
   );
@@ -39,18 +31,10 @@ export function MiningPage() {
         }
         sidebarLabel={t('MINING.SIDEBAR_LABEL')}
       >
-        <Panel className={styles.page}>
-          {activePage === 'create-session' ? (
-            <Section
-              className={styles.createSession}
-              aria-labelledby="create-mining-session-title"
-            >
-              <h1 id="create-mining-session-title">
-                {t('MINING.CREATE_SESSION')}
-              </h1>
-              <p>{t('MINING.CREATE_SESSION_DESCRIPTION')}</p>
-            </Section>
-          ) : (
+        {activePage === 'create-session' ? (
+          <MiningSessionForm />
+        ) : (
+          <Panel className={styles.page}>
             <>
               <Section className={styles.loots} aria-labelledby="mining-title">
                 <h1 id="mining-title">{t('MINING.LOOTS')}</h1>
@@ -70,8 +54,8 @@ export function MiningPage() {
                 <h2 id="cockpit-title">{t('MINING.COCKPIT')}</h2>
               </Section>
             </>
-          )}
-        </Panel>
+          </Panel>
+        )}
       </SidebarLayout>
     </MainLayout>
   );

@@ -25,6 +25,14 @@
 - Every new or modified function and method must have a concise docstring describing its responsibility, important inputs and validation rules, side effects, and return value when applicable.
 - Keep the documentation close to the implementation and update it whenever the function's behavior changes.
 
+# Frontend forms
+
+- Every application form must be built with `GenericForm`.
+- Form fields must use the shared React Hook Form components (`InputRHF`, `CheckboxRHF`, and equivalent shared RHF field components) so values and validation remain in the form context.
+- Every form must use a Zod schema through `GenericForm` for input validation.
+- Form actions must use `FormButtonsSection`; do not create ad-hoc submit or cancel button rows.
+- Split complex forms into one component per logical subsection and keep each subsection focused on its own fields and validation display.
+
 # Reuse before extension
 
 - Before adding a function, helper, service method, repository query, or API endpoint, search the existing services, repositories, controllers, generated client, and shared helpers for an equivalent capability.

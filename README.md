@@ -1,5 +1,15 @@
 # New Nx Repository
 
+## Frontend form conventions
+
+All application forms must use the shared form stack:
+
+- Wrap the form with `GenericForm`.
+- Use the shared React Hook Form field components (`InputRHF`, `CheckboxRHF`, and equivalent RHF components) for fields.
+- Define validation with a Zod schema passed to `GenericForm`.
+- Render submit and cancel actions with `FormButtonsSection`.
+- Split complex forms into one component per logical subsection.
+
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
 
 ✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
