@@ -1,12 +1,11 @@
 import MainLayout from '@/layouts/mainLayout/MainLayout';
 import { SidebarLayout } from '@/layouts/sidebarLayout';
 import { useTranslations } from '@/i18n/useTranslations';
-import { Panel, Section, SubSection } from '@/shared/components';
 
 import { miningButtons } from './constants';
-import MiningSessionForm from './MiningSessionForm';
+import MiningSessionForm from './createSession';
 import { useMiningContext } from './miningContext';
-import styles from './mining-page.module.scss';
+import MiningSessionsList from './sessionsList';
 import { getMiningActivePage, getMiningActiveView } from './utils';
 
 /** Render the mining workspace with its current-session and session-list navigation. */
@@ -16,10 +15,6 @@ export function MiningPage() {
   const hasCurrentSession = Boolean(context.session_id);
   const activePage = getMiningActivePage(context.page, hasCurrentSession);
   const activeView = getMiningActiveView(activePage, t);
-  const [activeViewPrefix, activeViewSuffix] = t('MINING.ACTIVE_VIEW').split(
-    '{view}',
-  );
-
   return (
     <MainLayout>
       <SidebarLayout
@@ -34,27 +29,7 @@ export function MiningPage() {
         {activePage === 'create-session' ? (
           <MiningSessionForm />
         ) : (
-          <Panel className={styles.page}>
-            <>
-              <Section className={styles.loots} aria-labelledby="mining-title">
-                <h1 id="mining-title">{t('MINING.LOOTS')}</h1>
-                <SubSection>
-                  <p>
-                    {activeViewPrefix}
-                    <span className={styles.activeView}>{activeView}</span>
-                    {activeViewSuffix}
-                  </p>
-                  <p>{t('MINING.DESCRIPTION')}</p>
-                </SubSection>
-              </Section>
-              <Section
-                className={styles.cockpit}
-                aria-labelledby="cockpit-title"
-              >
-                <h2 id="cockpit-title">{t('MINING.COCKPIT')}</h2>
-              </Section>
-            </>
-          </Panel>
+          <MiningSessionsList activeView={activeView} />
         )}
       </SidebarLayout>
     </MainLayout>

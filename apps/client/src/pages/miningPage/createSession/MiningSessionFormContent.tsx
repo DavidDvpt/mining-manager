@@ -15,7 +15,7 @@ import {
   getAmplifierClicks,
   getMiningDecayMultiplier,
   toPositiveNumber,
-} from './utils';
+} from '../utils';
 
 type MiningSessionFormContentProps = {
   finders: FinderResponse[];
