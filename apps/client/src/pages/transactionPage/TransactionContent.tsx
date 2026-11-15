@@ -111,7 +111,7 @@ export function TransactionContent({
 
   return (
     <Panel className={styles.page}>
-      <Section>
+      <Section className={styles.content}>
         <h1>{t('TRANSACTIONS.TITLE')}</h1>
         <p>
           {activeViewPrefix}
