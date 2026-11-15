@@ -1,7 +1,21 @@
-import { useFormContext, useWatch } from 'react-hook-form';
+import { useEffect } from 'react';
+import { useController, useFormContext, useWatch } from 'react-hook-form';
 
-import { InputRHF } from '@/shared/components';
-import { Section } from '@/shared/components';
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from '@/components/ui/radio-group';
+import {
+  getGetApiV1PlanetPlanetIdZoneQueryKey,
+  useGetApiV1Planet,
+  useGetApiV1PlanetPlanetIdZone,
+} from '@/api/generated/miningManagerAPI';
+import {
+  ComboboxRHF,
+  InputRHF,
+  SelectRHF,
+  Section,
+} from '@/shared/components';
 import { useTranslations } from '@/i18n/useTranslations';
 
 import type { MiningSessionFormValues } from '@/shared/types/mining';
@@ -10,8 +24,38 @@ import styles from './mining-session-form.module.scss';
 /** Render and validate the base fields of a mining-session configuration. */
 export function MiningSessionBaseSection() {
   const { t } = useTranslations();
-  const { register } = useFormContext<MiningSessionFormValues>();
+  const { control, setValue } =
+    useFormContext<MiningSessionFormValues>();
   const planet = useWatch<MiningSessionFormValues>({ name: 'planet' });
+  const { field: searchTypeField } = useController({
+    control,
+    name: 'searchType',
+  });
+  const planetsQuery = useGetApiV1Planet();
+  const zonesQuery = useGetApiV1PlanetPlanetIdZone(String(planet ?? ''), {
+    query: {
+      queryKey: getGetApiV1PlanetPlanetIdZoneQueryKey(String(planet ?? '')),
+      enabled: Boolean(String(planet ?? '').trim()),
+    },
+  });
+  const zones = zonesQuery.data ?? [];
+
+  useEffect(() => {
+    if (String(planet ?? '').trim() || !planetsQuery.data) {
+      return;
+    }
+
+    const defaultPlanet = planetsQuery.data.find(
+      (availablePlanet) => availablePlanet.name === 'Calypso',
+    );
+    if (defaultPlanet) {
+      setValue('planet', defaultPlanet.id, { shouldValidate: true });
+    }
+  }, [planet, planetsQuery.data, setValue]);
+
+  useEffect(() => {
+    setValue('zone', '');
+  }, [planet, setValue]);
 
   return (
     <Section aria-labelledby="mining-session-base-title">
@@ -26,42 +70,53 @@ export function MiningSessionBaseSection() {
           className={styles.clicksInput}
         />
         <fieldset className={`${styles.fieldset} ${styles.searchTypeField}`}>
-          <legend>{t('MINING.SEARCH_TYPE')}</legend>
-          <div className={styles.options}>
+          <legend id="mining-session-search-type-label">
+            {t('MINING.SEARCH_TYPE')}
+          </legend>
+          <RadioGroup
+            name={searchTypeField.name}
+            value={searchTypeField.value}
+            onValueChange={searchTypeField.onChange}
+            onBlur={searchTypeField.onBlur}
+            aria-labelledby="mining-session-search-type-label"
+            className={styles.options}
+          >
             <div className={styles.searchTypeColumn}>
               {[
                 ['E', t('MINING.ENMATTER')],
                 ['O', t('MINING.ORE')],
               ].map(([value, label]) => (
                 <label key={value} className={styles.option}>
-                  <input
-                    {...register('searchType')}
-                    type="radio"
-                    value={value}
-                  />
+                  <RadioGroupItem value={value} id={`search-type-${value}`} />
                   <span>{label}</span>
                 </label>
               ))}
             </div>
             <div className={styles.searchTypeColumn}>
               <label className={styles.option}>
-                <input {...register('searchType')} type="radio" value="OE" />
+                <RadioGroupItem value="OE" id="search-type-oe" />
                 <span>{t('MINING.ORE_ENMATTER')}</span>
               </label>
             </div>
-          </div>
+          </RadioGroup>
         </fieldset>
-        <InputRHF
+        <SelectRHF
           name="planet"
           label={t('MINING.PLANET')}
           required
-          className={styles.wideInput}
+          options={[
+            { value: '', label: '—' },
+            ...(planetsQuery.data ?? []).map((availablePlanet) => ({
+              value: availablePlanet.id,
+              label: availablePlanet.name,
+            })),
+          ]}
         />
-        <InputRHF
+        <ComboboxRHF
           name="zone"
           label={t('MINING.ZONE')}
+          options={zones.map((zone) => ({ value: zone.id, label: zone.name }))}
           disabled={!String(planet ?? '').trim()}
-          className={styles.wideInput}
         />
       </div>
     </Section>

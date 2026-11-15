@@ -8,12 +8,16 @@
 .select {
   width: 100%;
   min-height: 2.75rem;
-  padding: 0.625rem 0.75rem;
+  padding: 0.625rem 2.5rem 0.625rem 0.75rem;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--input-bg);
+  background-image: url('../../../assets/icons/chevron-down.svg');
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
   color: var(--text);
   font: inherit;
+  appearance: none;
 }
 
 .select:focus-visible {
