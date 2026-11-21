@@ -7,8 +7,8 @@
  * Purchase percentages for an item's owned inventory.
  */
 export interface ItemValuationResponse {
-  item_id: string;
-  average_purchase_percent: string | null;
-  remaining_purchase_percent: string | null;
-  calculated_at: string;
+  itemId: string;
+  averagePurchasePercent: string | null;
+  remainingPurchasePercent: string | null;
+  calculatedAt: string;
 }

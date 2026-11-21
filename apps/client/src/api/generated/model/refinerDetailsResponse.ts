@@ -7,5 +7,5 @@
  * Refiner-specific data exposed under ``details``.
  */
 export interface RefinerDetailsResponse {
-  use_per_minute: number | null;
+  usePerMinute: number | null;
 }

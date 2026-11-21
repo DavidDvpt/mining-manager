@@ -10,7 +10,7 @@ import type { Tool } from './tool.js';
  */
 export interface EnhancerDetailsResponse {
   bonus: string;
-  decay_improvement: string | null;
+  decayImprovement: string | null;
   socket: number;
   tool: Tool;
   type: EnhancerType;

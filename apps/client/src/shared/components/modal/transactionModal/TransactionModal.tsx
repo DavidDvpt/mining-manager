@@ -17,15 +17,25 @@ import {
 } from '@/api/generated/miningManagerAPI';
 import { isStackableItem } from '@/shared/utils';
 import type {
+  TransactionAction,
   TransactionFormValues,
-  TransactionModalProps,
+  TransactionLot,
 } from '@/shared/types/modal';
 import { TransactionForm } from './TransactionForm';
 import { TransactionModalInfo } from './TransactionModalInfo';
 import { TransactionSummary } from './TransactionSummary';
 import { transactionFormSchema } from './transactionFormSchema';
 import styles from './transaction-modal.module.scss';
+import { ItemStoreRow } from '@/shared/types';
 
+type TransactionModalProps = {
+  item: ItemStoreRow | null;
+  lot: TransactionLot | null;
+  lots?: TransactionLot[];
+  action: TransactionAction;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+};
 /** Render the transaction modal and orchestrate its pricing form. */
 export function TransactionModal({
   item,

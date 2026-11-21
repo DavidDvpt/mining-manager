@@ -7,8 +7,8 @@
  * Finder-specific data exposed under ``details``.
  */
 export interface FinderDetailsResponse {
-  use_per_minute: number | null;
+  usePerMinute: number | null;
   depth: string | null;
   range: string | null;
-  ammo_burn: number | null;
+  ammoBurn: number | null;
 }

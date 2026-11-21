@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils/styles';
 import styles from './toolbar.module.scss';
 
 const toolbarLinks = [
-  { label: 'Transactions', route: '/transactions' },
+  { label: 'Items', route: '/items' },
   { label: 'Mining', route: '/mining' },
   { label: 'Storage', route: '/storage' },
 ] as const;

@@ -1,38 +1,49 @@
-import MainLayout from '@/layouts/mainLayout/MainLayout';
 import { SidebarLayout } from '@/layouts/sidebarLayout';
 import { useTranslations } from '@/i18n/useTranslations';
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { miningButtons } from './constants';
-import MiningSessionForm from './createSession';
-import { useMiningContext } from './miningContext';
-import MiningSessionsList from './sessionsList';
-import { getMiningActivePage, getMiningActiveView } from './utils';
+import type { MiningButtonId } from './constants';
 
-/** Render the mining workspace with its current-session and session-list navigation. */
+/** Render the mining workspace shell and manage its sidebar navigation. */
 export function MiningPage() {
   const { t } = useTranslations();
-  const { context, updateContext } = useMiningContext();
-  const hasCurrentSession = Boolean(context.session_id);
-  const activePage = getMiningActivePage(context.page, hasCurrentSession);
-  const activeView = getMiningActiveView(activePage, t);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { sessionId } = useParams<{ sessionId?: string }>();
+  const isRunningRoute = location.pathname.endsWith('/running');
+  const hasCurrentSession =
+    Boolean(sessionId) || location.pathname.endsWith('/current');
+  const activePage: MiningButtonId = location.pathname.endsWith('/create')
+    ? 'create-session'
+    : location.pathname.endsWith('/current') || isRunningRoute
+      ? 'current-session'
+      : sessionId && location.pathname.endsWith('/close')
+        ? 'close'
+        : sessionId
+          ? 'current-session'
+          : 'sessions-list';
   return (
-    <MainLayout>
-      <SidebarLayout
-        buttons={miningButtons(t, { hasCurrentSession })}
-        defaultButtonId="sessions-list"
-        activeButtonId={activePage}
-        onButtonChange={(page) =>
-          updateContext({ page: page as typeof activePage })
-        }
-        sidebarLabel={t('MINING.SIDEBAR_LABEL')}
-      >
-        {activePage === 'create-session' ? (
-          <MiningSessionForm />
-        ) : (
-          <MiningSessionsList activeView={activeView} />
-        )}
-      </SidebarLayout>
-    </MainLayout>
+    <SidebarLayout
+      buttons={miningButtons(t, { hasCurrentSession })}
+      defaultButtonId="sessions-list"
+      activeButtonId={activePage}
+      onButtonChange={(page) => {
+        if (page === 'create-session') navigate('/mining/create');
+        else if (page === 'current-session')
+          navigate(
+            sessionId && hasCurrentSession
+              ? `/mining/${sessionId}/running`
+              : '/mining/current',
+          );
+        else if (page === 'close' && sessionId)
+          navigate(`/mining/${sessionId}/close`);
+        else navigate('/mining');
+      }}
+      sidebarLabel={t('MINING.SIDEBAR_LABEL')}
+    >
+      <Outlet />
+    </SidebarLayout>
   );
 }
 

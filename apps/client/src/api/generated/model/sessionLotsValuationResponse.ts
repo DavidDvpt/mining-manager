@@ -8,8 +8,8 @@ import type { LotValuationResponse } from './lotValuationResponse.js';
  * Per-lot valuation for one source session.
  */
 export interface SessionLotsValuationResponse {
-  session_id: string;
-  session_type: string;
+  sessionId: string;
+  sessionType: string;
   lots: LotValuationResponse[];
-  calculated_at: string;
+  calculatedAt: string;
 }

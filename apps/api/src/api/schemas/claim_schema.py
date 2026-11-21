@@ -6,6 +6,7 @@ from uuid import UUID
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
+from .base import ApiResponseModel
 from .deposit_size_schema import DepositSizeResponse
 from .item_schema import ItemSummaryResponse
 
@@ -44,10 +45,8 @@ class CreateClaimRequest(BaseModel):
     )
 
 
-class ClaimResponse(BaseModel):
+class ClaimResponse(ApiResponseModel):
     """Serialize a claim with its item, calculated value, and deposit size."""
-
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: UUID
     session_id: UUID
@@ -72,14 +71,14 @@ class ClaimResponse(BaseModel):
     )
 
 
-class ClaimResultResponse(BaseModel):
+class ClaimResultResponse(ApiResponseModel):
     """Serialize the total claimed quantity for one item."""
 
     item_id: UUID
     qty: int
 
 
-class ClaimCollectionResponse(BaseModel):
+class ClaimCollectionResponse(ApiResponseModel):
     """Serialize claims together with quantities aggregated by item."""
 
     claims: list[ClaimResponse]

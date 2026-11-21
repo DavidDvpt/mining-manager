@@ -7,7 +7,7 @@
  * Identifier and state of a newly created transaction session.
  */
 export interface SessionTransactionResponse {
-  session_id: string;
+  sessionId: string;
   type: string;
   status: string | null;
 }

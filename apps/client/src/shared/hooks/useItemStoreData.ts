@@ -16,27 +16,30 @@ import {
 import { getItemImageUrl } from '@/config/images';
 import { parseNumber } from '@/shared/utils';
 import type {
+  ItemStoreDetailsByKind,
   ItemStoreCatalogueItem,
   ItemStoreKind,
   ItemStoreRow,
+  ItemStoreRowFor,
 } from '@/shared/types/listItem';
+import { ItemKind } from '@/router/constants';
 
 /** Normalize one OpenAPI catalogue response into the row shape used by the flex list. */
-const toStoreRow = (
-  item: ItemStoreCatalogueItem,
-  kind: ItemStoreKind,
+const toStoreRow = <K extends ItemStoreKind>(
+  item: ItemStoreCatalogueItem<ItemStoreDetailsByKind[K]>,
+  kind: K,
   stock: number | null = null,
-): ItemStoreRow => ({
+): ItemStoreRowFor<K> => ({
   id: item.id,
   name: item.name,
   kind,
-  imageUrl: getItemImageUrl(item.img_id),
+  imageUrl: getItemImageUrl(item.img_id ?? null),
   isRare: item.is_rare,
   isUntradeable: item.is_untradeable,
   tt: parseNumber(item.economy.tt),
   decay: parseNumber(item.economy.decay),
   stock,
-  details: item.details as Record<string, unknown>,
+  details: item.details as ItemStoreRowFor<K>['details'],
 });
 
 /** Load every catalogue group and expose normalized rows for the transaction store views. */
@@ -53,7 +56,7 @@ export function useItemStoreData() {
   const refinerStock = useGetApiV1RefinersStock();
   const finderAmplifierStock = useGetApiV1FinderAmplifiersStock();
 
-  const rows = useMemo(
+  const rows: Record<ItemKind, ItemStoreRow[]> = useMemo(
     () => ({
       finder: (finders.data ?? []).map((item) =>
         toStoreRow(item, 'finder', finderStock.data?.[item.id] ?? 0),
@@ -65,9 +68,16 @@ export function useItemStoreData() {
         toStoreRow(item, 'refiner', refinerStock.data?.[item.id] ?? 0),
       ),
       'finder-amplifier': (finderAmplifiers.data ?? []).map((item) =>
-        toStoreRow(item, 'finder-amplifier', finderAmplifierStock.data?.[item.id] ?? 0),
+        toStoreRow(
+          item,
+          'finder-amplifier',
+          finderAmplifierStock.data?.[item.id] ?? 0,
+        ),
       ),
-      enhancer: (enhancers.data ?? []).map((item) =>
+      'finder-enhancer': (enhancers.data ?? []).map((item) =>
+        toStoreRow(item, 'enhancer'),
+      ),
+      'excavator-enhancer': (enhancers.data ?? []).map((item) =>
         toStoreRow(item, 'enhancer'),
       ),
       material: (materials.data ?? []).map((item) =>

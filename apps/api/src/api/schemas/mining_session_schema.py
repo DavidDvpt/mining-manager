@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from api.db.models import SessionMiningSearchType
 
+from .base import ApiResponseModel
 from .enhancer_schema import EnhancerDetailsResponse
 from .item_schema import ItemSummaryResponse
 from .lot_schema import UnstackableLotResponse
@@ -48,10 +49,8 @@ class CreateMiningSessionRequest(BaseModel):
         return value
 
 
-class CreateMiningSessionResponse(BaseModel):
+class CreateMiningSessionResponse(ApiResponseModel):
     """Serialize the created mining setup and its initial cost summary."""
-
-    model_config = ConfigDict(populate_by_name=True)
 
     session_id: UUID
     finder: list[UnstackableLotResponse]
@@ -100,7 +99,7 @@ class CloseMiningSessionRequest(BaseModel):
     produced: list[CloseProducedLineRequest] = Field(default_factory=list)
 
 
-class MiningEnhancerResponse(BaseModel):
+class MiningEnhancerResponse(ApiResponseModel):
     """Serialize one enhancer socket, its catalogue item, and stock usage."""
 
     socket: int
@@ -110,7 +109,7 @@ class MiningEnhancerResponse(BaseModel):
     used: int
 
 
-class MiningSessionCostResponse(BaseModel):
+class MiningSessionCostResponse(ApiResponseModel):
     """Serialize the initial TT and markup-adjusted TTC session cost."""
 
     tt: Decimal

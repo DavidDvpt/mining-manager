@@ -10,15 +10,15 @@ import type { ItemSummaryResponse } from './itemSummaryResponse.js';
  */
 export interface ClaimResponse {
   id: string;
-  session_id: string;
-  item_id: string;
+  sessionId: string;
+  itemId: string;
   qty: number;
-  is_hof: boolean;
+  isHof: boolean;
   depth: string | null;
   latitude: number | null;
   longitude: number | null;
-  created_at: string;
-  updated_at: string | null;
+  createdAt: string;
+  updatedAt: string | null;
   depleted: boolean;
   item: ItemSummaryResponse;
   value?: string | null;

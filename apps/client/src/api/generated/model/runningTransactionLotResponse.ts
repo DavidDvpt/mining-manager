@@ -7,6 +7,6 @@
  * Serialized lot reservation belonging to a running transaction.
  */
 export interface RunningTransactionLotResponse {
-  lot_id: string;
+  lotId: string;
   quantity: number;
 }

@@ -7,10 +7,10 @@
  * Purchase origin and realized profit attributed to one owned lot.
  */
 export interface LotValuationResponse {
-  lot_id: string;
-  origin_session_id: string;
-  origin_session_type: string;
-  origin_tt: string;
-  origin_ttc: string;
-  generated_sell_profit: string;
+  lotId: string;
+  originSessionId: string;
+  originSessionType: string;
+  originTt: string;
+  originTtc: string;
+  generatedSellProfit: string;
 }

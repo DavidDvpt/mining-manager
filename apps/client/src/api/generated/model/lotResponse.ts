@@ -9,12 +9,12 @@ import type { SessionLineResponse } from './sessionLineResponse.js';
  */
 export interface LotResponse {
   id: string;
-  user_id: string;
+  userId: string;
   type: string;
   origin: SessionLineResponse;
   qty: number;
   reserved: number;
-  created_at: string;
-  updated_at: string | null;
-  is_active: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+  isActive: boolean;
 }

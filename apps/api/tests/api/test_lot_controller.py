@@ -94,7 +94,7 @@ def test_get_lots_passes_item_and_connected_user_to_service(client, monkeypatch)
     assert response.status_code == 200
     assert response.json()["item"]["id"] == str(item_id)
     assert response.json()["lots"] == []
-    assert response.json()["total_quantity"] == 0
+    assert response.json()["totalQuantity"] == 0
     assert calls == {"user_id": user_id, "item_id": item_id}
 
 
@@ -122,7 +122,7 @@ def test_get_lots_accepts_item_id_in_path(client, monkeypatch):
     assert response.status_code == 200
     assert response.json()["item"]["id"] == str(item_id)
     assert response.json()["lots"] == []
-    assert response.json()["total_quantity"] == 0
+    assert response.json()["totalQuantity"] == 0
     assert calls == {"user_id": user_id, "item_id": item_id}
 
 

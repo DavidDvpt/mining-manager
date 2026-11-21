@@ -1,23 +1,38 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import HomePage from '@/pages/homePage/HomePage';
-import MiningPage from '@/pages/miningPage/MiningPage';
+import MainLayout from '@/layouts/mainLayout/MainLayout';
 import SignInPage from '@/pages/signinPage/SignInPage';
-import TransactionPage from '@/pages/transactionPage/TransactionPage';
 import { GuestOnly } from '@/router/guards/GuestOnly';
 import { RequireAuth } from '@/router/guards/RequireAuth';
+import itemRoutes from '@/router/itemRoutes';
+import { useGetApiV1MaterialTypes } from '@/api/generated/miningManagerAPI';
+import { toSlug } from '@/shared/utils/string';
 
 /** Render the public and authenticated business routes. */
 export function AppRouter() {
+  const location = useLocation();
+
+  console.log(location.pathname);
+  console.log(location.search);
+  const { data: materialTypes = [] } = useGetApiV1MaterialTypes();
+  const parsed = materialTypes?.map(({ name }) => toSlug(name)) ?? [];
+
   return (
     <Routes>
       <Route element={<GuestOnly />}>
         <Route path="/signin" element={<SignInPage />} />
       </Route>
       <Route element={<RequireAuth />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/mining" element={<MiningPage />} />
-        <Route path="/transactions" element={<TransactionPage />} />
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<HomePage />} />
+
+          {itemRoutes(parsed)}
+
+          {/* <Route path="/mining" element={<MiningPage />}>
+         
+          </Route> */}
+        </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

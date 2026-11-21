@@ -1,7 +1,5 @@
-import type {
-  ItemStoreKind,
-  ItemStoreRow,
-} from '@/shared/types/listItem';
+import { SidebarButtonType } from '@/shared/types';
+import type { ItemStoreKind, ItemStoreRow } from '@/shared/types/listItem';
 
 /** Return whether a catalogue row represents a stackable material or enhancer. */
 export function isStackableItem(item: ItemStoreRow): boolean {
@@ -11,6 +9,14 @@ export function isStackableItem(item: ItemStoreRow): boolean {
 /** Return whether a catalogue item is limited according to its display name. */
 export function isLimitedItem(item: ItemStoreRow): boolean {
   return item.name.endsWith('(L)');
+}
+
+export function getSlidebarActiveButton(
+  buttons: SidebarButtonType<string>[],
+  pathname: string,
+) {
+  if (!pathname || !buttons || buttons.length === 0) return null;
+  return buttons.find((f) => f.linkTo === pathname);
 }
 
 /** Resolve a sidebar button identifier to its catalogue store group. */

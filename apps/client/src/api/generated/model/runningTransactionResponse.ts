@@ -11,14 +11,14 @@ import type { RunningTransactionResponseStatus } from './runningTransactionRespo
  * Serialized row displayed by the running transaction manager.
  */
 export interface RunningTransactionResponse {
-  session_id: string;
+  sessionId: string;
   type: string;
   status: RunningTransactionResponseStatus;
   kind: RunningTransactionResponseKind;
   item: ItemSummaryResponse;
   quantity: number;
   lots: RunningTransactionLotResponse[];
-  created_at: string;
+  createdAt: string;
   tt: string;
   ttc: string;
 }

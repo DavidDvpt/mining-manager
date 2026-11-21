@@ -8,7 +8,7 @@
  */
 export interface SessionResponse {
   id: string;
-  user_id: string;
-  started_at: string;
-  ended_at: string | null;
+  userId: string;
+  startedAt: string;
+  endedAt: string | null;
 }

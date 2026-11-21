@@ -83,9 +83,9 @@ def test_close_mining_session_maps_payload_to_service(monkeypatch):
     assert response.status_code == 200
     assert response.json() == {
         "id": str(session_id),
-        "user_id": str(user_id),
-        "started_at": "2026-11-01",
-        "ended_at": "2026-11-04",
+        "userId": str(user_id),
+        "startedAt": "2026-11-01",
+        "endedAt": "2026-11-04",
     }
     assert calls == {
         "user_id": user_id,

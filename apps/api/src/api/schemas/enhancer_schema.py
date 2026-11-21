@@ -2,17 +2,14 @@
 
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict
-
 from api.db.models import EnhancerType, Tool
 
+from .base import ApiResponseModel
 from .item_schema import ItemResponse
 
 
-class EnhancerDetailsResponse(BaseModel):
+class EnhancerDetailsResponse(ApiResponseModel):
     """Enhancer-specific data exposed under ``details``."""
-
-    model_config = ConfigDict(from_attributes=True)
 
     bonus: Decimal
     decay_improvement: Decimal | None

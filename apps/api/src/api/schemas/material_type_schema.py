@@ -2,13 +2,11 @@
 
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from .base import ApiResponseModel
 
 
-class MaterialTypeResponse(BaseModel):
+class MaterialTypeResponse(ApiResponseModel):
     """Serialize an active material type used to group material items."""
-
-    model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     name: str

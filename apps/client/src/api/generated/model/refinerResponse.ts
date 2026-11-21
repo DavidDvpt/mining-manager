@@ -11,16 +11,16 @@ import type { RefinerDetailsResponse } from './refinerDetailsResponse.js';
 export interface RefinerResponse {
   id: string;
   name: string;
-  img_id: number | null;
-  nexus_id: number | null;
+  imgId: number | null;
+  nexusId: number | null;
   weight: string | null;
-  is_untradeable: boolean | null;
-  is_rare: boolean | null;
-  is_active: boolean | null;
-  nexus_url: string | null;
+  isUntradeable: boolean | null;
+  isRare: boolean | null;
+  isActive: boolean | null;
+  nexusUrl: string | null;
   description: string | null;
-  created_at: string | null;
-  updated_at: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
   economy: EconomyResponse;
   details: RefinerDetailsResponse;
 }

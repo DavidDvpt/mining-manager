@@ -4,11 +4,12 @@ import type { AppIconName } from '@/shared/components/icon';
 /** A sidebar button that can contain nested choices. */
 export type SidebarButtonId = string;
 
-export type SidebarButton<Id extends SidebarButtonId = SidebarButtonId> = {
+export type SidebarButtonType<Id extends SidebarButtonId = SidebarButtonId> = {
   id: Id;
   label: string;
+  linkTo: string;
   icon?: AppIconName;
-  children?: SidebarButton<Id>[];
+  children?: SidebarButtonType<Id>[];
   disabled?: boolean;
   separatorBefore?: boolean;
   separatorAfter?: boolean;
@@ -23,7 +24,7 @@ export type SidebarLayoutContextValue = {
 
 /** Public properties accepted by the sidebar layout component. */
 export type SidebarLayoutProps = PropsWithChildren<{
-  buttons: SidebarButton[];
+  buttons: SidebarButtonType[];
   defaultButtonId?: string;
   activeButtonId?: string;
   onButtonChange?: (buttonId: string) => void;
@@ -32,6 +33,8 @@ export type SidebarLayoutProps = PropsWithChildren<{
 
 /** Internal properties used to render a sidebar button and its nested level. */
 export type SidebarButtonItemProps = {
-  button: SidebarButton;
+  button: SidebarButtonType;
   level: number;
+  isActive: boolean;
+  isExpanded: boolean;
 };

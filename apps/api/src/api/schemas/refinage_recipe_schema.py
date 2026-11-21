@@ -2,13 +2,11 @@
 
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from .base import ApiResponseModel
 
 
-class RefinageRecipeResponse(BaseModel):
+class RefinageRecipeResponse(ApiResponseModel):
     """Serialize one material transformation recipe."""
-
-    model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     result: UUID

@@ -2,16 +2,15 @@
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Generic, TypeVar
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
+
+from .base import ApiResponseModel
 
 
-class EconomyResponse(BaseModel):
+class EconomyResponse(ApiResponseModel):
     """Economy data exposed for an item."""
-
-    model_config = ConfigDict(from_attributes=True)
 
     tt: Decimal | None
     decay: Decimal | None
@@ -19,10 +18,8 @@ class EconomyResponse(BaseModel):
     avg_mu_plus: Decimal | None
 
 
-class ItemSummaryResponse(BaseModel):
+class ItemSummaryResponse(ApiResponseModel):
     """Serialized catalogue item summary for nested responses."""
-
-    model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     name: str
@@ -38,13 +35,8 @@ class ItemSummaryResponse(BaseModel):
     updated_at: datetime | None
 
 
-TDetails = TypeVar("TDetails", bound=BaseModel)
-
-
-class ItemResponse(BaseModel, Generic[TDetails]):
+class ItemResponse[TDetails: BaseModel](ApiResponseModel):
     """Generic flattened item response."""
-
-    model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     name: str

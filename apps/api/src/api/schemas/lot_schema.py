@@ -4,16 +4,15 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from .base import ApiResponseModel
 from .item_schema import ItemSummaryResponse
 from .session_line_schema import SessionLineResponse
 
 
-class LotResponse(BaseModel):
+class LotResponse(ApiResponseModel):
     """Serialized FIFO lot with its session-line origin."""
-
-    model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     user_id: UUID
@@ -26,7 +25,7 @@ class LotResponse(BaseModel):
     is_active: bool
 
 
-class LotCollectionResponse(BaseModel):
+class LotCollectionResponse(ApiResponseModel):
     """Serialized item inventory with FIFO lots and aggregate quantity."""
 
     item: ItemSummaryResponse
@@ -34,10 +33,8 @@ class LotCollectionResponse(BaseModel):
     total_quantity: int
 
 
-class UnstackableLotResponse(BaseModel):
+class UnstackableLotResponse(ApiResponseModel):
     """Serialized unstackable lot with specialized item attributes."""
-
-    model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     user_id: UUID

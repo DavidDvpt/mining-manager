@@ -23,6 +23,7 @@ class Planet(Base):
         server_default="gen_random_uuid()",
     )
     name: Mapped[str] = mapped_column(String(), nullable=False)
+    nexus_url: Mapped[str | None] = mapped_column(String(), nullable=True)
     created_at: Mapped[date] = mapped_column(
         Date, nullable=False, server_default=text("now()")
     )

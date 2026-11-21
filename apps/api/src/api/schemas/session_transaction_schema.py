@@ -7,6 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from .base import ApiResponseModel
 from .item_schema import ItemSummaryResponse
 
 
@@ -68,14 +69,14 @@ class UpdateTransactionStatusRequest(BaseModel):
     status: Literal["RUNNING", "SOLDED", "RETURNED", "CANCELLED"]
 
 
-class RunningTransactionLotResponse(BaseModel):
+class RunningTransactionLotResponse(ApiResponseModel):
     """Serialized lot reservation belonging to a running transaction."""
 
     lot_id: UUID
     quantity: int
 
 
-class RunningTransactionResponse(BaseModel):
+class RunningTransactionResponse(ApiResponseModel):
     """Serialized row displayed by the running transaction manager."""
 
     session_id: UUID
@@ -90,7 +91,7 @@ class RunningTransactionResponse(BaseModel):
     ttc: Decimal
 
 
-class SessionTransactionResponse(BaseModel):
+class SessionTransactionResponse(ApiResponseModel):
     """Identifier and state of a newly created transaction session."""
 
     session_id: UUID

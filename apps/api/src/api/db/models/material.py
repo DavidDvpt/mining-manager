@@ -9,6 +9,7 @@ from ..base import Base
 
 if TYPE_CHECKING:
     from .item import Item
+    from .material_type import MaterialType
     from .refinage_recipe import RefinageRecipe
     from .resource_lot import ResourceLot
 
@@ -27,6 +28,7 @@ class Material(Base):
         ForeignKey("material_type.id"),
         nullable=False,
     )
+    material_type: Mapped["MaterialType"] = relationship()
     item: Mapped["Item"] = relationship(
         back_populates="material",
     )

@@ -8,5 +8,5 @@
  */
 export interface FinderAmplifierDetailsResponse {
   efficiency: string | null;
-  profession_level_min: string | null;
+  professionLevelMin: string | null;
 }

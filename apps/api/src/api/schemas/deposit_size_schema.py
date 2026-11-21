@@ -3,11 +3,12 @@
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
+
+from .base import ApiResponseModel
 
 
-class DepositSizeResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+class DepositSizeResponse(ApiResponseModel):
 
     id: UUID
     size: int

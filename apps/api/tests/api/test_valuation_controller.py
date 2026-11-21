@@ -57,10 +57,10 @@ def test_get_item_valuation_returns_purchase_percentages():
 
     assert response.status_code == 200
     assert response.json() == {
-        "item_id": str(item_id),
-        "average_purchase_percent": "116.5",
-        "remaining_purchase_percent": "113.333333",
-        "calculated_at": calculated_at.isoformat().replace("+00:00", "Z"),
+        "itemId": str(item_id),
+        "averagePurchasePercent": "116.5",
+        "remainingPurchasePercent": "113.333333",
+        "calculatedAt": calculated_at.isoformat().replace("+00:00", "Z"),
     }
     assert calls == {
         "user_id": user_id,
@@ -113,8 +113,8 @@ def test_get_material_lot_valuation_passes_catalogue_type():
         app.dependency_overrides.clear()
 
     assert response.status_code == 200
-    assert response.json()["item_id"] == str(material_id)
-    assert response.json()["lots"][0]["generated_sell_profit"] == "25"
+    assert response.json()["itemId"] == str(material_id)
+    assert response.json()["lots"][0]["generatedSellProfit"] == "25"
     assert calls == {
         "user_id": user_id,
         "item_id": material_id,
@@ -169,8 +169,8 @@ def test_get_mining_session_lot_valuation_returns_session_lots():
         app.dependency_overrides.clear()
 
     assert response.status_code == 200
-    assert response.json()["session_id"] == str(session_id)
-    assert response.json()["lots"][0]["lot_id"] == str(lot_id)
+    assert response.json()["sessionId"] == str(session_id)
+    assert response.json()["lots"][0]["lotId"] == str(lot_id)
     assert calls == {
         "user_id": user_id,
         "item_id": None,
@@ -213,7 +213,7 @@ def test_get_trade_item_lot_valuation_filters_transaction_origins():
         app.dependency_overrides.clear()
 
     assert response.status_code == 200
-    assert response.json()["item_id"] == str(item_id)
+    assert response.json()["itemId"] == str(item_id)
     assert calls == {
         "user_id": user_id,
         "item_id": item_id,

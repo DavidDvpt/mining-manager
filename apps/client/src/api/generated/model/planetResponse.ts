@@ -9,6 +9,7 @@
 export interface PlanetResponse {
   id: string;
   name: string;
-  created_at: string;
-  updated_at: string | null;
+  nexusUrl?: string | null;
+  createdAt: string;
+  updatedAt: string | null;
 }

@@ -1,14 +1,11 @@
 """Response schemas for refiner catalogue endpoints."""
 
-from pydantic import BaseModel, ConfigDict
-
+from .base import ApiResponseModel
 from .item_schema import ItemResponse
 
 
-class RefinerDetailsResponse(BaseModel):
+class RefinerDetailsResponse(ApiResponseModel):
     """Refiner-specific data exposed under ``details``."""
-
-    model_config = ConfigDict(from_attributes=True)
 
     use_per_minute: int | None
 

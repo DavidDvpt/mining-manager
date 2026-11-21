@@ -9,15 +9,15 @@ import type { ItemSummaryResponse } from './itemSummaryResponse.js';
  */
 export interface UnstackableLotResponse {
   id: string;
-  user_id: string;
+  userId: string;
   type: string;
   item: ItemSummaryResponse;
   qty: number;
   reserved: number;
   tier: number | null;
   tt: string | null;
-  is_default: boolean;
-  created_at: string;
-  updated_at: string | null;
-  is_active: boolean;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+  isActive: boolean;
 }

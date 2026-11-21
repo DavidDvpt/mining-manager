@@ -1,18 +1,16 @@
 """Response schemas for material catalogue endpoints."""
 
-from uuid import UUID
+from pydantic import Field
 
-from pydantic import BaseModel, ConfigDict
-
+from .base import ApiResponseModel
 from .item_schema import ItemResponse
+from .material_type_schema import MaterialTypeResponse
 
 
-class MaterialDetailsResponse(BaseModel):
+class MaterialDetailsResponse(ApiResponseModel):
     """Material-specific data exposed under ``details``."""
 
-    model_config = ConfigDict(from_attributes=True)
-
-    type: UUID
+    type: MaterialTypeResponse = Field(validation_alias="material_type")
 
 
 class MaterialResponse(ItemResponse[MaterialDetailsResponse]):

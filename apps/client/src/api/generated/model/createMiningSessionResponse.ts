@@ -10,7 +10,7 @@ import type { UnstackableLotResponse } from './unstackableLotResponse.js';
  * Serialize the created mining setup and its initial cost summary.
  */
 export interface CreateMiningSessionResponse {
-  session_id: string;
+  sessionId: string;
   finder: UnstackableLotResponse[];
   excavators: UnstackableLotResponse[];
   finderAmplifiers: UnstackableLotResponse[];

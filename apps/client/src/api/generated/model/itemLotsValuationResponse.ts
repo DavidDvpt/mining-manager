@@ -8,7 +8,7 @@ import type { LotValuationResponse } from './lotValuationResponse.js';
  * Per-lot valuation for one catalogue item.
  */
 export interface ItemLotsValuationResponse {
-  item_id: string;
+  itemId: string;
   lots: LotValuationResponse[];
-  calculated_at: string;
+  calculatedAt: string;
 }

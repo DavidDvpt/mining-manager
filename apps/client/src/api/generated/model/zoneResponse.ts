@@ -11,6 +11,6 @@ export interface ZoneResponse {
   name: string;
   planetId: string;
   userId: string;
-  created_at: string;
-  updated_at: string | null;
+  createdAt: string;
+  updatedAt: string | null;
 }

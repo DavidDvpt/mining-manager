@@ -1,12 +1,13 @@
 """Schemas for session-line responses."""
 
-from uuid import UUID
 from typing import Literal
+from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from api.db.models import SessionLineType
 
+from .base import ApiResponseModel
 from .item_schema import ItemSummaryResponse
 from .session_schema import SessionResponse
 
@@ -30,10 +31,8 @@ class ConsumeEnhancerRequest(BaseModel):
     quantity: Literal[1] = Field(default=1)
 
 
-class SessionLineResponse(BaseModel):
+class SessionLineResponse(ApiResponseModel):
     """Serialized session line, including its session and item."""
-
-    model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     session_id: UUID

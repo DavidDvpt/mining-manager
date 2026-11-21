@@ -5,7 +5,7 @@ from decimal import Decimal
 from enum import Enum
 from uuid import UUID
 
-from pydantic import BaseModel
+from .base import ApiResponseModel
 
 
 class ValuationSessionType(str, Enum):
@@ -16,7 +16,7 @@ class ValuationSessionType(str, Enum):
     TRANSACTION = "TRANSACTION"
 
 
-class ItemValuationResponse(BaseModel):
+class ItemValuationResponse(ApiResponseModel):
     """Purchase percentages for an item's owned inventory."""
 
     item_id: UUID
@@ -25,7 +25,7 @@ class ItemValuationResponse(BaseModel):
     calculated_at: datetime
 
 
-class LotValuationResponse(BaseModel):
+class LotValuationResponse(ApiResponseModel):
     """Purchase origin and realized profit attributed to one owned lot."""
 
     lot_id: UUID
@@ -36,7 +36,7 @@ class LotValuationResponse(BaseModel):
     generated_sell_profit: Decimal
 
 
-class ItemLotsValuationResponse(BaseModel):
+class ItemLotsValuationResponse(ApiResponseModel):
     """Per-lot valuation for one catalogue item."""
 
     item_id: UUID
@@ -44,7 +44,7 @@ class ItemLotsValuationResponse(BaseModel):
     calculated_at: datetime
 
 
-class SessionLotsValuationResponse(BaseModel):
+class SessionLotsValuationResponse(ApiResponseModel):
     """Per-lot valuation for one source session."""
 
     session_id: UUID

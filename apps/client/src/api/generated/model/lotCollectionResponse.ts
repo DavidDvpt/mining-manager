@@ -11,5 +11,5 @@ import type { LotResponse } from './lotResponse.js';
 export interface LotCollectionResponse {
   item: ItemSummaryResponse;
   lots: LotResponse[];
-  total_quantity: number;
+  totalQuantity: number;
 }

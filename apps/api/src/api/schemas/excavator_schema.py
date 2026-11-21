@@ -2,15 +2,12 @@
 
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict
-
+from .base import ApiResponseModel
 from .item_schema import ItemResponse
 
 
-class ExcavatorDetailsResponse(BaseModel):
+class ExcavatorDetailsResponse(ApiResponseModel):
     """Excavator-specific data exposed under ``details``."""
-
-    model_config = ConfigDict(from_attributes=True)
 
     use_per_minute: int | None
     efficiency: Decimal | None

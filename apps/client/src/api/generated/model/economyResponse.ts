@@ -9,6 +9,6 @@
 export interface EconomyResponse {
   tt: string | null;
   decay: string | null;
-  avg_mu_percent: string | null;
-  avg_mu_plus: string | null;
+  avgMuPercent: string | null;
+  avgMuPlus: string | null;
 }

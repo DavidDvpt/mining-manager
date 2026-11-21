@@ -11,10 +11,10 @@ import type { SessionResponse } from './sessionResponse.js';
  */
 export interface SessionLineResponse {
   id: string;
-  session_id: string;
-  item_id: string | null;
+  sessionId: string;
+  itemId: string | null;
   type: SessionLineType;
-  lot_id: string | null;
+  lotId: string | null;
   qty: number | null;
   session: SessionResponse;
   item: ItemSummaryResponse | null;

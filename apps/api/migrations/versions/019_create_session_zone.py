@@ -1,4 +1,4 @@
-"""create session zone table"""
+"""seed the initial planet catalogue"""
 
 import sqlalchemy as sa
 from alembic import op
@@ -9,44 +9,55 @@ branch_labels = None
 depends_on = None
 
 
-def upgrade() -> None:
-    """Create named session zones linked to planets."""
+PLANETS = [
+    ("Entropia Universe", "/planets/0"),
+    ("Calypso", "/planets/1"),
+    ("Arkadia", "/planets/2"),
+    ("Monria", "/planets/3"),
+    ("ROCKtropia", "/planets/4"),
+    ("Toulan", "/planets/5"),
+    ("Next Island", "/planets/6"),
+    ("Cyrene", "/planets/7"),
+    ("DSEC9", "/planets/8"),
+    ("Hunt The THING", "/planets/9"),
+    ("Ancient Greece", "/planets/11"),
+    ("Arkadia Underground", "/planets/12"),
+    ("Arkadia Moon", "/planets/13"),
+    ("Secret Island", "/planets/14"),
+    ("Asteroid F.O.M.A.", "/planets/15"),
+    ("Crystal Palace", "/planets/16"),
+    ("Space", "/planets/17"),
+    ("HELL", "/planets/18"),
+    ("ARIS", "/planets/19"),
+    ("Setesh", "/planets/20"),
+    ("Howling Mine", "/planets/21"),
+    ("The HUB", "/planets/24"),
+]
 
-    op.create_table(
-        "session_zone",
-        sa.Column(
-            "id",
-            sa.Uuid(),
-            server_default=sa.text("gen_random_uuid()"),
-            nullable=False,
-        ),
-        sa.Column("name", sa.String(), nullable=False),
-        sa.Column("planete_id", sa.Uuid(), nullable=False),
-        sa.Column("created_at", sa.Date(), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.Date(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["planete_id"], ["planet.id"], ondelete="CASCADE"
-        ),
-        sa.PrimaryKeyConstraint("id"),
+
+def upgrade() -> None:
+    """Insert the initial planet names and let PostgreSQL generate their UUIDs."""
+
+    planet_table = sa.table(
+        "planet",
+        sa.column("name", sa.String()),
+        sa.column("nexus_url", sa.String()),
     )
-    op.create_foreign_key(
-        "fk_session_mining_session_zone_id_session_zone",
-        "session_mining",
-        "session_zone",
-        ["session_zone_id"],
-        ["id"],
-        ondelete="CASCADE",
+    op.bulk_insert(
+        planet_table,
+        [{"name": name, "nexus_url": url} for name, url in PLANETS],
     )
 
 
 def downgrade() -> None:
-    """Drop the session zone table."""
+    """Remove only the planets inserted by this seed migration."""
 
-    op.execute(
-        """
-        ALTER TABLE session_mining
-        DROP CONSTRAINT IF EXISTS fk_session_mining_session_zone_id_session_zone,
-        DROP CONSTRAINT IF EXISTS fk_session_mining_session_sone_id_session_zone
-        """
+    planet_table = sa.table(
+        "planet",
+        sa.column("name", sa.String()),
     )
-    op.drop_table("session_zone")
+    op.execute(
+        planet_table.delete().where(
+            planet_table.c.name.in_([name for name, _ in PLANETS]),
+        )
+    )

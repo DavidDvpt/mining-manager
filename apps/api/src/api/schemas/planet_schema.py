@@ -5,22 +5,21 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .base import ApiResponseModel
 
-class PlanetResponse(BaseModel):
+
+class PlanetResponse(ApiResponseModel):
     """Serialize a planet from the read-only planet catalogue."""
-
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: UUID
     name: str
+    nexus_url: str | None = None
     created_at: date
     updated_at: date | None
 
 
-class ZoneResponse(BaseModel):
+class ZoneResponse(ApiResponseModel):
     """Serialize a zone and the planet it belongs to."""
-
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: UUID
     name: str

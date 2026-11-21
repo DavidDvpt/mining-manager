@@ -14,7 +14,10 @@ import {
   createStockColumn,
   createSummaryColumn,
 } from '@/shared/appList/columns';
-import type { ItemStoreColumn, ItemStoreListProps } from '@/shared/types/listItem';
+import type {
+  ItemStoreColumn,
+  ItemStoreListProps,
+} from '@/shared/types/listItem';
 
 /** Render transaction-store catalogue rows with their type-specific columns. */
 export function ItemStoreList({
@@ -32,18 +35,32 @@ export function ItemStoreList({
     let typeColumns: ItemStoreColumn[] = [];
 
     switch (kind) {
-      case 'finder': typeColumns = createFinderColumns(t); break;
-      case 'excavator': typeColumns = createExcavatorColumns(t); break;
-      case 'refiner': typeColumns = createRefinerColumns(t); break;
-      case 'finder-amplifier': typeColumns = createFinderAmplifierColumns(t); break;
-      case 'enhancer': typeColumns = createEnhancerColumns(t); break;
+      case 'finder':
+        typeColumns = createFinderColumns(t);
+        break;
+      case 'excavator':
+        typeColumns = createExcavatorColumns(t);
+        break;
+      case 'refiner':
+        typeColumns = createRefinerColumns(t);
+        break;
+      case 'finder-amplifier':
+        typeColumns = createFinderAmplifierColumns(t);
+        break;
+      case 'enhancer':
+        typeColumns = createEnhancerColumns(t);
+        break;
       case 'material':
-        typeColumns = createMaterialColumns(t, { includeType: showMaterialType });
+        typeColumns = createMaterialColumns(t, {
+          includeType: showMaterialType,
+        });
         break;
     }
 
     const editColumn = createEditColumn(t, onEdit);
-    const nameColumnIndex = typeColumns.findIndex((column) => column.key === 'name');
+    const nameColumnIndex = typeColumns.findIndex(
+      (column) => column.key === 'name',
+    );
     const columnsWithEdit =
       nameColumnIndex === -1
         ? [...typeColumns, editColumn]

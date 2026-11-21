@@ -5,7 +5,7 @@ import type { ItemStoreColumn, ItemStoreRow } from '@/shared/types/listItem';
 import { formatDecimalValue } from '@/shared/utils';
 import { isLimitedItem } from '@/shared/utils';
 import type { TranslationKey } from '@/i18n/types';
-import styles from '@/pages/transactionPage/itemStoreList/item-store-list.module.scss';
+import styles from '@/pages/itemPage/itemStoreList/item-store-list.module.scss';
 import appListStyles from '../app-list.module.scss';
 
 const valueOrDash = (value: unknown) =>

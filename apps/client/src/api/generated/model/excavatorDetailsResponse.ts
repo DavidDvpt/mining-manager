@@ -7,6 +7,6 @@
  * Excavator-specific data exposed under ``details``.
  */
 export interface ExcavatorDetailsResponse {
-  use_per_minute: number | null;
+  usePerMinute: number | null;
   efficiency: string | null;
 }

@@ -7,6 +7,6 @@
  * Serialize the total claimed quantity for one item.
  */
 export interface ClaimResultResponse {
-  item_id: string;
+  itemId: string;
   qty: number;
 }
