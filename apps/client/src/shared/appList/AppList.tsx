@@ -1,4 +1,4 @@
-import type { ChangeEvent } from 'react';
+import type { ChangeEvent, JSX } from 'react';
 import type { ItemColumn } from '@/shared/types/listItem';
 import { TooltipProvider } from '@/shared/components/tooltip';
 import styles from './app-list.module.scss';
@@ -39,7 +39,7 @@ export function AppList<TRow extends { id: string }>({
     <TooltipProvider>
       <div className={styles.list} role="table">
         <div className={styles.header} role="row">
-          {columns.map((column): import('react').JSX.Element => (
+          {columns.map((column): JSX.Element => (
             <div
               key={column.key}
               className={styles.cell}
@@ -51,9 +51,9 @@ export function AppList<TRow extends { id: string }>({
           ))}
         </div>
         <div className={styles.body}>
-          {rows.map((row): import('react').JSX.Element => (
+          {rows.map((row): JSX.Element => (
             <div key={row.id} className={styles.row} role="row">
-              {columns.map((column): import('react').JSX.Element => (
+              {columns.map((column): JSX.Element => (
                 <div
                   key={column.key}
                   className={`${styles.cell} ${column.cellClassName ?? ''} ${column.kind === 'button' ? styles.actionCell : ''}`}

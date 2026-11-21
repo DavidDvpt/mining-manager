@@ -14,7 +14,7 @@ import {
   createStockColumn,
   createSummaryColumn,
 } from './itemColumns';
-import type { ItemColumn, IItemListProps } from '@/shared/types/listItem';
+import type { ItemColumn, ItemListProps } from '@/shared/types/listItem';
 
 export function ItemList({
   kind,
@@ -25,7 +25,7 @@ export function ItemList({
   onBuy,
   onSell,
   onEdit,
-}: IItemListProps): JSX.Element {
+}: ItemListProps): JSX.Element {
   const { t } = useTranslations();
   const columns = useMemo<ItemColumn[]>((): ItemColumn[] => {
     let typeColumns: ItemColumn[] = [];

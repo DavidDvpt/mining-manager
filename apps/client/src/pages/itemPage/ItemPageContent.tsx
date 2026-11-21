@@ -1,5 +1,5 @@
 import { useTranslations } from '@/i18n/useTranslations';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { Panel, Section } from '@/shared/components';
 import { Switch } from '@/components/ui/switch';
 import { ItemList } from './itemList';
@@ -21,6 +21,7 @@ export function ItemPageContent({
   kind,
   subKind,
 }: ItemListLayoutProps): JSX.Element {
+  const navigate = useNavigate();
   const { t } = useTranslations();
   const [ownedOnly, setOwnedOnly] = useState(false);
   const { rows, isLoading, isError } = useItemStoreData();
@@ -73,6 +74,9 @@ export function ItemPageContent({
           isLoading={isLoading}
           isError={isError}
           showMaterialType={kind === 'material'}
+          onBuy={(row) => navigate(`${row.id}/buy`)}
+          onSell={(row) => navigate(`${row.id}/sell`)}
+          onEdit={(row) => navigate(`${row.id}/edit`)}
         />
       </Section>
       <Outlet />

@@ -6,6 +6,7 @@ import { formatDecimalValue } from '@/shared/utils';
 import { isLimitedItem } from '@/shared/utils';
 import type { TranslationKey } from '@/i18n/types';
 import styles from './item-list.module.scss';
+import { JSX } from 'react/jsx-runtime';
 
 const valueOrDash = (value: unknown): string =>
   value === null || value === undefined || value === '' ? '—' : String(value);
@@ -22,7 +23,7 @@ export const createCommonItemColumns = (
       label: '',
       flex: '0 0 4rem',
       cellClassName: styles.imageColumn,
-      render: (row): import('react').JSX.Element => (
+      render: (row): JSX.Element => (
         <EntropiaImage
           url={row.imageUrl}
           alt={row.name}

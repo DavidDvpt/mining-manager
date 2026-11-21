@@ -69,7 +69,7 @@ export type ItemColumn<TRow extends object = ItemRow> = {
 };
 
 /** Props accepted by the normalized item-store list component. */
-export type IItemListProps = {
+export type ItemListProps = {
   kind: ItemKind;
   rows: ItemRow[];
   isLoading?: boolean;
