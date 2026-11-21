@@ -7,11 +7,10 @@ import styles from './label.module.scss';
 export function Label({
   className,
   ...props
-}: ComponentPropsWithoutRef<typeof LabelPrimitive.Root>) {
+}: ComponentPropsWithoutRef<
+  typeof LabelPrimitive.Root
+>): import('react').JSX.Element {
   return (
-    <LabelPrimitive.Root
-      className={cn(styles.label, className)}
-      {...props}
-    />
+    <LabelPrimitive.Root className={cn(styles.label, className)} {...props} />
   );
 }

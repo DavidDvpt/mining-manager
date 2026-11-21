@@ -29,9 +29,9 @@ export function ItemStoreList({
   onBuy,
   onSell,
   onEdit,
-}: ItemStoreListProps) {
+}: ItemStoreListProps): import('react').JSX.Element {
   const { t } = useTranslations();
-  const columns = useMemo<ItemStoreColumn[]>(() => {
+  const columns = useMemo<ItemStoreColumn[]>((): ItemStoreColumn[] => {
     let typeColumns: ItemStoreColumn[] = [];
 
     switch (kind) {
@@ -59,7 +59,7 @@ export function ItemStoreList({
 
     const editColumn = createEditColumn(t, onEdit);
     const nameColumnIndex = typeColumns.findIndex(
-      (column) => column.key === 'name',
+      (column): boolean => column.key === 'name',
     );
     const columnsWithEdit =
       nameColumnIndex === -1

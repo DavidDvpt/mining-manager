@@ -10,7 +10,7 @@ type ToolEditFieldLabelProps = {
 export function ToolEditFieldLabel({
   children,
   range,
-}: ToolEditFieldLabelProps) {
+}: ToolEditFieldLabelProps): import('react').JSX.Element {
   return (
     <>
       {children}&nbsp;

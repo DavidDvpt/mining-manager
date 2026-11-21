@@ -8,7 +8,7 @@ export const SidebarLayoutContext = createContext<
 >(undefined);
 
 /** Read the active sidebar selection from a descendant of `SidebarLayout`. */
-export function useSidebarLayoutContext() {
+export function useSidebarLayoutContext(): SidebarLayoutContextValue {
   const context = useContext(SidebarLayoutContext);
 
   if (!context) {

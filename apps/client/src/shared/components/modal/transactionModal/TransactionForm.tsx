@@ -49,7 +49,7 @@ export function TransactionForm({
   lots,
   selectedLotId,
   onLotChange,
-}: TransactionFormProps) {
+}: TransactionFormProps): import('react').JSX.Element {
   const pricingRef = useRef<TransactionPricing | null>(null);
   const { setValue } = useFormContext<TransactionFormValues>();
   const { t } = useTranslations();
@@ -58,13 +58,16 @@ export function TransactionForm({
     defaultValue: true,
   });
 
-  const setValueOptions = useMemo(() => {
+  const setValueOptions = useMemo((): {
+    shouldDirty: boolean;
+    shouldValidate: boolean;
+  } => {
     return { shouldDirty: true, shouldValidate: true };
   }, []);
 
   /** Apply recalculated values to React Hook Form. */
   const setCalculatedValues = useCallback(
-    (values: TransactionPricingValues) => {
+    (values: TransactionPricingValues): void => {
       setValue('quantity', values.quantity, {
         shouldDirty: true,
         shouldValidate: true,
@@ -76,7 +79,7 @@ export function TransactionForm({
     [setValue, setValueOptions],
   );
 
-  useEffect(() => {
+  useEffect((): void => {
     const pricing = new TransactionPricing(action, item, lot);
     pricingRef.current = pricing;
     setCalculatedValues(pricing.getValues());
@@ -87,13 +90,13 @@ export function TransactionForm({
   const updateField = async (
     field: TransactionPricingField,
     value: EditableNumber,
-  ) => {
+  ): Promise<void> => {
     if (!pricingRef.current || value === undefined) return;
     setCalculatedValues(await pricingRef.current.update(field, value));
   };
 
   /** Keep React Hook Form synchronized before recalculating dependent values. */
-  const handleChange = (key: TransactionPricingField, value: string) => {
+  const handleChange = (key: TransactionPricingField, value: string): void => {
     const parsedValue = parseInputValue(value);
     // Keep the field empty while the user replaces a value; the schema will
     // prevent submission until a valid numeric value is entered again.
@@ -102,7 +105,7 @@ export function TransactionForm({
   };
 
   /** Toggle automatic pricing and synchronize recalculated values. */
-  const handleAutoComputeChange = (checked: boolean) => {
+  const handleAutoComputeChange = (checked: boolean): void => {
     if (!pricingRef.current) return;
     pricingRef.current.setAutoCompute(checked);
     setValue(
@@ -127,7 +130,7 @@ export function TransactionForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {lots.map((availableLot) => (
+              {lots.map((availableLot): import('react').JSX.Element => (
                 <SelectItem key={availableLot.id} value={availableLot.id}>
                   <span className={styles.lotOptionLabel}>
                     <span>
@@ -149,7 +152,7 @@ export function TransactionForm({
         step={1}
         readOnly={!isStackable}
         autoFocus={isStackable}
-        onChange={(event) => handleChange('quantity', event.target.value)}
+        onChange={(event): void => handleChange('quantity', event.target.value)}
       />
       <InputRHF
         name="tt"
@@ -159,7 +162,7 @@ export function TransactionForm({
         step="0.01"
         readOnly={isStackable}
         autoFocus={!isStackable}
-        onChange={(event) => handleChange('tt', event.target.value)}
+        onChange={(event): void => handleChange('tt', event.target.value)}
       />
       <InputRHF
         name="fee"
@@ -168,7 +171,7 @@ export function TransactionForm({
         min={0}
         step="0.01"
         readOnly={action === 'sell' && autoCompute}
-        onChange={(event) => handleChange('fee', event.target.value)}
+        onChange={(event): void => handleChange('fee', event.target.value)}
       />
       <InputRHF
         name="ttc"
@@ -176,13 +179,15 @@ export function TransactionForm({
         type="number"
         min={0}
         step={1}
-        onChange={(event) => handleChange('ttc', event.target.value)}
+        onChange={(event): void => handleChange('ttc', event.target.value)}
       />
       <CheckboxRHF
         name="autoCompute"
         label={t('TRANSACTION_MODAL.AUTO_COMPUTE')}
         wrapperClassName={styles.autoComputeToggle}
-        onCheckedChange={(checked) => void handleAutoComputeChange(checked)}
+        onCheckedChange={(checked): undefined =>
+          void handleAutoComputeChange(checked)
+        }
       />
     </div>
   );

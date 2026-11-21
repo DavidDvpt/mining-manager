@@ -13,7 +13,7 @@ export const DialogClose = DialogPrimitive.Close;
 export const DialogOverlay = forwardRef<
   ElementRef<typeof DialogPrimitive.Overlay>,
   ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
->(({ className, ...props }, ref) => (
+>(({ className, ...props }, ref): import('react').JSX.Element => (
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(styles.overlay, className)}
@@ -26,14 +26,10 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 export const DialogContent = forwardRef<
   ElementRef<typeof DialogPrimitive.Content>,
   ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
+>(({ className, children, ...props }, ref): import('react').JSX.Element => (
   <DialogPrimitive.Portal>
     <DialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={className}
-      {...props}
-    >
+    <DialogPrimitive.Content ref={ref} className={className} {...props}>
       {children}
       <DialogPrimitive.Close className={styles.close} aria-label="Close">
         <AppIcon name={AppIconName.X} size={22} />
@@ -47,7 +43,7 @@ DialogContent.displayName = DialogPrimitive.Content.displayName;
 export function DialogHeader({
   className,
   ...props
-}: ComponentPropsWithoutRef<'div'>) {
+}: ComponentPropsWithoutRef<'div'>): import('react').JSX.Element {
   return <div className={cn(styles.header, className)} {...props} />;
 }
 
@@ -55,7 +51,7 @@ export function DialogHeader({
 export function DialogFooter({
   className,
   ...props
-}: ComponentPropsWithoutRef<'div'>) {
+}: ComponentPropsWithoutRef<'div'>): import('react').JSX.Element {
   return <div className={cn(styles.footer, className)} {...props} />;
 }
 
@@ -63,7 +59,7 @@ export function DialogFooter({
 export const DialogTitle = forwardRef<
   ElementRef<typeof DialogPrimitive.Title>,
   ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
->(({ className, ...props }, ref) => (
+>(({ className, ...props }, ref): import('react').JSX.Element => (
   <DialogPrimitive.Title
     ref={ref}
     className={cn(styles.title, className)}
@@ -76,7 +72,7 @@ DialogTitle.displayName = DialogPrimitive.Title.displayName;
 export const DialogDescription = forwardRef<
   ElementRef<typeof DialogPrimitive.Description>,
   ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
->(({ className, ...props }, ref) => (
+>(({ className, ...props }, ref): import('react').JSX.Element => (
   <DialogPrimitive.Description
     ref={ref}
     className={cn(styles.description, className)}

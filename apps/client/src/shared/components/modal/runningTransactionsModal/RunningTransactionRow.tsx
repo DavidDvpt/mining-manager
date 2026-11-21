@@ -17,7 +17,7 @@ type Translate = (key: TranslationKey) => string;
 export function toRunningTransactionRow(
   transaction: RunningTransactionResponse,
 ): RunningTransactionRow {
-  return { ...transaction, id: transaction.session_id };
+  return { ...transaction, id: transaction.sessionId };
 }
 
 /** Format the API date for the running transaction list. */
@@ -33,19 +33,26 @@ export function createRunningTransactionColumns(
     status: UpdateTransactionStatusRequestStatus,
   ) => void,
 ): ItemStoreColumn<RunningTransactionRow>[] {
-  const statusOptions = Object.values(Status).map((status) => ({
-    label: status,
-    value: status,
-  }));
+  const statusOptions = Object.values(Status).map(
+    (
+      status,
+    ): {
+      label: 'RUNNING' | 'SOLDED' | 'RETURNED' | 'CANCELLED';
+      value: 'RUNNING' | 'SOLDED' | 'RETURNED' | 'CANCELLED';
+    } => ({
+      label: status,
+      value: status,
+    }),
+  );
 
   return [
     {
       key: 'image',
       label: '',
       flex: '0 0 4rem',
-      render: (row) => (
+      render: (row): import('react').JSX.Element => (
         <EntropiaImage
-          url={getItemImageUrl(row.item.img_id)}
+          url={getItemImageUrl(row.item.imgId)}
           alt={row.item.name}
           size="small"
         />
@@ -55,34 +62,34 @@ export function createRunningTransactionColumns(
       key: 'name',
       label: t('RUNNING_TRANSACTIONS_MODAL.NAME'),
       flex: '1 1 14rem',
-      render: (row) => row.item.name,
+      render: (row): string => row.item.name,
     },
     {
       key: 'quantity',
       label: t('RUNNING_TRANSACTIONS_MODAL.QUANTITY'),
       flex: '0 1 6rem',
       align: 'right',
-      render: (row) => row.quantity,
+      render: (row): number => row.quantity,
     },
     {
       key: 'createdAt',
       label: t('RUNNING_TRANSACTIONS_MODAL.CREATED_AT'),
       flex: '0 1 8rem',
-      render: (row) => formatTransactionDate(row.created_at),
+      render: (row): string => formatTransactionDate(row.createdAt),
     },
     {
       key: 'tt',
       label: 'TT',
       flex: '0 1 6rem',
       align: 'right',
-      render: (row) => formatDecimalValue(row.tt),
+      render: (row): string => formatDecimalValue(row.tt),
     },
     {
       key: 'ttc',
       label: 'TTC',
       flex: '0 1 6rem',
       align: 'right',
-      render: (row) => formatDecimalValue(row.ttc),
+      render: (row): string => formatDecimalValue(row.ttc),
     },
     {
       key: 'status',
@@ -91,10 +98,13 @@ export function createRunningTransactionColumns(
       flex: '0 0 11rem',
       cellClassName: styles.statusCell,
       selectOptions: statusOptions,
-      selectValue: (row) => row.status,
-      onSelectChange: (row, value) =>
+      selectValue: (
+        row,
+      ): import('@/api/generated/model').RunningTransactionResponseStatus =>
+        row.status,
+      onSelectChange: (row, value): void =>
         onStatusChange(row, value as UpdateTransactionStatusRequestStatus),
-      render: () => null,
+      render: (): null => null,
     },
   ];
 }

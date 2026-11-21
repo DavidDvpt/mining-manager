@@ -3,7 +3,7 @@ import type { UnstackableLotResponse } from '@/api/generated/model/unstackableLo
 
 /** API lot shape accepted by the transaction modal, including remaining TT when provided. */
 export type TransactionLot = UnstackableLotResponse & {
-  tt_remaining?: string | null;
+  ttRemaining?: string | null;
 };
 
 /** Supported transaction directions for the transaction modal. */

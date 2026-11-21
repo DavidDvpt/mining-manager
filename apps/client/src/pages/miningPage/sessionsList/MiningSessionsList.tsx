@@ -8,11 +8,12 @@ type MiningSessionsListProps = {
 };
 
 /** Render the mining sessions list view and its current placeholder panels. */
-export function MiningSessionsList({ activeView }: MiningSessionsListProps) {
+export function MiningSessionsList({
+  activeView,
+}: MiningSessionsListProps): import('react').JSX.Element {
   const { t } = useTranslations();
-  const [activeViewPrefix, activeViewSuffix] = t('MINING.ACTIVE_VIEW').split(
-    '{view}',
-  );
+  const [activeViewPrefix, activeViewSuffix] =
+    t('MINING.ACTIVE_VIEW').split('{view}');
 
   return (
     <Panel className={styles.page}>

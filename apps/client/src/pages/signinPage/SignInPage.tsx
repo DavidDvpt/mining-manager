@@ -11,7 +11,7 @@ import type { SignInValues } from './signInSchema';
 import styles from './sign-in-page.module.scss';
 
 /** Render the public signin page and establish the HttpOnly cookie session. */
-export function SignInPage() {
+export function SignInPage(): import('react').JSX.Element {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const signIn = usePostApiV1Signin();

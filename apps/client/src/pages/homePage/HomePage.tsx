@@ -3,7 +3,7 @@ import { useTranslations } from '@/i18n/useTranslations';
 import styles from './home-page.module.scss';
 
 /** Render the authenticated information dashboard without showing running transactions. */
-export function HomePage() {
+export function HomePage(): import('react').JSX.Element {
   const { t } = useTranslations();
 
   return (

@@ -27,10 +27,12 @@ export function Button({
   iconPosition = 'start',
   children,
   ...props
-}: ButtonProps) {
+}: ButtonProps): import('react').JSX.Element {
   const Component = asChild ? Slot : 'button';
   /** Wrap a decorative icon with the spacing and alignment required by the button. */
-  const renderIcon = (position: 'start' | 'end') =>
+  const renderIcon = (
+    position: 'start' | 'end',
+  ): import('react').JSX.Element | null =>
     icon ? (
       <span
         className={cn(styles.icon, iconClassName)}

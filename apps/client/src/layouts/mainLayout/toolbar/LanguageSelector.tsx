@@ -10,10 +10,10 @@ import {
 import styles from './toolbar.module.scss';
 
 /** Render the language selector and reload the application after a locale change. */
-export function LanguageSelector() {
+export function LanguageSelector(): import('react').JSX.Element {
   const { locale, t } = useTranslations();
 
-  const handleChange = (value: string) => {
+  const handleChange = (value: string): void => {
     setDocumentLocale(value as Locale);
     window.location.reload();
   };
@@ -21,10 +21,7 @@ export function LanguageSelector() {
   return (
     <div className={styles.languageSelector}>
       <span className={styles.visuallyHidden}>{t('APP.LANGUAGE')}</span>
-      <Select
-        value={locale}
-        onValueChange={handleChange}
-      >
+      <Select value={locale} onValueChange={handleChange}>
         <SelectTrigger
           className={styles.languageTrigger}
           aria-label={t('APP.LANGUAGE')}
@@ -35,14 +32,14 @@ export function LanguageSelector() {
           <SelectItem value="fr_FR">
             <span role="img" aria-label={t('APP.FRENCH_FLAG')}>
               🇫🇷
-            </span>&nbsp;
-            FR
+            </span>
+            &nbsp; FR
           </SelectItem>
           <SelectItem value="en_EN">
             <span role="img" aria-label={t('APP.ENGLISH_FLAG')}>
               🇬🇧
-            </span>&nbsp;
-            EN
+            </span>
+            &nbsp; EN
           </SelectItem>
         </SelectContent>
       </Select>

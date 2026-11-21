@@ -14,9 +14,9 @@ export function isLimitedItem(item: ItemStoreRow): boolean {
 export function getSlidebarActiveButton(
   buttons: SidebarButtonType<string>[],
   pathname: string,
-) {
+): SidebarButtonType<string> | null | undefined {
   if (!pathname || !buttons || buttons.length === 0) return null;
-  return buttons.find((f) => f.linkTo === pathname);
+  return buttons.find((f): boolean => f.linkTo === pathname);
 }
 
 /** Resolve a sidebar button identifier to its catalogue store group. */

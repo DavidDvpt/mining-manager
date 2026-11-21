@@ -1,4 +1,4 @@
-function BuyTransactionRoute() {
+function BuyTransactionRoute(): import('react').JSX.Element {
   return <div>BuyTransactionRoute</div>;
 }
 

@@ -33,9 +33,9 @@ const toStoreRow = <K extends ItemStoreKind>(
   id: item.id,
   name: item.name,
   kind,
-  imageUrl: getItemImageUrl(item.img_id ?? null),
-  isRare: item.is_rare,
-  isUntradeable: item.is_untradeable,
+  imageUrl: getItemImageUrl(item.imgId ?? null),
+  isRare: item.isRare,
+  isUntradeable: item.isUntradeable,
   tt: parseNumber(item.economy.tt),
   decay: parseNumber(item.economy.decay),
   stock,
@@ -43,7 +43,11 @@ const toStoreRow = <K extends ItemStoreKind>(
 });
 
 /** Load every catalogue group and expose normalized rows for the transaction store views. */
-export function useItemStoreData() {
+export function useItemStoreData(): {
+  rows: Record<ItemKind, ItemStoreRow[]>;
+  isLoading: boolean;
+  isError: boolean;
+} {
   const finders = useGetApiV1Finders();
   const excavators = useGetApiV1Excavators();
   const refiners = useGetApiV1Refiners();
@@ -57,31 +61,42 @@ export function useItemStoreData() {
   const finderAmplifierStock = useGetApiV1FinderAmplifiersStock();
 
   const rows: Record<ItemKind, ItemStoreRow[]> = useMemo(
-    () => ({
-      finder: (finders.data ?? []).map((item) =>
+    (): {
+      finder: ItemStoreRowFor<'finder'>[];
+      excavator: ItemStoreRowFor<'excavator'>[];
+      refiner: ItemStoreRowFor<'refiner'>[];
+      'finder-amplifier': ItemStoreRowFor<'finder-amplifier'>[];
+      'finder-enhancer': ItemStoreRowFor<'enhancer'>[];
+      'excavator-enhancer': ItemStoreRowFor<'enhancer'>[];
+      material: ItemStoreRowFor<'material'>[];
+    } => ({
+      finder: (finders.data ?? []).map((item): ItemStoreRowFor<'finder'> =>
         toStoreRow(item, 'finder', finderStock.data?.[item.id] ?? 0),
       ),
-      excavator: (excavators.data ?? []).map((item) =>
-        toStoreRow(item, 'excavator', excavatorStock.data?.[item.id] ?? 0),
+      excavator: (excavators.data ?? []).map(
+        (item): ItemStoreRowFor<'excavator'> =>
+          toStoreRow(item, 'excavator', excavatorStock.data?.[item.id] ?? 0),
       ),
-      refiner: (refiners.data ?? []).map((item) =>
+      refiner: (refiners.data ?? []).map((item): ItemStoreRowFor<'refiner'> =>
         toStoreRow(item, 'refiner', refinerStock.data?.[item.id] ?? 0),
       ),
-      'finder-amplifier': (finderAmplifiers.data ?? []).map((item) =>
-        toStoreRow(
-          item,
-          'finder-amplifier',
-          finderAmplifierStock.data?.[item.id] ?? 0,
-        ),
+      'finder-amplifier': (finderAmplifiers.data ?? []).map(
+        (item): ItemStoreRowFor<'finder-amplifier'> =>
+          toStoreRow(
+            item,
+            'finder-amplifier',
+            finderAmplifierStock.data?.[item.id] ?? 0,
+          ),
       ),
-      'finder-enhancer': (enhancers.data ?? []).map((item) =>
-        toStoreRow(item, 'enhancer'),
+      'finder-enhancer': (enhancers.data ?? []).map(
+        (item): ItemStoreRowFor<'enhancer'> => toStoreRow(item, 'enhancer'),
       ),
-      'excavator-enhancer': (enhancers.data ?? []).map((item) =>
-        toStoreRow(item, 'enhancer'),
+      'excavator-enhancer': (enhancers.data ?? []).map(
+        (item): ItemStoreRowFor<'enhancer'> => toStoreRow(item, 'enhancer'),
       ),
-      material: (materials.data ?? []).map((item) =>
-        toStoreRow(item, 'material', materialStock.data?.[item.id] ?? 0),
+      material: (materials.data ?? []).map(
+        (item): ItemStoreRowFor<'material'> =>
+          toStoreRow(item, 'material', materialStock.data?.[item.id] ?? 0),
       ),
     }),
     [
@@ -113,7 +128,7 @@ export function useItemStoreData() {
       excavatorStock,
       refinerStock,
       finderAmplifierStock,
-    ].some((query) => query.isLoading),
+    ].some((query): boolean => query.isLoading),
     isError: [
       finders,
       excavators,
@@ -126,6 +141,6 @@ export function useItemStoreData() {
       excavatorStock,
       refinerStock,
       finderAmplifierStock,
-    ].some((query) => query.isError),
+    ].some((query): boolean => query.isError),
   };
 }

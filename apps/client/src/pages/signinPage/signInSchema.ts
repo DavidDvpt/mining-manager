@@ -4,7 +4,9 @@ import type { TranslationKey } from '@/i18n/types';
 type Translate = (key: TranslationKey) => string;
 
 /** Build the signin validation schema with messages from the active locale. */
-export function createSignInSchema(t: Translate) {
+export function createSignInSchema(
+  t: Translate,
+): z.ZodObject<{ pseudo: z.ZodString; password: z.ZodString }, z.core.$strip> {
   return z.object({
     pseudo: z
       .string()

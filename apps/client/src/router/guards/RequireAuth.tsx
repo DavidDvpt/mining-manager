@@ -4,7 +4,7 @@ import { useGetApiV1Me } from '@/api/generated/miningManagerAPI';
 import { useTranslations } from '@/i18n/useTranslations';
 
 /** Protect application routes with the current HttpOnly cookie session. */
-export function RequireAuth() {
+export function RequireAuth(): import('react').JSX.Element {
   const currentUser = useGetApiV1Me();
   const { t } = useTranslations();
 

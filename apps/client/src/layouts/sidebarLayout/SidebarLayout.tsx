@@ -10,7 +10,7 @@ export function SidebarLayout({
   onButtonChange,
   sidebarLabel = 'Sidebar navigation',
   children,
-}: SidebarLayoutProps) {
+}: SidebarLayoutProps): import('react').JSX.Element {
   return (
     <div className={styles.layout}>
       <SideNavbar buttons={buttons} ariaLabel={sidebarLabel} />

@@ -36,25 +36,29 @@ export function getTranslations(locale: Locale): TranslationSchema {
 
 /** Resolve a dot-separated translation path from a nested locale dictionary. */
 export function getTranslation(locale: Locale, key: TranslationKey): string {
-  const value = key.split('.').reduce<unknown>(
-    (current, segment) =>
-      current && typeof current === 'object'
-        ? (current as Record<string, unknown>)[segment]
-        : undefined,
-    getTranslations(locale),
-  );
+  const value = key
+    .split('.')
+    .reduce<unknown>(
+      (current, segment): unknown =>
+        current && typeof current === 'object'
+          ? (current as Record<string, unknown>)[segment]
+          : undefined,
+      getTranslations(locale),
+    );
 
   if (typeof value === 'string') {
     return value;
   }
 
-  const fallbackValue = key.split('.').reduce<unknown>(
-    (current, segment) =>
-      current && typeof current === 'object'
-        ? (current as Record<string, unknown>)[segment]
-        : undefined,
-    en_EN,
-  );
+  const fallbackValue = key
+    .split('.')
+    .reduce<unknown>(
+      (current, segment): unknown =>
+        current && typeof current === 'object'
+          ? (current as Record<string, unknown>)[segment]
+          : undefined,
+      en_EN,
+    );
 
   return typeof fallbackValue === 'string' ? fallbackValue : key;
 }
@@ -73,5 +77,6 @@ export function setDocumentLocale(locale: Locale): void {
 /** Subscribe to language changes made by the future language selector. */
 export function subscribeToLocale(listener: () => void): () => void {
   document.addEventListener(LANGUAGE_CHANGE_EVENT, listener);
-  return () => document.removeEventListener(LANGUAGE_CHANGE_EVENT, listener);
+  return (): void =>
+    document.removeEventListener(LANGUAGE_CHANGE_EVENT, listener);
 }

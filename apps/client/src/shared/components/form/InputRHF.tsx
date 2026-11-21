@@ -14,15 +14,20 @@ type InputRHFProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'name'> & {
 };
 
 /** Bind a styled input and its accessible validation message to React Hook Form. */
-export function InputRHF({ name, label, className, id, ...props }: InputRHFProps) {
+export function InputRHF({
+  name,
+  label,
+  className,
+  id,
+  ...props
+}: InputRHFProps): import('react').JSX.Element {
   const form = useSafeFormContext();
   const { t } = useTranslations();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const fieldState = form.getFieldState(name, form.formState);
   const inputId = id ?? name;
   const isPasswordField = props.type === 'password';
-  const inputType =
-    isPasswordField && isPasswordVisible ? 'text' : props.type;
+  const inputType = isPasswordField && isPasswordVisible ? 'text' : props.type;
   const registration = form.register(name, {
     valueAsNumber: props.type === 'number',
   });
@@ -49,7 +54,9 @@ export function InputRHF({ name, label, className, id, ...props }: InputRHFProps
           <button
             type="button"
             className={styles.passwordToggle}
-            onClick={() => setIsPasswordVisible((visible) => !visible)}
+            onClick={(): void =>
+              setIsPasswordVisible((visible): boolean => !visible)
+            }
             aria-label={
               isPasswordVisible
                 ? t('AUTH.SIGNIN.HIDE_PASSWORD')

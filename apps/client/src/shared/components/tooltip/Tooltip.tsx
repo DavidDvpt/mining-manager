@@ -10,7 +10,10 @@ type TooltipProps = {
 };
 
 /** Render Radix tooltip content for one interactive trigger. */
-export function Tooltip({ content, children }: TooltipProps) {
+export function Tooltip({
+  content,
+  children,
+}: TooltipProps): import('react').JSX.Element {
   return (
     <TooltipPrimitive.Root>
       <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>

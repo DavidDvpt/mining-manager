@@ -9,7 +9,7 @@ function SidebarButton({
   level,
   isActive,
   isExpanded,
-}: SidebarButtonItemProps) {
+}: SidebarButtonItemProps): import('react').JSX.Element {
   const navigate = useNavigate();
 
   const hasChildren = Boolean(button.children?.length);
@@ -47,7 +47,7 @@ function SidebarButton({
         </NavLink>
         {hasChildren && isExpanded ? (
           <div className={styles.submenu}>
-            {button.children?.map((child) => (
+            {button.children?.map((child): import('react').JSX.Element => (
               <SidebarButton
                 key={child.linkTo}
                 button={child}

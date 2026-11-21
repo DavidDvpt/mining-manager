@@ -11,7 +11,10 @@ export const RadioGroup = RadioGroupPrimitive.Root;
 export const RadioGroupItem = forwardRef<
   ElementRef<typeof RadioGroupPrimitive.Item>,
   ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>
->(function RadioGroupItem({ className, children, ...props }, ref) {
+>(function RadioGroupItem(
+  { className, children, ...props },
+  ref,
+): import('react').JSX.Element {
   return (
     <RadioGroupPrimitive.Item
       ref={ref}

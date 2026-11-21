@@ -6,7 +6,7 @@ import { miningButtons } from './constants';
 import type { MiningButtonId } from './constants';
 
 /** Render the mining workspace shell and manage its sidebar navigation. */
-export function MiningPage() {
+export function MiningPage(): import('react').JSX.Element {
   const { t } = useTranslations();
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,7 +28,7 @@ export function MiningPage() {
       buttons={miningButtons(t, { hasCurrentSession })}
       defaultButtonId="sessions-list"
       activeButtonId={activePage}
-      onButtonChange={(page) => {
+      onButtonChange={(page): void => {
         if (page === 'create-session') navigate('/mining/create');
         else if (page === 'current-session')
           navigate(

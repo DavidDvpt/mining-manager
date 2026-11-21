@@ -86,9 +86,9 @@ export type ItemStoreCatalogueItem<
 > = {
   id: string;
   name: string;
-  img_id: number | null;
-  is_rare: boolean | null;
-  is_untradeable: boolean | null;
+  imgId: number | null;
+  isRare: boolean | null;
+  isUntradeable: boolean | null;
   economy: { tt: string | null; decay: string | null };
   details: TDetails;
 };

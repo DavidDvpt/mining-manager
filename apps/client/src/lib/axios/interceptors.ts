@@ -16,8 +16,8 @@ const EXPIRED_JWT_TOKEN_MESSAGE = 'Expired JWT token';
 
 /** Return whether a request is one of the authentication endpoints. */
 function isAuthenticationRequest(url: string): boolean {
-  return ['/signin', '/signup', '/refresh-token', '/logout'].some((path) =>
-    url.includes(path),
+  return ['/signin', '/signup', '/refresh-token', '/logout'].some(
+    (path): boolean => url.includes(path),
   );
 }
 
@@ -33,7 +33,8 @@ export function normalizeApiError(error: AxiosError<ApiErrorBody>): ApiError {
   }
 
   if (!error.response) {
-    const isTimeout = error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT';
+    const isTimeout =
+      error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT';
     return new ApiError({
       status: 0,
       kind: isTimeout ? 'timeout' : 'network',
@@ -93,8 +94,8 @@ async function refreshAuthentication(
   if (!refreshPromise) {
     refreshPromise = publicClient
       .post('/refresh-token')
-      .then(() => undefined)
-      .finally(() => {
+      .then((): undefined => undefined)
+      .finally((): void => {
         refreshPromise = null;
       });
   }
@@ -105,8 +106,8 @@ async function refreshAuthentication(
 /** Attach a no-op request interceptor while keeping credentials cookie-only. */
 export function attachPrivateRequestInterceptor(instance: AxiosInstance): void {
   instance.interceptors.request.use(
-    (config: InternalAxiosRequestConfig) => config,
-    (error) => Promise.reject(error),
+    (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => config,
+    (error): Promise<never> => Promise.reject(error),
   );
 }
 
@@ -116,8 +117,10 @@ export function attachPrivateResponseInterceptor(
   publicClient: AxiosInstance,
 ): void {
   privateClient.interceptors.response.use(
-    (response: AxiosResponse) => response,
-    async (error: AxiosError<ApiErrorBody>) => {
+    (response: AxiosResponse): AxiosResponse => response,
+    async (
+      error: AxiosError<ApiErrorBody>,
+    ): Promise<AxiosResponse> => {
       const config = error.config as AuthenticatedRequestConfig | undefined;
       const requestUrl = config?.url ?? '';
       const shouldRefresh =

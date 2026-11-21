@@ -5,8 +5,8 @@ import { Toaster } from 'sonner';
 import { queryClient } from '@/lib/react-query/queryClient';
 import { AppRouter } from '@/router/AppRouter';
 
-/** Render application providers, global toasts, and the browser router. */
-export function App() {
+/** Render application-wide providers and the browser router. */
+export function App(): import('react').JSX.Element {
   return (
     <QueryClientProvider client={queryClient}>
       <Toaster

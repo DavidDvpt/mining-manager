@@ -18,7 +18,7 @@ export function MiningEnhancersBlock({
   minimumFinderTier,
   enhancers,
   stock,
-}: MiningEnhancersBlockProps) {
+}: MiningEnhancersBlockProps): import('react').JSX.Element {
   const { t } = useTranslations();
   useFormContext<MiningSessionFormValues>();
 
@@ -27,27 +27,32 @@ export function MiningEnhancersBlock({
       <h3>{t('MINING.ENHANCERS')}</h3>
       {minimumFinderTier > 0 ? (
         <div className={styles.socketList}>
-          {Array.from({ length: minimumFinderTier }, (_, index) => {
-            const socket = index + 1;
-            const options = enhancers
-              .filter((enhancer) => enhancer.details.socket === socket)
-              .map((enhancer) => ({
-                value: enhancer.id,
-                label: `${enhancer.name} / ${stock[enhancer.id] ?? 0}`,
-              }));
+          {Array.from(
+            { length: minimumFinderTier },
+            (_, index): import('react').JSX.Element => {
+              const socket = index + 1;
+              const options = enhancers
+                .filter(
+                  (enhancer): boolean => enhancer.details.socket === socket,
+                )
+                .map((enhancer): { value: string; label: string } => ({
+                  value: enhancer.id,
+                  label: `${enhancer.name} / ${stock[enhancer.id] ?? 0}`,
+                }));
 
-            return (
-              <SelectRHF
-                key={socket}
-                name={`enhancers.${socket}`}
-                label={`${t('MINING.SOCKET')} ${socket}`}
-                options={[
-                  { value: '', label: t('MINING.NO_ENHANCER') },
-                  ...options,
-                ]}
-              />
-            );
-          })}
+              return (
+                <SelectRHF
+                  key={socket}
+                  name={`enhancers.${socket}`}
+                  label={`${t('MINING.SOCKET')} ${socket}`}
+                  options={[
+                    { value: '', label: t('MINING.NO_ENHANCER') },
+                    ...options,
+                  ]}
+                />
+              );
+            },
+          )}
         </div>
       ) : (
         <p className={styles.muted}>{t('MINING.NO_ENHANCERS')}</p>

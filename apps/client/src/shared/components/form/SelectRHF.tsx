@@ -19,7 +19,7 @@ export function SelectRHF({
   className,
   id,
   ...props
-}: SelectRHFProps) {
+}: SelectRHFProps): import('react').JSX.Element {
   const form = useSafeFormContext();
   const fieldState = form.getFieldState(name, form.formState);
   const selectId = id ?? name;
@@ -33,11 +33,15 @@ export function SelectRHF({
         id={selectId}
         aria-invalid={fieldState.invalid || undefined}
         aria-describedby={fieldState.error ? `${selectId}-error` : undefined}
-        className={[styles.select, className, fieldState.error && styles.invalid]
+        className={[
+          styles.select,
+          className,
+          fieldState.error && styles.invalid,
+        ]
           .filter(Boolean)
           .join(' ')}
       >
-        {options.map((option) => (
+        {options.map((option): import('react').JSX.Element => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>

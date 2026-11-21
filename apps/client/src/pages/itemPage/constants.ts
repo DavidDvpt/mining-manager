@@ -40,11 +40,16 @@ export const transactionButtons = (
       id: 'materials',
       label: t('TRANSACTIONS.MATERIALS'),
       linkTo: '/items/materials',
-      children: materialTypes.map(({ id, name }) => ({
-        id: `material-${id}`,
-        label: name,
-        linkTo: `materials/${toSlug(name)}`,
-      })),
+      children: materialTypes.map(
+        ({
+          id,
+          name,
+        }): { id: `material-${string}`; label: string; linkTo: string } => ({
+          id: `material-${id}`,
+          label: name,
+          linkTo: `materials/${toSlug(name)}`,
+        }),
+      ),
     },
   ];
 };

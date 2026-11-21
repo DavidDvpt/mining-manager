@@ -11,7 +11,7 @@ export function EntropiaImage({
   alt,
   size = 'medium',
   className,
-}: EntropiaImageProps) {
+}: EntropiaImageProps): import('react').JSX.Element {
   const { t } = useTranslations();
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const hasError = failedUrl === url;
@@ -24,7 +24,7 @@ export function EntropiaImage({
           alt={alt}
           className={styles.image}
           loading="lazy"
-          onError={() => setFailedUrl(url)}
+          onError={(): void => setFailedUrl(url)}
         />
       ) : (
         <span

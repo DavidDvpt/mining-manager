@@ -64,7 +64,10 @@ export type AppIconProps = Omit<LucideProps, 'ref'> & {
 };
 
 /** Render one centrally registered Lucide icon selected by its public name. */
-export function AppIcon({ name, ...props }: AppIconProps) {
+export function AppIcon({
+  name,
+  ...props
+}: AppIconProps): import('react').JSX.Element {
   const Icon = icons[name];
 
   return <Icon {...props} />;

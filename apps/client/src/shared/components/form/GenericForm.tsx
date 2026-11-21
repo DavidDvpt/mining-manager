@@ -15,7 +15,9 @@ export function GenericForm<
   onSubmit,
   children,
   className,
-}: GenericFormProps<TInput, TOutput> & { schema: ZodType<TOutput, TInput> }) {
+}: GenericFormProps<TInput, TOutput> & {
+  schema: ZodType<TOutput, TInput>;
+}): import('react').JSX.Element {
   const methods = useForm<TInput, unknown, TOutput>({
     resolver: zodResolver(schema),
     defaultValues: defaultValues as DefaultValues<TInput>,

@@ -34,7 +34,7 @@ export function MiningSessionFormContent({
   amplifierStock,
   enhancers,
   enhancerStock,
-}: MiningSessionFormContentProps) {
+}: MiningSessionFormContentProps): import('react').JSX.Element {
   const { control } = useFormContext<MiningSessionFormValues>();
   const finderItemId = useWatch({ control, name: 'finderItemId' });
   const clicks = useWatch({ control, name: 'clicks' });
@@ -45,24 +45,26 @@ export function MiningSessionFormContent({
       enabled: Boolean(finderItemId),
     },
   });
-  const selectedFinder = finders.find((finder) => finder.id === finderItemId);
+  const selectedFinder = finders.find(
+    (finder): boolean => finder.id === finderItemId,
+  );
   const selectedFinderLots = finderLotsQuery.data ?? [];
   const finderDecay = toPositiveNumber(selectedFinder?.economy.decay);
   const requiredFinderTt =
     finderDecay * getMiningDecayMultiplier(searchType) * (clicks || 0);
   const selectedFindersTt = selectedFinderLots.reduce(
-    (total, lot) => total + toPositiveNumber(lot.tt),
+    (total, lot): number => total + toPositiveNumber(lot.tt),
     0,
   );
   const finderCapacityValid =
-    selectedFinderLots.every((lot) => lot.tt === null) ||
+    selectedFinderLots.every((lot): boolean => lot.tt === null) ||
     selectedFindersTt >= requiredFinderTt;
   const minimumFinderTier = selectedFinderLots.length
-    ? Math.min(...selectedFinderLots.map((lot) => lot.tier ?? 0))
+    ? Math.min(...selectedFinderLots.map((lot): number => lot.tier ?? 0))
     : 0;
 
   /** Calculate amplifier clicks using the current form search mode. */
-  const amplifierClicks = (amplifier: FinderAmplifierResponse) =>
+  const amplifierClicks = (amplifier: FinderAmplifierResponse): number =>
     getAmplifierClicks(
       amplifier.economy.tt,
       amplifier.economy.decay,

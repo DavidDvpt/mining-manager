@@ -27,7 +27,7 @@ export function MiningFindersBlock({
   requiredTt,
   selectedTt,
   isCapacityValid,
-}: MiningFindersBlockProps) {
+}: MiningFindersBlockProps): import('react').JSX.Element {
   const { t } = useTranslations();
   const { control } = useFormContext<MiningSessionFormValues>();
   const selectedLotIds = useWatch({ control, name: 'finderLotIds' });
@@ -40,13 +40,15 @@ export function MiningFindersBlock({
           <SelectRHF
             name="finderItemId"
             label={t('MINING.SELECT_FINDER')}
-            options={finders.map((finder) => ({
-              value: finder.id,
-              label: `${finder.name} · ${stock[finder.id] ?? 0}`,
-            }))}
+            options={finders.map(
+              (finder): { value: string; label: string } => ({
+                value: finder.id,
+                label: `${finder.name} · ${stock[finder.id] ?? 0}`,
+              }),
+            )}
           />
           <div className={styles.lotList}>
-            {lots.map((lot) => (
+            {lots.map((lot): import('react').JSX.Element => (
               <CheckboxRHF
                 key={lot.id}
                 name="finderLotIds"

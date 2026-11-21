@@ -14,7 +14,10 @@ export const SelectValue = SelectPrimitive.Value;
 export const SelectTrigger = forwardRef<
   ElementRef<typeof SelectPrimitive.Trigger>,
   ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(function SelectTrigger({ className, children, ...props }, ref) {
+>(function SelectTrigger(
+  { className, children, ...props },
+  ref,
+): import('react').JSX.Element {
   return (
     <SelectPrimitive.Trigger
       ref={ref}
@@ -33,7 +36,10 @@ export const SelectTrigger = forwardRef<
 export const SelectContent = forwardRef<
   ElementRef<typeof SelectPrimitive.Content>,
   ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(function SelectContent({ className, children, ...props }, ref) {
+>(function SelectContent(
+  { className, children, ...props },
+  ref,
+): import('react').JSX.Element {
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -60,7 +66,10 @@ export const SelectContent = forwardRef<
 export const SelectItem = forwardRef<
   ElementRef<typeof SelectPrimitive.Item>,
   ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
->(function SelectItem({ className, children, ...props }, ref) {
+>(function SelectItem(
+  { className, children, ...props },
+  ref,
+): import('react').JSX.Element {
   return (
     <SelectPrimitive.Item
       ref={ref}

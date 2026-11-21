@@ -11,7 +11,11 @@ type SignInFormProps = {
 };
 
 /** Render and validate the public cookie-based signin form. */
-export function SignInForm({ error, isSubmitting, onSubmit }: SignInFormProps) {
+export function SignInForm({
+  error,
+  isSubmitting,
+  onSubmit,
+}: SignInFormProps): import('react').JSX.Element {
   const { t } = useTranslations();
 
   return (

@@ -23,10 +23,10 @@ export function CheckboxRHF({
   wrapperClassName,
   labelClassName,
   onCheckedChange,
-}: CheckboxRHFProps) {
+}: CheckboxRHFProps): import('react').JSX.Element {
   const form = useFormContext();
 
-  useEffect(() => {
+  useEffect((): void => {
     form.register(name);
   }, [form, name]);
 
@@ -36,15 +36,15 @@ export function CheckboxRHF({
     : Boolean(fieldValue);
 
   /** Store the checkbox value in RHF and notify the consumer of the new state. */
-  const handleCheckedChange = (checked: boolean) => {
+  const handleCheckedChange = (checked: boolean): void => {
     const nextChecked = checked === true;
     const nextValue = checkedValue
-      ? (() => {
+      ? ((): any[] => {
           const currentValues = Array.isArray(fieldValue) ? fieldValue : [];
           return nextChecked
             ? [...currentValues, checkedValue]
             : currentValues.filter(
-                (currentValue) => currentValue !== checkedValue,
+                (currentValue): boolean => currentValue !== checkedValue,
               );
         })()
       : nextChecked;

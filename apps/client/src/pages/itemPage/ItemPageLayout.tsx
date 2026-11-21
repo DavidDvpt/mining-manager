@@ -7,7 +7,7 @@ import { useTranslations } from '@/i18n/useTranslations';
 import { transactionButtons } from './constants';
 
 /** Render the item catalogue inside the shared sidebar workspace. */
-function ItemPageLayout() {
+function ItemPageLayout(): import('react').JSX.Element {
   const { t } = useTranslations();
   const { data: materialTypes = [] } = useGetApiV1MaterialTypes();
 

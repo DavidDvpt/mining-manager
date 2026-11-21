@@ -27,15 +27,15 @@ export function Modal({
   noClose = false,
   className,
   children,
-}: ModalProps) {
+}: ModalProps): import('react').JSX.Element {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(styles.content, className)}
-        onInteractOutside={(event) => {
+        onInteractOutside={(event): void => {
           if (noClose) event.preventDefault();
         }}
-        onEscapeKeyDown={(event) => {
+        onEscapeKeyDown={(event): void => {
           if (noClose) event.preventDefault();
         }}
       >

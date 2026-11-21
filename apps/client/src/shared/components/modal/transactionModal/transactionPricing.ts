@@ -30,8 +30,8 @@ export class TransactionPricing {
     this.itemTtValue = item?.tt ?? 0;
 
     const tt = lot
-      ? numericValue(lot.tt_remaining ?? lot.tt ?? '')
-      : item?.tt ?? 0;
+      ? numericValue(lot.ttRemaining ?? lot.tt ?? '')
+      : (item?.tt ?? 0);
 
     this.values = {
       quantity: 1,
@@ -52,12 +52,15 @@ export class TransactionPricing {
   }
 
   /** Enable or disable automatic pricing for subsequent edits. */
-  setAutoCompute(value: boolean) {
+  setAutoCompute(value: boolean): void {
     this.autoCompute = value;
   }
 
   /** Normalize a numeric input while preserving decimal values except quantity. */
-  private normalizeValue(field: TransactionPricingField, value: number): number {
+  private normalizeValue(
+    field: TransactionPricingField,
+    value: number,
+  ): number {
     return field === 'quantity' ? Math.max(1, Math.floor(value)) : value;
   }
 
@@ -86,8 +89,8 @@ export class TransactionPricing {
   ): boolean {
     return Boolean(
       field &&
-        value !== undefined &&
-        (this.autoCompute || this.action === 'buy'),
+      value !== undefined &&
+      (this.autoCompute || this.action === 'buy'),
     );
   }
 
@@ -159,7 +162,6 @@ export class TransactionPricing {
 
   /** Calculate the fee from the markup above TT. */
   private feeFromMarkup(value: number): number {
-
     if (value <= 0) return 0.5;
 
     const fee = (99.5 * value + 995) / (value + 1990);

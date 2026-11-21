@@ -273,7 +273,7 @@ describe('TransactionModal', () => {
           id: 'lot-1',
           item: { id: 'finder-1', name: 'Finder' },
           tt: 10,
-          tt_remaining: '10',
+          ttRemaining: '10',
         } as never}
         action="sell"
         open

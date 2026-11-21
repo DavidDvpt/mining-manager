@@ -1,4 +1,4 @@
-function RunningTransactions() {
+function RunningTransactions(): import('react').JSX.Element {
   return <div>RunningTransactions</div>;
 }
 

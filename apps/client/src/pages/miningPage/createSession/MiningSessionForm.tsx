@@ -26,7 +26,7 @@ function handleMiningSessionSubmit(_values: MiningSessionFormValues): void {
 }
 
 /** Render the RHF/Zod mining-session configuration form and its subsections. */
-export function MiningSessionForm() {
+export function MiningSessionForm(): import('react').JSX.Element {
   const { t } = useTranslations();
   const findersQuery = useGetApiV1Finders();
   const finderStockQuery = useGetApiV1FindersStock();
@@ -34,38 +34,47 @@ export function MiningSessionForm() {
   const amplifierStockQuery = useGetApiV1FinderAmplifiersStock();
   const enhancersQuery = useGetApiV1Enhancers();
   const allEnhancers = useMemo(
-    () => enhancersQuery.data ?? [],
+    (): import('../../../api/generated/model').EnhancerResponse[] =>
+      enhancersQuery.data ?? [],
     [enhancersQuery.data],
   );
   const enhancerStockQueries = useQueries({
-    queries: allEnhancers.map((enhancer) =>
-      getGetApiV1LotsItemIdQueryOptions(enhancer.id),
+    queries: allEnhancers.map(
+      (
+        enhancer,
+      ): import('@tanstack/react-query').UseQueryOptions<
+        import('../../../api/generated/model').LotCollectionResponse,
+        import('../../../lib/axios/types').ApiError,
+        import('../../../api/generated/model').LotCollectionResponse,
+        readonly unknown[]
+      > & { queryKey: import('@tanstack/query-core').QueryKey } =>
+        getGetApiV1LotsItemIdQueryOptions(enhancer.id),
     ),
   });
   const enhancerStock = useMemo(
-    () =>
+    (): { [k: string]: any } =>
       Object.fromEntries(
-        allEnhancers.map((enhancer, index) => [
+        allEnhancers.map((enhancer, index): [string, any] => [
           enhancer.id,
-          enhancerStockQueries[index]?.data?.total_quantity ?? 0,
+          enhancerStockQueries[index]?.data?.totalQuantity ?? 0,
         ]),
       ),
     [allEnhancers, enhancerStockQueries],
   );
   const finders = useMemo(
-    () =>
+    (): import('../../../api/generated/model').FinderResponse[] =>
       (findersQuery.data ?? []).filter(
-        (finder) =>
-          finder.is_active !== false &&
+        (finder): boolean =>
+          finder.isActive !== false &&
           (finderStockQuery.data?.[finder.id] ?? 0) > 0,
       ),
     [findersQuery.data, finderStockQuery.data],
   );
   const amplifiers = useMemo(
-    () =>
+    (): import('../../../api/generated/model').FinderAmplifierResponse[] =>
       (amplifiersQuery.data ?? []).filter(
-        (amplifier) =>
-          amplifier.is_active !== false &&
+        (amplifier): boolean =>
+          amplifier.isActive !== false &&
           (amplifierStockQuery.data?.[amplifier.id] ?? 0) > 0,
       ),
     [amplifiersQuery.data, amplifierStockQuery.data],
@@ -84,7 +93,7 @@ export function MiningSessionForm() {
         amplifiers={amplifiers}
         amplifierStock={amplifierStockQuery.data ?? {}}
         enhancers={allEnhancers.filter(
-          (enhancer) => (enhancerStock[enhancer.id] ?? 0) > 0,
+          (enhancer): boolean => (enhancerStock[enhancer.id] ?? 0) > 0,
         )}
         enhancerStock={enhancerStock}
       />

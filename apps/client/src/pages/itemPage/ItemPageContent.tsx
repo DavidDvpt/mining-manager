@@ -15,7 +15,10 @@ interface ItemListLayoutProps {
   subKind?: ItemSubKind;
 }
 
-export function ItemPageContent({ kind, subKind }: ItemListLayoutProps) {
+export function ItemPageContent({
+  kind,
+  subKind,
+}: ItemListLayoutProps): import('react').JSX.Element {
   const { t } = useTranslations();
   const [ownedOnly, setOwnedOnly] = useState(true);
   const { rows, isLoading, isError } = useItemStoreData();
@@ -25,13 +28,13 @@ export function ItemPageContent({ kind, subKind }: ItemListLayoutProps) {
     'TRANSACTIONS.ACTIVE_VIEW',
   ).split('{view}');
 
-  const visibleRows = useMemo(() => {
+  const visibleRows = useMemo((): import('../../shared').ItemStoreRow[] => {
     if (kind !== 'material' || !subKind) {
       return rows[kind] ?? [];
     }
 
     return (
-      rows[kind]?.filter((row) =>
+      rows[kind]?.filter((row): boolean =>
         kind === 'material' && subKind
           ? row.kind === 'material' && row.details.type.name === toSlug(subKind)
           : true,

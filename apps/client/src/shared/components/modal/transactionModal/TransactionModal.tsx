@@ -44,19 +44,19 @@ export function TransactionModal({
   action,
   open,
   onOpenChange,
-}: TransactionModalProps) {
+}: TransactionModalProps): import('react').JSX.Element | null {
   const { t } = useTranslations();
   const queryClient = useQueryClient();
   const [validationError, setValidationError] = useState<string | null>(null);
   const [selectedLotId, setSelectedLotId] = useState<string | null>(null);
   const availableLots = lots.length > 0 ? lots : lot ? [lot] : [];
   const selectedLot =
-    availableLots.find(({ id }) => id === selectedLotId) ??
+    availableLots.find(({ id }): boolean => id === selectedLotId) ??
     availableLots[0] ??
     null;
 
   /** Select the first available instance whenever a transaction is opened or its item changes. */
-  useEffect(() => {
+  useEffect((): void => {
     setSelectedLotId(availableLots[0]?.id ?? null);
   }, [item?.id, action, open, lots]);
 
@@ -67,7 +67,9 @@ export function TransactionModal({
   const isStackable = Boolean(item && isStackableItem(item) && !selectedLot);
 
   /** Persist the transaction through the mutation matching its action and stackability. */
-  const handleSubmit = async (formValues: TransactionFormValues) => {
+  const handleSubmit = async (
+    formValues: TransactionFormValues,
+  ): Promise<void> => {
     if (!item) return;
 
     if (
@@ -144,7 +146,7 @@ export function TransactionModal({
       const stockQueryKey = getGetApiV1StorageMaterialStockQueryKey();
       queryClient.setQueryData<Record<string, number>>(
         stockQueryKey,
-        (stock = {}) => ({
+        (stock = {}): { [x: string]: number } => ({
           ...stock,
           [item.id]: Math.max(
             0,
@@ -160,7 +162,9 @@ export function TransactionModal({
         getGetApiV1ExcavatorsStockQueryKey(),
         getGetApiV1RefinersStockQueryKey(),
         getGetApiV1FinderAmplifiersStockQueryKey(),
-      ].map((queryKey) => queryClient.invalidateQueries({ queryKey })),
+      ].map((queryKey): Promise<void> =>
+        queryClient.invalidateQueries({ queryKey }),
+      ),
     );
 
     onOpenChange(false);
@@ -205,7 +209,7 @@ export function TransactionModal({
         />
         <TransactionSummary stackable={isStackable} />
         <FormButtonsSection
-          onCancel={() => onOpenChange(false)}
+          onCancel={(): void => onOpenChange(false)}
           cancelLabel="Annuler"
           submitLabel="Valider"
           align="right"

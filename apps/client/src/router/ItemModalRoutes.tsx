@@ -3,7 +3,7 @@ import SellTransactionRoute from '@/pages/itemPage/SellTransactionRoute';
 import ToolEditRoute from '@/pages/itemPage/ToolEditRoute';
 import { Route } from 'react-router-dom';
 
-function itemModalRoutes() {
+function itemModalRoutes(): import('react').JSX.Element {
   return (
     <>
       <Route index element={null} />

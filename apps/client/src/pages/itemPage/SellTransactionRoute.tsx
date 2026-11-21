@@ -1,4 +1,4 @@
-function SellTransactionRoute() {
+function SellTransactionRoute(): import('react').JSX.Element {
   return <div>SellTransactionRoute</div>;
 }
 

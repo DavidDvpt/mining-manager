@@ -7,7 +7,7 @@ import type { MiningButtonId } from './constants';
 import MiningSessionsList from './sessionsList';
 
 /** Render the main mining panel selected by the current route. */
-export function MiningPageContent() {
+export function MiningPageContent(): import('react').JSX.Element {
   const { t } = useTranslations();
   const location = useLocation();
   const { sessionId } = useParams<{ sessionId?: string }>();
@@ -28,7 +28,7 @@ export function MiningPageContent() {
 }
 
 /** Provide a route boundary for a mining session and its future child views. */
-export function MiningSessionRoute() {
+export function MiningSessionRoute(): import('react').JSX.Element {
   return <Outlet />;
 }
 

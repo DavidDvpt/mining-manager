@@ -8,16 +8,12 @@ import TopBarNav from './TopBarNav';
 import styles from './toolbar.module.scss';
 
 /** Render the persistent application header and its primary navigation links. */
-export function TopBar() {
+export function TopBar(): import('react').JSX.Element {
   const { t } = useTranslations();
 
   return (
     <header className={styles.topBar}>
-      <NavLink
-        className={styles.brand}
-        to="/"
-        aria-label={t('APP.HOME_LINK')}
-      >
+      <NavLink className={styles.brand} to="/" aria-label={t('APP.HOME_LINK')}>
         <img src={brand} alt="Mining Manager" />
       </NavLink>
       <TopBarNav />

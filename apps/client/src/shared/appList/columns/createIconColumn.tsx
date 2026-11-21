@@ -21,13 +21,20 @@ export const createIconColumn = <TRow extends object>({
   className?: string;
   isVisible?: (row: TRow) => boolean;
   onClick?: (row: TRow) => void;
-}) => ({
+}): {
+  key: string;
+  label: string;
+  kind: 'button';
+  flex: string;
+  align: 'center';
+  render: (row: TRow) => import('react').JSX.Element;
+} => ({
   key,
   label: '',
   kind: 'button' as const,
   flex: '0 0 2.75rem',
   align: 'center' as const,
-  render: (row: TRow) => {
+  render: (row: TRow): import('react').JSX.Element => {
     const visible = isVisible?.(row) ?? true;
 
     const button = (
@@ -42,7 +49,7 @@ export const createIconColumn = <TRow extends object>({
         tabIndex={visible ? undefined : -1}
         aria-hidden={!visible}
         style={{ visibility: visible ? 'visible' : 'hidden' }}
-        onClick={() => {
+        onClick={(): void => {
           if (visible) onClick?.(row);
         }}
       />

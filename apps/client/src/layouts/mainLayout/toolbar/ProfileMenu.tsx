@@ -13,7 +13,7 @@ import { useDismissOnOutsideInteraction } from '@/shared/hooks/useDismissOnOutsi
 import styles from './profile.module.scss';
 
 /** Render the authenticated user's profile trigger and actions menu. */
-export function ProfileMenu() {
+export function ProfileMenu(): import('react').JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -24,14 +24,14 @@ export function ProfileMenu() {
   const pseudo = currentUser.data?.pseudo?.trim() ?? '';
   const avatarLetter = (pseudo[0] ?? 'U').toUpperCase();
 
-  useDismissOnOutsideInteraction(menuRef, () => setIsOpen(false), isOpen);
+  useDismissOnOutsideInteraction(menuRef, (): void => setIsOpen(false), isOpen);
 
-  const handleProfile = () => {
+  const handleProfile = (): void => {
     setIsOpen(false);
     navigate('/profile');
   };
 
-  const handleLogout = async () => {
+  const handleLogout = async (): Promise<void> => {
     /**
      * Log out through the API and navigate only after success.
      * Cancel and seed the current-user query to prevent GuestOnly from
@@ -59,7 +59,7 @@ export function ProfileMenu() {
         className={styles.profileTrigger}
         aria-label={t('APP.PROFILE_MENU')}
         aria-expanded={isOpen}
-        onClick={() => setIsOpen((open) => !open)}
+        onClick={(): void => setIsOpen((open): boolean => !open)}
       >
         <span className={styles.avatar} aria-hidden="true">
           {avatarLetter}
@@ -80,7 +80,7 @@ export function ProfileMenu() {
             type="button"
             className={styles.profileAction}
             role="menuitem"
-            onClick={() => void handleLogout()}
+            onClick={(): undefined => void handleLogout()}
             disabled={logout.isPending}
           >
             {t('APP.LOGOUT')}

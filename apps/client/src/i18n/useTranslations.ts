@@ -14,7 +14,11 @@ export function useTranslations(): {
 } {
   const [locale, setLocale] = useState<Locale>(getLocaleFromDocument);
 
-  useEffect(() => subscribeToLocale(() => setLocale(getLocaleFromDocument())), []);
+  useEffect(
+    (): (() => void) =>
+      subscribeToLocale((): void => setLocale(getLocaleFromDocument())),
+    [],
+  );
 
   const t = useCallback(
     (key: TranslationKey): string => getTranslation(locale, key),

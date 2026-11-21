@@ -8,7 +8,7 @@ import type { TranslationKey } from '@/i18n/types';
 import styles from '@/pages/itemPage/itemStoreList/item-store-list.module.scss';
 import appListStyles from '../app-list.module.scss';
 
-const valueOrDash = (value: unknown) =>
+const valueOrDash = (value: unknown): string =>
   value === null || value === undefined || value === '' ? '—' : String(value);
 type Translate = (key: TranslationKey) => string;
 
@@ -23,7 +23,7 @@ export const createCommonItemColumns = (
       label: '',
       flex: '0 0 4rem',
       cellClassName: appListStyles.imageColumn,
-      render: (row) => (
+      render: (row): import('react').JSX.Element => (
         <EntropiaImage
           url={row.imageUrl}
           alt={row.name}
@@ -32,13 +32,18 @@ export const createCommonItemColumns = (
         />
       ),
     },
-    { key: 'name', label: t('ITEM_STORE.NAME'), flex: '1 1 14rem', render: (row) => row.name },
+    {
+      key: 'name',
+      label: t('ITEM_STORE.NAME'),
+      flex: '1 1 14rem',
+      render: (row): string => row.name,
+    },
     {
       key: 'tt',
       label: 'TT',
       flex: '0 1 6rem',
       align: 'right',
-      render: (row) => formatDecimalValue(row.tt),
+      render: (row): string => formatDecimalValue(row.tt),
     },
   ];
 
@@ -48,7 +53,7 @@ export const createCommonItemColumns = (
       label: t('ITEM_STORE.DECAY'),
       flex: '0 1 6rem',
       align: 'right',
-      render: (row) => formatDecimalValue(row.decay),
+      render: (row): string => formatDecimalValue(row.decay),
     });
   }
 
@@ -61,12 +66,14 @@ export const createStockColumn = (t: Translate): ItemStoreColumn => ({
   label: t('ITEM_STORE.STOCK'),
   flex: '0 1 6rem',
   align: 'right',
-  render: (row) => row.stock ?? '—',
+  render: (row): number | '—' => row.stock ?? '—',
 });
 
 /** Format a normalized item detail for a compact catalogue cell. */
-export const itemDetail = (key: string) => (row: ItemStoreRow) =>
-  valueOrDash(row.details[key]);
+export const itemDetail =
+  (key: string): ((row: ItemStoreRow) => string) =>
+  (row: ItemStoreRow): string =>
+    valueOrDash(row.details[key]);
 
 /** Create the trailing buy action column shared by every item-store list. */
 export const createBuyColumn = (
@@ -95,7 +102,7 @@ export const createSellColumn = (
     ariaLabel: t('ITEM_STORE.SELL'),
     title: t('ITEM_STORE.SELL'),
     className: `${styles.buyButton} ${styles.sellButton}`,
-    isVisible: (row) => (row.stock ?? 0) > 0,
+    isVisible: (row): boolean => (row.stock ?? 0) > 0,
     onClick: onSell,
   });
 
@@ -111,7 +118,7 @@ export const createEditColumn = (
     ariaLabel: t('ITEM_STORE.EDIT'),
     title: t('ITEM_STORE.EDIT'),
     className: styles.buyButton,
-    isVisible: (row) => {
+    isVisible: (row): boolean => {
       const isEditableTool =
         row.kind === 'finder' ||
         row.kind === 'excavator' ||
@@ -136,35 +143,90 @@ export const createSummaryColumn = (t: Translate): ItemStoreColumn =>
 /** Return columns specific to finder catalogue rows. */
 export const createFinderColumns = (t: Translate): ItemStoreColumn[] => [
   ...createCommonItemColumns(t),
-  { key: 'depth', label: t('ITEM_STORE.DEPTH'), flex: '0 1 7rem', align: 'right', render: itemDetail('depth') },
-  { key: 'range', label: t('ITEM_STORE.RANGE'), flex: '0 1 7rem', align: 'right', render: itemDetail('range') },
-  { key: 'ammoBurn', label: t('ITEM_STORE.AMMO_BURN'), flex: '0 0 5rem', align: 'right', render: itemDetail('ammo_burn') },
+  {
+    key: 'depth',
+    label: t('ITEM_STORE.DEPTH'),
+    flex: '0 1 7rem',
+    align: 'right',
+    render: itemDetail('depth'),
+  },
+  {
+    key: 'range',
+    label: t('ITEM_STORE.RANGE'),
+    flex: '0 1 7rem',
+    align: 'right',
+    render: itemDetail('range'),
+  },
+  {
+    key: 'ammoBurn',
+    label: t('ITEM_STORE.AMMO_BURN'),
+    flex: '0 0 5rem',
+    align: 'right',
+    render: itemDetail('ammoBurn'),
+  },
 ];
 
 /** Return columns specific to excavator catalogue rows. */
 export const createExcavatorColumns = (t: Translate): ItemStoreColumn[] => [
   ...createCommonItemColumns(t),
-  { key: 'efficiency', label: t('ITEM_STORE.EFFICIENCY'), flex: '0 1 8rem', align: 'right', render: itemDetail('efficiency') },
+  {
+    key: 'efficiency',
+    label: t('ITEM_STORE.EFFICIENCY'),
+    flex: '0 1 8rem',
+    align: 'right',
+    render: itemDetail('efficiency'),
+  },
 ];
 
 /** Return columns specific to refiner catalogue rows. */
 export const createRefinerColumns = (t: Translate): ItemStoreColumn[] => [
   ...createCommonItemColumns(t),
-  { key: 'usePerMinute', label: t('ITEM_STORE.USE_PER_MINUTE'), flex: '0 1 7rem', align: 'right', render: itemDetail('use_per_minute') },
+  {
+    key: 'usePerMinute',
+    label: t('ITEM_STORE.USE_PER_MINUTE'),
+    flex: '0 1 7rem',
+    align: 'right',
+    render: itemDetail('usePerMinute'),
+  },
 ];
 
 /** Return columns specific to finder-amplifier catalogue rows. */
-export const createFinderAmplifierColumns = (t: Translate): ItemStoreColumn[] => [
+export const createFinderAmplifierColumns = (
+  t: Translate,
+): ItemStoreColumn[] => [
   ...createCommonItemColumns(t),
-  { key: 'efficiency', label: t('ITEM_STORE.EFFICIENCY'), flex: '0 1 8rem', align: 'right', render: itemDetail('efficiency') },
-  { key: 'professionLevel', label: t('ITEM_STORE.LEVEL_MIN'), flex: '0 1 8rem', align: 'right', render: itemDetail('profession_level_min') },
+  {
+    key: 'efficiency',
+    label: t('ITEM_STORE.EFFICIENCY'),
+    flex: '0 1 8rem',
+    align: 'right',
+    render: itemDetail('efficiency'),
+  },
+  {
+    key: 'professionLevel',
+    label: t('ITEM_STORE.LEVEL_MIN'),
+    flex: '0 1 8rem',
+    align: 'right',
+    render: itemDetail('professionLevelMin'),
+  },
 ];
 
 /** Return columns specific to enhancer catalogue rows. */
 export const createEnhancerColumns = (t: Translate): ItemStoreColumn[] => [
   ...createCommonItemColumns(t, { includeDecay: false }),
-  { key: 'type', label: t('ITEM_STORE.TYPE'), flex: '0 1 8rem', render: itemDetail('type') },
-  { key: 'bonus', label: t('ITEM_STORE.BONUS'), flex: '0 1 7rem', align: 'right', render: itemDetail('bonus') },
+  {
+    key: 'type',
+    label: t('ITEM_STORE.TYPE'),
+    flex: '0 1 8rem',
+    render: itemDetail('type'),
+  },
+  {
+    key: 'bonus',
+    label: t('ITEM_STORE.BONUS'),
+    flex: '0 1 7rem',
+    align: 'right',
+    render: itemDetail('bonus'),
+  },
 ];
 
 /** Return columns specific to material catalogue rows. */

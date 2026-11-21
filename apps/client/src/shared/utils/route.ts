@@ -3,12 +3,17 @@ import type { BaseRouteQueries } from '@/shared/types/route';
 
 /** Convert a snake_case query key from the URL to camelCase. */
 export function routeQueryKeyToCamelCase(key: string): string {
-  return key.replace(/_([a-z])/g, (_, character: string) => character.toUpperCase());
+  return key.replace(/_([a-z])/g, (_, character: string): string =>
+    character.toUpperCase(),
+  );
 }
 
 /** Convert a camelCase query key to snake_case for the URL. */
 export function routeQueryKeyToSnakeCase(key: string): string {
-  return key.replace(/[A-Z]/g, (character) => `_${character.toLowerCase()}`);
+  return key.replace(
+    /[A-Z]/g,
+    (character): string => `_${character.toLowerCase()}`,
+  );
 }
 
 /** Parse URL query parameters into a typed camelCase query object. */
@@ -16,7 +21,7 @@ export function parseRouteQueries<Queries extends BaseRouteQueries>(
   searchParams: URLSearchParams,
 ): Queries {
   return Object.fromEntries(
-    Array.from(searchParams.entries()).map(([key, value]) => [
+    Array.from(searchParams.entries()).map(([key, value]): [string, string] => [
       routeQueryKeyToCamelCase(key),
       value,
     ]),
@@ -52,10 +57,7 @@ export function parseAppRoute<
   pathname: string,
   definition: AppRouteDefinition<Prefix, Kind, Action>,
 ): AppRoute<Prefix, Kind, Action> {
-  const segments = pathname
-    .split('/')
-    .filter(Boolean)
-    .map(decodeRouteSegment);
+  const segments = pathname.split('/').filter(Boolean).map(decodeRouteSegment);
   const [prefix, kind, id, action] = segments;
   const hasPrefix = prefix === definition.prefix;
   const isKind = hasPrefix && definition.kinds.includes(kind as Kind);

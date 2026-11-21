@@ -25,7 +25,7 @@ type RunningTransactionsModalProps = {
 export function RunningTransactionsModal({
   open,
   onOpenChange,
-}: RunningTransactionsModalProps) {
+}: RunningTransactionsModalProps): import('react').JSX.Element {
   const { t } = useTranslations();
   const queryClient = useQueryClient();
   const transactions = useGetApiV1TransactionRunning({
@@ -36,7 +36,8 @@ export function RunningTransactionsModal({
   });
   const updateStatus = usePatchApiV1TransactionSessionIdStatus();
   const rows = useMemo(
-    () => (transactions.data ?? []).map(toRunningTransactionRow),
+    (): RunningTransactionRow[] =>
+      (transactions.data ?? []).map(toRunningTransactionRow),
     [transactions.data],
   );
   const queryKey = getGetApiV1TransactionRunningQueryKey();
@@ -45,24 +46,24 @@ export function RunningTransactionsModal({
   const handleStatusChange = async (
     row: RunningTransactionRow,
     status: UpdateTransactionStatusRequestStatus,
-  ) => {
+  ): Promise<void> => {
     if (status === row.status) return;
     await updateStatus.mutateAsync({
-      sessionId: row.session_id,
+      sessionId: row.sessionId,
       data: { status },
     });
     await queryClient.invalidateQueries({ queryKey });
   };
 
   const columns = useMemo(
-    () =>
-      createRunningTransactionColumns(t, (row, status) => {
+    (): import('../../..').ItemStoreColumn<RunningTransactionRow>[] =>
+      createRunningTransactionColumns(t, (row, status): void => {
         void handleStatusChange(row, status);
       }),
     [t],
   );
-  const tools = rows.filter(({ kind }) => kind === 'tool');
-  const resources = rows.filter(({ kind }) => kind === 'resource');
+  const tools = rows.filter(({ kind }): boolean => kind === 'tool');
+  const resources = rows.filter(({ kind }): boolean => kind === 'resource');
 
   return (
     <Modal

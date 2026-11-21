@@ -12,16 +12,16 @@ const toolbarLinks = [
 ] as const;
 
 /** Render the primary navigation links displayed in the top bar. */
-export function TopBarNav() {
+export function TopBarNav(): import('react').JSX.Element {
   const { t } = useTranslations();
 
   return (
     <nav className={styles.navigation} aria-label={t('APP.PRIMARY_NAVIGATION')}>
-      {toolbarLinks.map(({ label, route }) => (
+      {toolbarLinks.map(({ label, route }): import('react').JSX.Element => (
         <NavLink
           key={route}
           to={route}
-          className={({ isActive }) =>
+          className={({ isActive }): string =>
             cn(
               buttonVariants({ variant: 'topbar' }),
               styles.navButton,

@@ -10,10 +10,13 @@ type TransactionModalInfoProps = {
 };
 
 /** Render the selected item information displayed in the transaction modal. */
-export function TransactionModalInfo({ item, lot }: TransactionModalInfoProps) {
+export function TransactionModalInfo({
+  item,
+  lot,
+}: TransactionModalInfoProps): import('react').JSX.Element {
   const name = item?.name ?? lot?.item.name ?? 'Item';
   const imageUrl = item?.imageUrl ?? null;
-  const tt = lot?.tt_remaining ?? lot?.tt ?? item?.tt ?? null;
+  const tt = lot?.ttRemaining ?? lot?.tt ?? item?.tt ?? null;
 
   return (
     <div className={styles.itemInfo}>

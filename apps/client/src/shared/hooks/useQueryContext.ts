@@ -9,16 +9,16 @@ type QueryContextUpdates<T extends QueryContext> = Partial<{
 /** Read and update a typed context stored in prefixed URL query parameters. */
 export function useQueryContext<T extends QueryContext>(
   parse: (params: URLSearchParams) => T,
-) {
+): { context: T; updateContext: (updates: QueryContextUpdates<T>) => void } {
   const [searchParams, setSearchParams] = useSearchParams();
-  const context = useMemo(() => parse(searchParams), [parse, searchParams]);
+  const context = useMemo((): T => parse(searchParams), [parse, searchParams]);
 
   /** Merge context updates into the URL while removing null or undefined values. */
   const updateContext = useCallback(
-    (updates: QueryContextUpdates<T>) => {
+    (updates: QueryContextUpdates<T>): void => {
       setSearchParams(
-        (currentParams) => {
-          Object.entries(updates).forEach(([key, value]) => {
+        (currentParams): URLSearchParams => {
+          Object.entries(updates).forEach(([key, value]): void => {
             const parameter = `context_${key}`;
             if (value === null || value === undefined || value === '') {
               currentParams.delete(parameter);

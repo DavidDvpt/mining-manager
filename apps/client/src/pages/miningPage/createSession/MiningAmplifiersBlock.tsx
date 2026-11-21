@@ -18,7 +18,7 @@ export function MiningAmplifiersBlock({
   amplifiers,
   stock,
   getClicksAvailable,
-}: MiningAmplifiersBlockProps) {
+}: MiningAmplifiersBlockProps): import('react').JSX.Element {
   const { t } = useTranslations();
   const { control } = useFormContext<MiningSessionFormValues>();
   const selectedAmplifierIds = useWatch({ control, name: 'amplifierIds' });
@@ -28,7 +28,7 @@ export function MiningAmplifiersBlock({
       <h3>{t('MINING.AMPLIFIERS')}</h3>
       {amplifiers.length ? (
         <div className={styles.amplifierList}>
-          {amplifiers.map((amplifier) => (
+          {amplifiers.map((amplifier): import('react').JSX.Element => (
             <div key={amplifier.id} className={styles.amplifierRow}>
               <CheckboxRHF
                 name="amplifierIds"

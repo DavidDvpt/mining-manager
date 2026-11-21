@@ -11,7 +11,9 @@ type TransactionSummaryProps = {
 };
 
 /** Render the live transaction summary from React Hook Form values. */
-export function TransactionSummary({ stackable }: TransactionSummaryProps) {
+export function TransactionSummary({
+  stackable,
+}: TransactionSummaryProps): import('react').JSX.Element {
   const formValues = useWatch<TransactionFormValues>();
   const tt = formValues.tt ?? 0;
   const fee = formValues.fee ?? 0;

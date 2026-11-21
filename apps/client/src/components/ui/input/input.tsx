@@ -3,6 +3,9 @@ import { cn } from '../../../lib/utils/styles';
 import styles from './input.module.scss';
 
 /** Render the base input control used by form-specific field components. */
-export function Input({ className, ...props }: ComponentProps<'input'>) {
+export function Input({
+  className,
+  ...props
+}: ComponentProps<'input'>): import('react').JSX.Element {
   return <input className={cn(styles.input, className)} {...props} />;
 }

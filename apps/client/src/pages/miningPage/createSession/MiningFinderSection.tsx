@@ -41,7 +41,7 @@ export function MiningFinderSection({
   minimumFinderTier,
   enhancers,
   enhancerStock,
-}: MiningFinderSectionProps) {
+}: MiningFinderSectionProps): import('react').JSX.Element {
   const { t } = useTranslations();
 
   return (

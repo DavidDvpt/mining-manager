@@ -2,7 +2,11 @@ import type { ContainerProps } from './container.types';
 import styles from './containers.module.scss';
 
 /** Render a neutral wrapper for content nested inside a Section. */
-export function SubSection({ className, children, ...props }: ContainerProps) {
+export function SubSection({
+  className,
+  children,
+  ...props
+}: ContainerProps): import('react').JSX.Element {
   return (
     <div
       className={[styles.subSection, className].filter(Boolean).join(' ')}

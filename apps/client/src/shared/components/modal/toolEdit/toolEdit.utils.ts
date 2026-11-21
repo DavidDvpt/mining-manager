@@ -25,9 +25,18 @@ export function shouldShowTt(item: ItemStoreRow | null): boolean {
 }
 
 /** Build the validation schema using the catalogue TT ceiling. */
-export function createToolEditSchema(maxTt?: number) {
+export function createToolEditSchema(
+  maxTt?: number,
+): z.ZodObject<
+  { tier: z.ZodOptional<z.ZodNumber>; tt: z.ZodOptional<z.ZodNumber> },
+  z.core.$strip
+> {
   return z.object({
     tier: z.number().int().min(0).max(10).optional(),
-    tt: z.number().min(0).max(maxTt ?? Number.MAX_VALUE).optional(),
+    tt: z
+      .number()
+      .min(0)
+      .max(maxTt ?? Number.MAX_VALUE)
+      .optional(),
   });
 }

@@ -5,13 +5,15 @@ const envSchema = z.object({
     .string()
     .optional()
     .refine(
-      (value) => !value || value.startsWith('/') || URL.canParse(value),
+      (value): boolean =>
+        !value || value.startsWith('/') || URL.canParse(value),
       'VITE_API_BASE_URL must be a relative path or a valid URL',
     ),
   VITE_IMAGE_BASE_URL: z
     .string()
     .refine(
-      (value) => !value || value.startsWith('/') || URL.canParse(value),
+      (value): boolean =>
+        !value || value.startsWith('/') || URL.canParse(value),
       'VITE_IMAGE_BASE_URL must be a relative path or a valid URL',
     )
     .default(''),
@@ -21,7 +23,9 @@ const parsedEnv = envSchema.safeParse(import.meta.env);
 
 if (!parsedEnv.success) {
   const errors = parsedEnv.error.issues
-    .map((issue) => `${issue.path.join('.') || 'env'}: ${issue.message}`)
+    .map(
+      (issue): string => `${issue.path.join('.') || 'env'}: ${issue.message}`,
+    )
     .join('\n');
   throw new Error(`Invalid environment variables:\n${errors}`);
 }

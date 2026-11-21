@@ -14,19 +14,19 @@ export function useDismissOnOutsideInteraction(
   onDismiss: () => void,
   enabled = true,
 ): void {
-  useEffect(() => {
+  useEffect((): (() => void) | undefined => {
     if (!enabled) return;
 
-    const handlePointerDown = (event: PointerEvent) => {
+    const handlePointerDown = (event: PointerEvent): void => {
       if (!rootRef.current?.contains(event.target as Node)) onDismiss();
     };
-    const handleKeyDown = (event: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') onDismiss();
     };
 
     document.addEventListener('pointerdown', handlePointerDown);
     document.addEventListener('keydown', handleKeyDown);
-    return () => {
+    return (): void => {
       document.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
     };

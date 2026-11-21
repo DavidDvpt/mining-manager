@@ -8,7 +8,7 @@ import styles from './switch.module.scss';
 export const Switch = forwardRef<
   ComponentRef<typeof SwitchPrimitive.Root>,
   ComponentPropsWithoutRef<typeof SwitchPrimitive.Root>
->(({ className, ...props }, ref) => (
+>(({ className, ...props }, ref): import('react').JSX.Element => (
   <SwitchPrimitive.Root
     ref={ref}
     className={cn(styles.switch, className)}

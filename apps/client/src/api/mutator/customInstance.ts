@@ -32,7 +32,7 @@ export const customInstance = <T>(
     ? axiosPublicInstance
     : axiosPrivateInstance;
 
-  return client.request<T>(requestConfig).then(({ data }) => data);
+  return client.request<T>(requestConfig).then(({ data }): T => data);
 };
 
 export type ErrorType<_Error> = ApiError;

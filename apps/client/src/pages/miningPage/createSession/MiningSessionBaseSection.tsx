@@ -1,31 +1,22 @@
 import { useEffect } from 'react';
 import { useController, useFormContext, useWatch } from 'react-hook-form';
 
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from '@/components/ui/radio-group';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   getGetApiV1PlanetPlanetIdZoneQueryKey,
   useGetApiV1Planet,
   useGetApiV1PlanetPlanetIdZone,
 } from '@/api/generated/miningManagerAPI';
-import {
-  ComboboxRHF,
-  InputRHF,
-  SelectRHF,
-  Section,
-} from '@/shared/components';
+import { ComboboxRHF, InputRHF, SelectRHF, Section } from '@/shared/components';
 import { useTranslations } from '@/i18n/useTranslations';
 
 import type { MiningSessionFormValues } from '@/shared/types/mining';
 import styles from './mining-session-form.module.scss';
 
 /** Render and validate the base fields of a mining-session configuration. */
-export function MiningSessionBaseSection() {
+export function MiningSessionBaseSection(): import('react').JSX.Element {
   const { t } = useTranslations();
-  const { control, setValue } =
-    useFormContext<MiningSessionFormValues>();
+  const { control, setValue } = useFormContext<MiningSessionFormValues>();
   const planet = useWatch<MiningSessionFormValues>({ name: 'planet' });
   const { field: searchTypeField } = useController({
     control,
@@ -40,20 +31,20 @@ export function MiningSessionBaseSection() {
   });
   const zones = zonesQuery.data ?? [];
 
-  useEffect(() => {
+  useEffect((): void => {
     if (String(planet ?? '').trim() || !planetsQuery.data) {
       return;
     }
 
     const defaultPlanet = planetsQuery.data.find(
-      (availablePlanet) => availablePlanet.name === 'Calypso',
+      (availablePlanet): boolean => availablePlanet.name === 'Calypso',
     );
     if (defaultPlanet) {
       setValue('planet', defaultPlanet.id, { shouldValidate: true });
     }
   }, [planet, planetsQuery.data, setValue]);
 
-  useEffect(() => {
+  useEffect((): void => {
     setValue('zone', '');
   }, [planet, setValue]);
 
@@ -85,7 +76,7 @@ export function MiningSessionBaseSection() {
               {[
                 ['E', t('MINING.ENMATTER')],
                 ['O', t('MINING.ORE')],
-              ].map(([value, label]) => (
+              ].map(([value, label]): import('react').JSX.Element => (
                 <label key={value} className={styles.option}>
                   <RadioGroupItem value={value} id={`search-type-${value}`} />
                   <span>{label}</span>
@@ -106,16 +97,21 @@ export function MiningSessionBaseSection() {
           required
           options={[
             { value: '', label: '—' },
-            ...(planetsQuery.data ?? []).map((availablePlanet) => ({
-              value: availablePlanet.id,
-              label: availablePlanet.name,
-            })),
+            ...(planetsQuery.data ?? []).map(
+              (availablePlanet): { value: string; label: string } => ({
+                value: availablePlanet.id,
+                label: availablePlanet.name,
+              }),
+            ),
           ]}
         />
         <ComboboxRHF
           name="zone"
           label={t('MINING.ZONE')}
-          options={zones.map((zone) => ({ value: zone.id, label: zone.name }))}
+          options={zones.map((zone): { value: string; label: string } => ({
+            value: zone.id,
+            label: zone.name,
+          }))}
           disabled={!String(planet ?? '').trim()}
         />
       </div>

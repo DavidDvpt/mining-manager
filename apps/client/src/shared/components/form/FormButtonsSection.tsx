@@ -37,7 +37,7 @@ export function FormButtonsSection({
   cancelLabel = 'Cancel',
   submitLabel = 'Submit',
   align = 'center',
-}: FormButtonsSectionProps) {
+}: FormButtonsSectionProps): import('react').JSX.Element {
   const shouldUseFullWidth = fullWidth === true && cancelVisible === false;
 
   return (

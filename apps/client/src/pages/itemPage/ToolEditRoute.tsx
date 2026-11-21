@@ -1,4 +1,4 @@
-function ToolEditRoute() {
+function ToolEditRoute(): import('react').JSX.Element {
   return <div>ToolEditRoute</div>;
 }
 

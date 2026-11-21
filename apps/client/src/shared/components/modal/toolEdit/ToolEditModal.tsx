@@ -29,7 +29,7 @@ export function ToolEditModal({
   item,
   open,
   onOpenChange,
-}: ToolEditModalProps) {
+}: ToolEditModalProps): import('react').JSX.Element | null {
   const { t } = useTranslations();
   const queryClient = useQueryClient();
   const updateLot = usePutApiV1LotsUnstackableLotId();
@@ -43,13 +43,24 @@ export function ToolEditModal({
   const showTier = shouldShowTier(item);
   const showTt = shouldShowTt(item);
   const maxTt = item?.tt ?? undefined;
-  const schema = useMemo(() => createToolEditSchema(maxTt), [maxTt]);
+  const schema = useMemo(
+    (): import('zod').ZodObject<
+      {
+        tier: import('zod').ZodOptional<import('zod').ZodNumber>;
+        tt: import('zod').ZodOptional<import('zod').ZodNumber>;
+      },
+      import('zod/v4/core').$strip
+    > => createToolEditSchema(maxTt),
+    [maxTt],
+  );
   const tierLabel = useMemo(
-    () => <ToolEditFieldLabel range="0 - 10">Tier</ToolEditFieldLabel>,
+    (): import('react').JSX.Element => (
+      <ToolEditFieldLabel range="0 - 10">Tier</ToolEditFieldLabel>
+    ),
     [],
   );
   const ttLabel = useMemo(
-    () => (
+    (): import('react').JSX.Element => (
       <ToolEditFieldLabel range={`0 - ${maxTt ?? '—'}`}>TT</ToolEditFieldLabel>
     ),
     [maxTt],
@@ -57,7 +68,7 @@ export function ToolEditModal({
 
   if (!item) return null;
 
-  const handleSubmit = async (values: ToolEditValues) => {
+  const handleSubmit = async (values: ToolEditValues): Promise<void> => {
     if (!lot) return;
     await updateLot.mutateAsync({
       lotId: lot.id,
@@ -87,7 +98,7 @@ export function ToolEditModal({
           key={lot.id}
           schema={schema}
           defaultValues={{
-            tier: showTier ? lot.tier ?? 0 : undefined,
+            tier: showTier ? (lot.tier ?? 0) : undefined,
             tt: showTt && lot.tt !== null ? Number(lot.tt) : undefined,
           }}
           onSubmit={handleSubmit}
@@ -118,7 +129,7 @@ export function ToolEditModal({
             ) : null}
           </div>
           <FormButtonsSection
-            onCancel={() => onOpenChange(false)}
+            onCancel={(): void => onOpenChange(false)}
             cancelLabel={t('TOOL_EDIT_MODAL.CANCEL')}
             submitLabel={
               updateLot.isPending

@@ -8,17 +8,20 @@ interface SideNavbarProps {
   ariaLabel: string;
 }
 
-function SideNavbar({ buttons, ariaLabel }: SideNavbarProps) {
+function SideNavbar({
+  buttons,
+  ariaLabel,
+}: SideNavbarProps): import('react').JSX.Element {
   const location = useLocation();
   const pathname = location.pathname;
 
-  function isRouteActive(linkTo: string, pathname: string) {
+  function isRouteActive(linkTo: string, pathname: string): boolean {
     return Boolean(matchPath({ path: linkTo, end: false }, pathname));
   }
   return (
     <aside className={styles.sidebar} aria-label={ariaLabel}>
       <nav className={styles.navigation}>
-        {buttons.map((button) => {
+        {buttons.map((button): import('react').JSX.Element => {
           return (
             <SidebarButton
               key={button.linkTo}
