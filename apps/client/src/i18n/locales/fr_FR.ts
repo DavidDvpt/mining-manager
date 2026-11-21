@@ -119,7 +119,7 @@ export const fr_FR: TranslationSchema = {
     LEVEL_MIN: 'Niveau min.',
     DEPTH: 'Profondeur',
     RANGE: 'Portée',
-    AMMO_BURN: 'Consommation de munitions',
+    AMMO_BURN: 'Ammos',
     USE_PER_MINUTE: 'Utilisation / min',
   },
   TOOL_EDIT_MODAL: {

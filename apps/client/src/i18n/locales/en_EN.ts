@@ -52,8 +52,7 @@ export const en_EN: TranslationSchema = {
     LOOTS: 'Loots',
     COCKPIT: 'Cockpit',
     CREATE_SESSION: 'Create session',
-    CREATE_SESSION_DESCRIPTION:
-      'The new session setup will be added here.',
+    CREATE_SESSION_DESCRIPTION: 'The new session setup will be added here.',
     BASE: 'Base',
     CLICKS: 'Number of clicks',
     SEARCH_TYPE: 'Search type',
@@ -113,7 +112,7 @@ export const en_EN: TranslationSchema = {
     LEVEL_MIN: 'Min. level',
     DEPTH: 'Depth',
     RANGE: 'Range',
-    AMMO_BURN: 'Ammo burn',
+    AMMO_BURN: 'Ammos',
     USE_PER_MINUTE: 'Use / min',
   },
   TOOL_EDIT_MODAL: {

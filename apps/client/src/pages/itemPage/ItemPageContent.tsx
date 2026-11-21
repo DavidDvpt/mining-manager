@@ -8,8 +8,9 @@ import styles from './item-list-layout.module.scss';
 import { useItemStoreData } from '@/shared/hooks';
 import { JSX, useMemo, useState } from 'react';
 import { ItemKind, ItemSubKind } from '@/router/constants';
-import { toSlug } from '@/shared/utils/string';
+
 import { ItemRow } from '@/shared';
+import { toSlug } from '@/shared/utils/string';
 
 interface ItemListLayoutProps {
   kind: ItemKind;
@@ -21,42 +22,31 @@ export function ItemPageContent({
   subKind,
 }: ItemListLayoutProps): JSX.Element {
   const { t } = useTranslations();
-  const [ownedOnly, setOwnedOnly] = useState(true);
+  const [ownedOnly, setOwnedOnly] = useState(false);
   const { rows, isLoading, isError } = useItemStoreData();
 
   const [activeViewPrefix, activeViewSuffix] = t(
     'TRANSACTIONS.ACTIVE_VIEW',
   ).split('{view}');
 
-  const visibleRows = useMemo((): ItemRow[] => {
+  const filteredRows = useMemo((): ItemRow[] => {
     if (kind !== 'material' || !subKind) {
       return rows[kind] ?? [];
     }
 
     return (
-      rows[kind]?.filter((row): boolean =>
-        kind === 'material' && subKind
-          ? row.kind === 'material' && row.details.type.name === toSlug(subKind)
-          : true,
-      ) ?? []
+      rows[kind]?.filter((row): boolean => {
+        return kind === 'material' && subKind
+          ? row.kind === 'material' &&
+              toSlug(row.details.type.name) === toSlug(subKind)
+          : true;
+      }) ?? []
     );
   }, [rows, kind, subKind]);
 
-  // const ownedRows = ownedOnly
-  //   ? visibleRows.filter((row) => (row.stock ?? 0) > 0)
-  //   : visibleRows;
-  // const displayRows =
-  //   activeKind === 'material'
-  //     ? ownedRows.map((row) => ({
-  //         ...row,
-  //         details: {
-  //           ...row.details,
-  //           type:
-  //             materialTypes.find(({ id }) => id === row.details.type)?.name ??
-  //             row.details.type,
-  //         },
-  //       }))
-  //     : ownedRows;
+  const visibleRows = ownedOnly
+    ? filteredRows.filter((row) => (row.stock ?? 0) > 0)
+    : filteredRows;
 
   return (
     <Panel className={styles.page}>

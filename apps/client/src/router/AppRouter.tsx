@@ -13,7 +13,7 @@ import { toSlug } from '@/shared/utils/string';
 export function AppRouter(): import('react').JSX.Element {
   const { data: materialTypes = [] } = useGetApiV1MaterialTypes();
   const parsed = materialTypes?.map(({ name }): string => toSlug(name)) ?? [];
-
+  console.log(parsed);
   return (
     <Routes>
       <Route element={<GuestOnly />}>
