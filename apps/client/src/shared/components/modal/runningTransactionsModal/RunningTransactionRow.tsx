@@ -7,7 +7,7 @@ import { getItemImageUrl } from '@/config/images';
 import type { TranslationKey } from '@/i18n/types';
 import { EntropiaImage } from '@/shared/components/entropiaImage';
 import { formatDecimalValue } from '@/shared/utils';
-import type { ItemStoreColumn } from '@/shared/types/listItem';
+import type { ItemColumn } from '@/shared/types/listItem';
 import styles from './running-transactions-modal.module.scss';
 
 export type RunningTransactionRow = RunningTransactionResponse & { id: string };
@@ -32,7 +32,7 @@ export function createRunningTransactionColumns(
     row: RunningTransactionRow,
     status: UpdateTransactionStatusRequestStatus,
   ) => void,
-): ItemStoreColumn<RunningTransactionRow>[] {
+): ItemColumn<RunningTransactionRow>[] {
   const statusOptions = Object.values(Status).map(
     (
       status,

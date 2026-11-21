@@ -13,7 +13,7 @@ import {
   type TransactionPricingValues,
 } from './transactionPricing';
 import styles from './transaction-modal.module.scss';
-import { ItemStoreRow } from '@/shared/types';
+import { ItemRow } from '@/shared/types';
 import { useTranslations } from '@/i18n/useTranslations';
 import { Label } from '@/components/ui/label/label';
 import {
@@ -27,7 +27,7 @@ import {
 type TransactionFormProps = {
   action: 'buy' | 'sell';
   isStackable: boolean;
-  item: ItemStoreRow | null;
+  item: ItemRow | null;
   lot: TransactionLot | null;
   lots: TransactionLot[];
   selectedLotId: string | null;

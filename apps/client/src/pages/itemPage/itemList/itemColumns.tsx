@@ -1,12 +1,11 @@
 import { EntropiaImage } from '@/shared/components/entropiaImage';
 import { AppIconName } from '@/shared/components/icon';
-import { createIconColumn } from './createIconColumn';
-import type { ItemStoreColumn, ItemStoreRow } from '@/shared/types/listItem';
+import { createIconColumn } from '../../../shared/appList/columns/createIconColumn';
+import type { ItemColumn, ItemRow } from '@/shared/types/listItem';
 import { formatDecimalValue } from '@/shared/utils';
 import { isLimitedItem } from '@/shared/utils';
 import type { TranslationKey } from '@/i18n/types';
-import styles from '@/pages/itemPage/itemStoreList/item-store-list.module.scss';
-import appListStyles from '../app-list.module.scss';
+import styles from './item-list.module.scss';
 
 const valueOrDash = (value: unknown): string =>
   value === null || value === undefined || value === '' ? '—' : String(value);
@@ -16,13 +15,13 @@ type Translate = (key: TranslationKey) => string;
 export const createCommonItemColumns = (
   t: Translate,
   options: { includeDecay?: boolean } = {},
-): ItemStoreColumn[] => {
-  const columns: ItemStoreColumn[] = [
+): ItemColumn[] => {
+  const columns: ItemColumn[] = [
     {
       key: 'image',
       label: '',
       flex: '0 0 4rem',
-      cellClassName: appListStyles.imageColumn,
+      cellClassName: styles.imageColumn,
       render: (row): import('react').JSX.Element => (
         <EntropiaImage
           url={row.imageUrl}
@@ -61,7 +60,7 @@ export const createCommonItemColumns = (
 };
 
 /** Create the stock column shared by every catalogue row. */
-export const createStockColumn = (t: Translate): ItemStoreColumn => ({
+export const createStockColumn = (t: Translate): ItemColumn => ({
   key: 'stock',
   label: t('ITEM_STORE.STOCK'),
   flex: '0 1 6rem',
@@ -71,15 +70,15 @@ export const createStockColumn = (t: Translate): ItemStoreColumn => ({
 
 /** Format a normalized item detail for a compact catalogue cell. */
 export const itemDetail =
-  (key: string): ((row: ItemStoreRow) => string) =>
-  (row: ItemStoreRow): string =>
+  (key: string): ((row: ItemRow) => string) =>
+  (row: ItemRow): string =>
     valueOrDash(row.details[key]);
 
 /** Create the trailing buy action column shared by every item-store list. */
 export const createBuyColumn = (
   t: Translate,
-  onBuy?: (row: ItemStoreRow) => void,
-): ItemStoreColumn =>
+  onBuy?: (row: ItemRow) => void,
+): ItemColumn =>
   createIconColumn({
     key: 'buy',
     icon: AppIconName.ShoppingCart,
@@ -93,8 +92,8 @@ export const createBuyColumn = (
 /** Create the sell action column, hiding the action when stock is empty. */
 export const createSellColumn = (
   t: Translate,
-  onSell?: (row: ItemStoreRow) => void,
-): ItemStoreColumn =>
+  onSell?: (row: ItemRow) => void,
+): ItemColumn =>
   createIconColumn({
     key: 'sell',
     icon: AppIconName.HandCoins,
@@ -109,8 +108,8 @@ export const createSellColumn = (
 /** Create the primary edit action for owned editable tool rows. */
 export const createEditColumn = (
   t: Translate,
-  onEdit?: (row: ItemStoreRow) => void,
-): ItemStoreColumn =>
+  onEdit?: (row: ItemRow) => void,
+): ItemColumn =>
   createIconColumn({
     key: 'edit',
     icon: AppIconName.Pencil,
@@ -130,7 +129,7 @@ export const createEditColumn = (
   });
 
 /** Create the item financial-summary column shared by every item-store list. */
-export const createSummaryColumn = (t: Translate): ItemStoreColumn =>
+export const createSummaryColumn = (t: Translate): ItemColumn =>
   createIconColumn({
     key: 'summary',
     icon: AppIconName.ChartNoAxesCombined,
@@ -141,7 +140,7 @@ export const createSummaryColumn = (t: Translate): ItemStoreColumn =>
   });
 
 /** Return columns specific to finder catalogue rows. */
-export const createFinderColumns = (t: Translate): ItemStoreColumn[] => [
+export const createFinderColumns = (t: Translate): ItemColumn[] => [
   ...createCommonItemColumns(t),
   {
     key: 'depth',
@@ -167,7 +166,7 @@ export const createFinderColumns = (t: Translate): ItemStoreColumn[] => [
 ];
 
 /** Return columns specific to excavator catalogue rows. */
-export const createExcavatorColumns = (t: Translate): ItemStoreColumn[] => [
+export const createExcavatorColumns = (t: Translate): ItemColumn[] => [
   ...createCommonItemColumns(t),
   {
     key: 'efficiency',
@@ -179,7 +178,7 @@ export const createExcavatorColumns = (t: Translate): ItemStoreColumn[] => [
 ];
 
 /** Return columns specific to refiner catalogue rows. */
-export const createRefinerColumns = (t: Translate): ItemStoreColumn[] => [
+export const createRefinerColumns = (t: Translate): ItemColumn[] => [
   ...createCommonItemColumns(t),
   {
     key: 'usePerMinute',
@@ -191,9 +190,7 @@ export const createRefinerColumns = (t: Translate): ItemStoreColumn[] => [
 ];
 
 /** Return columns specific to finder-amplifier catalogue rows. */
-export const createFinderAmplifierColumns = (
-  t: Translate,
-): ItemStoreColumn[] => [
+export const createFinderAmplifierColumns = (t: Translate): ItemColumn[] => [
   ...createCommonItemColumns(t),
   {
     key: 'efficiency',
@@ -212,7 +209,7 @@ export const createFinderAmplifierColumns = (
 ];
 
 /** Return columns specific to enhancer catalogue rows. */
-export const createEnhancerColumns = (t: Translate): ItemStoreColumn[] => [
+export const createEnhancerColumns = (t: Translate): ItemColumn[] => [
   ...createCommonItemColumns(t, { includeDecay: false }),
   {
     key: 'type',
@@ -233,7 +230,7 @@ export const createEnhancerColumns = (t: Translate): ItemStoreColumn[] => [
 export const createMaterialColumns = (
   t: Translate,
   options: { includeType?: boolean } = {},
-): ItemStoreColumn[] => {
+): ItemColumn[] => {
   const columns = createCommonItemColumns(t, { includeDecay: false });
 
   if (options.includeType) {

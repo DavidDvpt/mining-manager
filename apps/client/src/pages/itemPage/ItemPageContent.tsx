@@ -2,13 +2,14 @@ import { useTranslations } from '@/i18n/useTranslations';
 import { Outlet } from 'react-router-dom';
 import { Panel, Section } from '@/shared/components';
 import { Switch } from '@/components/ui/switch';
-import { ItemStoreList } from './itemStoreList';
+import { ItemList } from './itemList';
 
 import styles from './item-list-layout.module.scss';
 import { useItemStoreData } from '@/shared/hooks';
-import { useMemo, useState } from 'react';
+import { JSX, useMemo, useState } from 'react';
 import { ItemKind, ItemSubKind } from '@/router/constants';
 import { toSlug } from '@/shared/utils/string';
+import { ItemRow } from '@/shared';
 
 interface ItemListLayoutProps {
   kind: ItemKind;
@@ -18,7 +19,7 @@ interface ItemListLayoutProps {
 export function ItemPageContent({
   kind,
   subKind,
-}: ItemListLayoutProps): import('react').JSX.Element {
+}: ItemListLayoutProps): JSX.Element {
   const { t } = useTranslations();
   const [ownedOnly, setOwnedOnly] = useState(true);
   const { rows, isLoading, isError } = useItemStoreData();
@@ -28,7 +29,7 @@ export function ItemPageContent({
     'TRANSACTIONS.ACTIVE_VIEW',
   ).split('{view}');
 
-  const visibleRows = useMemo((): import('../../shared').ItemStoreRow[] => {
+  const visibleRows = useMemo((): ItemRow[] => {
     if (kind !== 'material' || !subKind) {
       return rows[kind] ?? [];
     }
@@ -77,7 +78,7 @@ export function ItemPageContent({
           />
         </div>
 
-        <ItemStoreList
+        <ItemList
           kind={kind}
           rows={visibleRows}
           isLoading={isLoading}

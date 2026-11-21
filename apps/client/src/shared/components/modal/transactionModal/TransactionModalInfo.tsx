@@ -1,11 +1,11 @@
 import { EntropiaImage } from '@/shared/components/entropiaImage';
 import { formatDecimalValue } from '@/shared/utils';
-import type { ItemStoreRow } from '@/shared/types/listItem';
+import type { ItemRow } from '@/shared/types/listItem';
 import type { TransactionLot } from '@/shared/types/modal';
 import styles from './transaction-modal.module.scss';
 
 type TransactionModalInfoProps = {
-  item: ItemStoreRow | null;
+  item: ItemRow | null;
   lot: TransactionLot | null;
 };
 

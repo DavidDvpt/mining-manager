@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { ItemStoreRow } from '@/shared/types/listItem';
+import type { ItemRow } from '@/shared/types/listItem';
 import { TransactionPricing } from './transactionPricing';
 
-const item: ItemStoreRow = {
+const item: ItemRow = {
   id: 'material-1',
   name: 'Oil',
   kind: 'material',

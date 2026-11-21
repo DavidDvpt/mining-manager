@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { JSX, useMemo } from 'react';
 import { AppList } from '@/shared/appList';
 import { useTranslations } from '@/i18n/useTranslations';
 import {
@@ -13,14 +13,10 @@ import {
   createSellColumn,
   createStockColumn,
   createSummaryColumn,
-} from '@/shared/appList/columns';
-import type {
-  ItemStoreColumn,
-  ItemStoreListProps,
-} from '@/shared/types/listItem';
+} from './itemColumns';
+import type { ItemColumn, IItemListProps } from '@/shared/types/listItem';
 
-/** Render transaction-store catalogue rows with their type-specific columns. */
-export function ItemStoreList({
+export function ItemList({
   kind,
   rows,
   isLoading = false,
@@ -29,10 +25,10 @@ export function ItemStoreList({
   onBuy,
   onSell,
   onEdit,
-}: ItemStoreListProps): import('react').JSX.Element {
+}: IItemListProps): JSX.Element {
   const { t } = useTranslations();
-  const columns = useMemo<ItemStoreColumn[]>((): ItemStoreColumn[] => {
-    let typeColumns: ItemStoreColumn[] = [];
+  const columns = useMemo<ItemColumn[]>((): ItemColumn[] => {
+    let typeColumns: ItemColumn[] = [];
 
     switch (kind) {
       case 'finder':
@@ -47,7 +43,8 @@ export function ItemStoreList({
       case 'finder-amplifier':
         typeColumns = createFinderAmplifierColumns(t);
         break;
-      case 'enhancer':
+      case 'finder-enhancer':
+      case 'excavator-enhancer':
         typeColumns = createEnhancerColumns(t);
         break;
       case 'material':
@@ -92,4 +89,4 @@ export function ItemStoreList({
   );
 }
 
-export default ItemStoreList;
+export default ItemList;

@@ -1,10 +1,10 @@
 import type { ChangeEvent } from 'react';
-import type { ItemStoreColumn } from '@/shared/types/listItem';
+import type { ItemColumn } from '@/shared/types/listItem';
 import { TooltipProvider } from '@/shared/components/tooltip';
 import styles from './app-list.module.scss';
 
 export type AppListProps<TRow extends { id: string }> = {
-  columns: ItemStoreColumn<TRow>[];
+  columns: ItemColumn<TRow>[];
   rows: TRow[];
   isLoading?: boolean;
   isError?: boolean;
@@ -30,7 +30,7 @@ export function AppList<TRow extends { id: string }>({
 
   /** Forward a select cell change to the column's row-specific callback. */
   const handleSelectChange = (
-    column: ItemStoreColumn<TRow>,
+    column: ItemColumn<TRow>,
     row: TRow,
     event: ChangeEvent<HTMLSelectElement>,
   ): void | undefined => column.onSelectChange?.(row, event.target.value);

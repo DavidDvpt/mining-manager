@@ -16,3 +16,13 @@
     background: var(--success);
   }
 }
+
+.imageColumn {
+  padding-block: 2px;
+}
+
+.imageColumn > :first-child {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

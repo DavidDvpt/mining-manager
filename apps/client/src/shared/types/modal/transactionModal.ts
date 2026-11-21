@@ -1,4 +1,4 @@
-import type { ItemStoreRow } from '../listItem';
+import type { ItemRow } from '../listItem';
 import type { UnstackableLotResponse } from '@/api/generated/model/unstackableLotResponse';
 
 /** API lot shape accepted by the transaction modal, including remaining TT when provided. */
@@ -20,7 +20,7 @@ export type TransactionFormValues = {
 
 /** Props required to render and submit the transaction modal. */
 export type TransactionModalProps = {
-  item: ItemStoreRow | null;
+  item: ItemRow | null;
   lot: TransactionLot | null;
   lots?: TransactionLot[];
   action: TransactionAction;

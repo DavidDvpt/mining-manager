@@ -55,16 +55,6 @@
   white-space: nowrap;
 }
 
-.imageColumn {
-  padding-block: 2px;
-}
-
-.imageColumn > :first-child {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .actionCell {
   display: flex;
   flex: 0 0 2.75rem;

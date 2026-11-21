@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { isLimitedItem } from '@/shared/utils';
-import type { ItemStoreRow } from '@/shared/types/listItem';
+import type { ItemRow } from '@/shared/types/listItem';
 
 export type ToolEditValues = {
   tier?: number;
@@ -8,12 +8,12 @@ export type ToolEditValues = {
 };
 
 /** Return whether the selected tool supports tier editing. */
-export function shouldShowTier(item: ItemStoreRow | null): boolean {
+export function shouldShowTier(item: ItemRow | null): boolean {
   return item?.kind === 'finder' || item?.kind === 'excavator';
 }
 
 /** Return whether the selected unlimited tool supports TT editing. */
-export function shouldShowTt(item: ItemStoreRow | null): boolean {
+export function shouldShowTt(item: ItemRow | null): boolean {
   return (
     item !== null &&
     !isLimitedItem(item) &&

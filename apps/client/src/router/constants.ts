@@ -3,7 +3,7 @@ export const ITEM_ROUTES = {
   finders: 'finder',
   excavators: 'excavator',
   refiners: 'refiner',
-  amplifiers: 'finder-amplifier',
+  'finder-amplifiers': 'finder-amplifier',
   'finder-enhancers': 'finder-enhancer',
   'excavator-enhancers': 'excavator-enhancer',
 } as const;

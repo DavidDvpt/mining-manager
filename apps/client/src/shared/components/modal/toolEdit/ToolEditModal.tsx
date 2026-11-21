@@ -8,7 +8,7 @@ import { FormButtonsSection, GenericForm, InputRHF } from '@/shared/components';
 import { Modal } from '@/shared/components/modal';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from '@/i18n/useTranslations';
-import type { ItemStoreRow } from '@/shared/types/listItem';
+import type { ItemRow } from '@/shared/types/listItem';
 import styles from './tool-edit-modal.module.scss';
 import {
   createToolEditSchema,
@@ -19,7 +19,7 @@ import {
 import ToolEditFieldLabel from './ToolEditFieldLabel';
 
 type ToolEditModalProps = {
-  item: ItemStoreRow | null;
+  item: ItemRow | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };

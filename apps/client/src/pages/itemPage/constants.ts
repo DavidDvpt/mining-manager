@@ -11,6 +11,11 @@ export const FIXED_SIDEBAR_ITEM_BUTTONS = [
   { id: 'excavator', label: 'Excavator', linkTo: '/items/excavators' },
   { id: 'refiner', label: 'Refiner', linkTo: '/items/refiners' },
   {
+    id: 'finder-smplifier',
+    label: 'Finder Amplifiers',
+    linkTo: '/items/finder-amplifiers',
+  },
+  {
     id: 'finder-enhancers',
     label: 'Finder Enhancers',
     linkTo: '/items/finder-enhancers',

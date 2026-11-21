@@ -56,7 +56,7 @@ export function RunningTransactionsModal({
   };
 
   const columns = useMemo(
-    (): import('../../..').ItemStoreColumn<RunningTransactionRow>[] =>
+    (): import('../../..').ItemColumn<RunningTransactionRow>[] =>
       createRunningTransactionColumns(t, (row, status): void => {
         void handleStatusChange(row, status);
       }),

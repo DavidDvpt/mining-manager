@@ -1,4 +1,4 @@
-import { ItemStoreRow } from '@/shared/types';
+import { ItemRow } from '@/shared/types';
 import type { TransactionAction, TransactionLot } from '@/shared/types/modal';
 import { isStackableItem, numericValue } from '@/shared/utils';
 
@@ -22,7 +22,7 @@ export class TransactionPricing {
 
   constructor(
     private readonly action: PricingAction,
-    item: ItemStoreRow | null,
+    item: ItemRow | null,
     lot: TransactionLot | null,
   ) {
     this.autoCompute = action !== 'buy';

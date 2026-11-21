@@ -26,10 +26,10 @@ import { TransactionModalInfo } from './TransactionModalInfo';
 import { TransactionSummary } from './TransactionSummary';
 import { transactionFormSchema } from './transactionFormSchema';
 import styles from './transaction-modal.module.scss';
-import { ItemStoreRow } from '@/shared/types';
+import { ItemRow } from '@/shared/types';
 
 type TransactionModalProps = {
-  item: ItemStoreRow | null;
+  item: ItemRow | null;
   lot: TransactionLot | null;
   lots?: TransactionLot[];
   action: TransactionAction;
