@@ -33,6 +33,47 @@
   min-width: 0;
 }
 
+.link {
+  display: inline-flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 2.25rem;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    color 120ms ease;
+
+  &:focus-visible {
+    outline: 2px solid var(--primary-300);
+    outline-offset: 2px;
+  }
+
+  &:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+  }
+}
+
+.active {
+  background: var(--blue-600);
+  color: var(--text);
+
+  &:hover {
+    background: var(--blue-500);
+  }
+}
+
 .label {
   min-width: 0;
   white-space: normal;

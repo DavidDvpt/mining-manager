@@ -24,7 +24,6 @@ export function ItemPageContent({
   const [ownedOnly, setOwnedOnly] = useState(true);
   const { rows, isLoading, isError } = useItemStoreData();
 
-  console.log(rows);
   const [activeViewPrefix, activeViewSuffix] = t(
     'TRANSACTIONS.ACTIVE_VIEW',
   ).split('{view}');

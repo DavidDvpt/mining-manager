@@ -16,7 +16,8 @@ export const ITEM_SUB_ROUTES = {
   ore: 'Ore',
   'refined-ore': 'Refined Ore',
   food: 'Food',
-  strongboxe: 'Strongboxes',
+  fragment: 'Fragment',
+  strongboxes: 'Strongboxes',
   'natural-material': 'Natural Material',
 } as const;
 

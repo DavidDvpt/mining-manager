@@ -35,6 +35,5 @@ export type SidebarLayoutProps = PropsWithChildren<{
 export type SidebarButtonItemProps = {
   button: SidebarButtonType;
   level: number;
-  isActive: boolean;
-  isExpanded: boolean;
+  pathname: string;
 };

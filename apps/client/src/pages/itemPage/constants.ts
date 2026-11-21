@@ -52,7 +52,7 @@ export const transactionButtons = (
         }): { id: `material-${string}`; label: string; linkTo: string } => ({
           id: `material-${id}`,
           label: name,
-          linkTo: `materials/${toSlug(name)}`,
+          linkTo: `/items/materials/${toSlug(name)}`,
         }),
       ),
     },

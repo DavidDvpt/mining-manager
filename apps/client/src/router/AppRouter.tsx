@@ -11,10 +11,6 @@ import { toSlug } from '@/shared/utils/string';
 
 /** Render the public and authenticated business routes. */
 export function AppRouter(): import('react').JSX.Element {
-  const location = useLocation();
-
-  console.log(location.pathname);
-  console.log(location.search);
   const { data: materialTypes = [] } = useGetApiV1MaterialTypes();
   const parsed = materialTypes?.map(({ name }): string => toSlug(name)) ?? [];
 
