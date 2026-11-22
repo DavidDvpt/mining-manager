@@ -9,7 +9,7 @@ import { useItemStoreData } from '@/shared/hooks';
 import { JSX, useMemo, useState } from 'react';
 import { ItemKind, ItemSubKind } from '@/router/constants';
 
-import { ItemRow } from '@/shared';
+import { ItemRow, TransactionAction } from '@/shared';
 import { toSlug } from '@/shared/utils/string';
 
 interface ItemListLayoutProps {
@@ -17,6 +17,7 @@ interface ItemListLayoutProps {
   subKind?: ItemSubKind;
 }
 
+/** Render the filtered catalogue and navigate to item actions with row context. */
 export function ItemPageContent({
   kind,
   subKind,
@@ -49,6 +50,11 @@ export function ItemPageContent({
     ? filteredRows.filter((row) => (row.stock ?? 0) > 0)
     : filteredRows;
 
+  const handleClick = (row: ItemRow, type: TransactionAction | 'edit') => {
+    const query = `?item=${encodeURIComponent(JSON.stringify(row))}`;
+
+    navigate(`${row.id}/${type}${query}`);
+  };
   return (
     <Panel className={styles.page}>
       <Section className={styles.content}>
@@ -74,13 +80,9 @@ export function ItemPageContent({
           isLoading={isLoading}
           isError={isError}
           showMaterialType={kind === 'material'}
-          onBuy={(row) => navigate(`${row.id}/buy?item=${JSON.stringify(row)}`)}
-          onSell={(row) =>
-            navigate(`${row.id}/sell?item=${JSON.stringify(row)}`)
-          }
-          onEdit={(row) =>
-            navigate(`${row.id}/edit?item=${JSON.stringify(row)}`)
-          }
+          onBuy={(row) => handleClick(row, 'buy')}
+          onSell={(row) => handleClick(row, 'sell')}
+          onEdit={(row) => handleClick(row, 'edit')}
         />
       </Section>
       <Outlet />

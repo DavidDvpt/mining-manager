@@ -79,6 +79,13 @@ export type TranslationSchema = {
     QUANTITY: string;
     INSTANCE: string;
     AUTO_COMPUTE: string;
+    TYPE_DETAIL: string;
+    PURCHASE_QUANTITY: string;
+    TYPE_DETAIL_HAND_TO_HAND: string;
+    TYPE_DETAIL_FOUND: string;
+    TYPE_DETAIL_GIFT: string;
+    TYPE_DETAIL_EXISTING_STOCK: string;
+    TYPE_DETAIL_GIVEN: string;
   };
   RUNNING_TRANSACTIONS_MODAL: {
     TITLE: string;

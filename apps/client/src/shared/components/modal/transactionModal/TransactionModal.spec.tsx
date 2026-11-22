@@ -96,6 +96,7 @@ describe('TransactionModal', () => {
         item={stackableItem}
         lot={null}
         action="buy"
+        kind="material"
         open
         onOpenChange={vi.fn()}
       />,
@@ -112,6 +113,7 @@ describe('TransactionModal', () => {
         item={unstackableItem}
         lot={null}
         action="buy"
+        kind="tool"
         open
         onOpenChange={vi.fn()}
       />,
@@ -130,6 +132,7 @@ describe('TransactionModal', () => {
         item={stackableItem}
         lot={null}
         action="buy"
+        kind="material"
         open
         onOpenChange={onOpenChange}
       />,
@@ -159,6 +162,7 @@ describe('TransactionModal', () => {
         item={unstackableItem}
         lot={null}
         action="buy"
+        kind="tool"
         open
         onOpenChange={vi.fn()}
       />,
@@ -191,6 +195,7 @@ describe('TransactionModal', () => {
         item={stackableItem}
         lot={null}
         action="buy"
+        kind="material"
         open
         onOpenChange={vi.fn()}
       />,
@@ -213,6 +218,7 @@ describe('TransactionModal', () => {
         item={stackableItem}
         lot={null}
         action="buy"
+        kind="material"
         open
         onOpenChange={vi.fn()}
       />,
@@ -237,6 +243,7 @@ describe('TransactionModal', () => {
         item={stackableItem}
         lot={null}
         action="sell"
+        kind="material"
         open
         onOpenChange={vi.fn()}
       />,
@@ -261,6 +268,7 @@ describe('TransactionModal', () => {
         item={stackableItem}
         lot={null}
         action="sell"
+        kind="material"
         open
         onOpenChange={onOpenChange}
       />,
@@ -296,6 +304,7 @@ describe('TransactionModal', () => {
           } as never
         }
         action="sell"
+        kind="tool"
         open
         onOpenChange={vi.fn()}
       />,
@@ -320,6 +329,7 @@ describe('TransactionModal', () => {
         item={unstackableItem}
         lot={null}
         action="sell"
+        kind="tool"
         open
         onOpenChange={onOpenChange}
       />,

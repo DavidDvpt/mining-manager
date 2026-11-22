@@ -6,10 +6,12 @@ import type { CreateUnstackableBuyRequestKind } from './createUnstackableBuyRequ
 import type { CreateUnstackableBuyRequestTypeDetail } from './createUnstackableBuyRequestTypeDetail.js';
 
 /**
- * Payload for a non-stackable BUY transaction session.
+ * Payload for one or more identical non-stackable BUY sessions.
  */
 export interface CreateUnstackableBuyRequest {
   quantity?: 1;
+  /** @minimum 1 */
+  purchase_quantity?: number;
   tt: number | string;
   kind: CreateUnstackableBuyRequestKind;
   type_detail: CreateUnstackableBuyRequestTypeDetail;

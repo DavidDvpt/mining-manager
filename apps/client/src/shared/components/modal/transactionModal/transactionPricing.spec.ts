@@ -16,16 +16,6 @@ const item: ItemRow = {
 };
 
 describe('TransactionPricing', () => {
-  it('starts buy transactions without automatic pricing and can synchronize it', () => {
-    const pricing = new TransactionPricing('buy', item, null);
-
-    expect(pricing.getAutoCompute()).toBe(false);
-
-    pricing.setAutoCompute(true);
-
-    expect(pricing.getAutoCompute()).toBe(true);
-  });
-
   it('allows editing the buy fee and keeps TTC above TT plus fee', async () => {
     const pricing = new TransactionPricing('buy', item, null);
 

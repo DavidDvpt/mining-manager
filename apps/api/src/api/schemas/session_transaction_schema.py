@@ -25,9 +25,10 @@ class CreateStackableBuyRequest(BaseModel):
 
 
 class CreateUnstackableBuyRequest(BaseModel):
-    """Payload for a non-stackable BUY transaction session."""
+    """Payload for one or more identical non-stackable BUY sessions."""
 
     quantity: Literal[1] = 1
+    purchase_quantity: int = Field(default=1, ge=1)
     tt: Decimal
     kind: Literal["tool", "enhancer", "material"]
     type_detail: Literal[

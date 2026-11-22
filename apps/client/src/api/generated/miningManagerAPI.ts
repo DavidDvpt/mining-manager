@@ -3441,7 +3441,7 @@ export const usePostApiV1TransactionBuyStackable = <TError = ErrorType<HTTPValid
     }
 
 /**
- * Create a BUY session for one non-stackable lot.
+ * Create one or more identical BUY sessions for non-stackable lots.
  * @summary Create Buy Unstackable
  */
 export const postApiV1TransactionBuyUnstackable = (

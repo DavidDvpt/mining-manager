@@ -6,13 +6,13 @@ import styles from './transaction-modal.module.scss';
 
 type TransactionModalInfoProps = {
   item: ItemRow | null;
-  lot: TransactionLot | null;
+  lot?: TransactionLot | null;
 };
 
 /** Render the selected item information displayed in the transaction modal. */
 export function TransactionModalInfo({
   item,
-  lot,
+  lot = null,
 }: TransactionModalInfoProps): import('react').JSX.Element {
   const name = item?.name ?? lot?.item.name ?? 'Item';
   const imageUrl = item?.imageUrl ?? null;
@@ -21,6 +21,7 @@ export function TransactionModalInfo({
   return (
     <div className={styles.itemInfo}>
       <EntropiaImage url={imageUrl} alt={name} size="small" />
+
       <div className={styles.itemDetails}>
         <strong>{lot ? `${name} T${lot.tier ?? 0}` : name}</strong>
         <span>TT : {formatDecimalValue(tt)}</span>

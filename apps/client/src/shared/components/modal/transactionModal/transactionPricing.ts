@@ -1,6 +1,6 @@
 import { ItemRow } from '@/shared/types';
 import type { TransactionAction, TransactionLot } from '@/shared/types/modal';
-import { isStackableItem, numericValue } from '@/shared/utils';
+import { numericValue } from '@/shared/utils';
 
 export type PricingAction = TransactionAction;
 export type TransactionPricingField = 'quantity' | 'tt' | 'fee' | 'ttc';
@@ -15,7 +15,6 @@ export type TransactionPricingValues = {
 
 /** Own transaction values and apply automatic pricing transitions. */
 export class TransactionPricing {
-  private autoCompute = true;
   private itemTtValue = 0;
   private isStackable = false;
   private values: TransactionPricingValues;
@@ -25,8 +24,7 @@ export class TransactionPricing {
     item: ItemRow | null,
     lot: TransactionLot | null,
   ) {
-    this.autoCompute = action !== 'buy';
-    this.isStackable = Boolean(item && isStackableItem(item) && !lot);
+    this.isStackable = Boolean(item && item.details.isStackable && !lot);
     this.itemTtValue = item?.tt ?? 0;
 
     const tt = lot
@@ -46,16 +44,6 @@ export class TransactionPricing {
     return this.values;
   }
 
-  /** Return whether automatic pricing is enabled for the current transaction. */
-  getAutoCompute(): boolean {
-    return this.autoCompute;
-  }
-
-  /** Enable or disable automatic pricing for subsequent edits. */
-  setAutoCompute(value: boolean): void {
-    this.autoCompute = value;
-  }
-
   /** Normalize a numeric input while preserving decimal values except quantity. */
   private normalizeValue(
     field: TransactionPricingField,
@@ -68,8 +56,9 @@ export class TransactionPricing {
   async update(
     field: TransactionPricingField,
     value: number | undefined,
+    autoCompute = true,
   ): Promise<TransactionPricingValues> {
-    if (value === undefined || !this.canUpdate(field, value)) {
+    if (value === undefined || !field) {
       return this.values;
     }
 
@@ -77,21 +66,9 @@ export class TransactionPricing {
     this.values =
       this.action === 'buy'
         ? this.updateBuy(field, normalizedValue)
-        : this.updateSell(field, normalizedValue);
+        : this.updateSell(field, normalizedValue, autoCompute);
 
     return this.values;
-  }
-
-  /** Return whether a field can update the pricing session in its current mode. */
-  private canUpdate(
-    field: TransactionPricingField,
-    value: number | undefined,
-  ): boolean {
-    return Boolean(
-      field &&
-      value !== undefined &&
-      (this.autoCompute || this.action === 'buy'),
-    );
   }
 
   /** Apply a buy input and keep TTC valid when TT or fee changes. */
@@ -110,13 +87,14 @@ export class TransactionPricing {
 
     return field === 'ttc'
       ? nextValues
-      : this.ensureTtcCoversAmount(nextValues);
+      : this.ensureTtcCoversAmount(nextValues, true);
   }
 
   /** Apply a sale input while respecting stackability and temporary TTC edits. */
   private updateSell(
     field: TransactionPricingField,
     value: number,
+    autoCompute: boolean,
   ): TransactionPricingValues {
     if (field === 'quantity' && !this.isStackable) return this.values;
     if (field === 'tt' && this.isStackable) return this.values;
@@ -132,21 +110,22 @@ export class TransactionPricing {
 
     return field === 'ttc'
       ? nextValues
-      : this.ensureTtcCoversAmount(nextValues);
+      : this.ensureTtcCoversAmount(nextValues, autoCompute);
   }
 
   /** Keep TTC above TT plus fee, recalculating fees when needed. */
   private ensureTtcCoversAmount(
     values: TransactionPricingValues,
+    autoCompute: boolean,
   ): TransactionPricingValues {
     const { fee } = values;
     let { ttc } = values;
-    let calculatedFee = this.calculateFee(values.tt, fee, ttc);
+    let calculatedFee = this.calculateFee(values.tt, fee, ttc, autoCompute);
 
     while (ttc - calculatedFee - values.tt < 0) {
       ttc += 1;
       calculatedFee =
-        this.action === 'buy'
+        this.action === 'buy' || !autoCompute
           ? calculatedFee
           : this.feeFromMarkup(ttc - values.tt);
     }
@@ -155,8 +134,13 @@ export class TransactionPricing {
   }
 
   /** Calculate the fee according to the transaction mode and current markup. */
-  private calculateFee(tt: number, fee: number, ttc: number): number {
-    if (this.action === 'buy' || fee !== 0) return fee;
+  private calculateFee(
+    tt: number,
+    fee: number,
+    ttc: number,
+    autoCompute: boolean,
+  ): number {
+    if (this.action === 'buy' || !autoCompute || fee !== 0) return fee;
     return this.feeFromMarkup(ttc - tt);
   }
 

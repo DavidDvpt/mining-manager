@@ -92,11 +92,12 @@ async def create_buy_unstackable(
     current_user: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> SessionTransactionResponse:
-    """Create a BUY session for one non-stackable lot."""
+    """Create one or more identical BUY sessions for non-stackable lots."""
 
     transaction_session = await get_session_transaction_service(session).create_buy_unstackable(
         user_id=current_user["id"],
         item_id=payload.item_id,
+        purchase_quantity=payload.purchase_quantity,
         tt=payload.tt,
         kind=payload.kind,
         type_detail=SessionTransactionTypeDetail(payload.type_detail),

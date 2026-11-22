@@ -3,7 +3,6 @@ import { AppIconName } from '@/shared/components/icon';
 import { createIconColumn } from '../../../shared/appList/columns/createIconColumn';
 import type { ItemColumn, ItemRow } from '@/shared/types/listItem';
 import { formatDecimalValue } from '@/shared/utils';
-import { isLimitedItem } from '@/shared/utils';
 import type { TranslationKey } from '@/i18n/types';
 import styles from './item-list.module.scss';
 import { JSX } from 'react/jsx-runtime';
@@ -122,7 +121,7 @@ export const createEditColumn = (
       const isEditableTool =
         row.kind === 'finder' ||
         row.kind === 'excavator' ||
-        (!isLimitedItem(row) &&
+        (!row.details.isLimited &&
           (row.kind === 'refiner' || row.kind === 'finder-amplifier'));
       return isEditableTool && (row.stock ?? 0) > 0;
     },

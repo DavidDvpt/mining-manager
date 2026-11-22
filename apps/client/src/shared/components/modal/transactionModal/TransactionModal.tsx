@@ -3,7 +3,7 @@ import { FormButtonsSection } from '@/shared/components/form/FormButtonsSection'
 import { Modal } from '@/shared/components/modal';
 import { useTranslations } from '@/i18n/useTranslations';
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   getGetApiV1StorageMaterialStockQueryKey,
   usePostApiV1TransactionBuyStackable,
@@ -15,41 +15,35 @@ import {
   getGetApiV1FindersStockQueryKey,
   getGetApiV1RefinersStockQueryKey,
 } from '@/api/generated/miningManagerAPI';
-import { isStackableItem } from '@/shared/utils';
 import type {
-  TransactionAction,
   TransactionFormValues,
-  TransactionLot,
+  TransactionModalProps,
 } from '@/shared/types/modal';
 import { TransactionForm } from './TransactionForm';
 import { TransactionModalInfo } from './TransactionModalInfo';
 import { TransactionSummary } from './TransactionSummary';
 import { transactionFormSchema } from './transactionFormSchema';
+import { getTransactionKind } from './transactionModal.utils';
 import styles from './transaction-modal.module.scss';
-import { ItemRow } from '@/shared/types';
 
-type TransactionModalProps = {
-  item: ItemRow | null;
-  lot: TransactionLot | null;
-  lots?: TransactionLot[];
-  action: TransactionAction;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-};
-/** Render the transaction modal and orchestrate its pricing form. */
+/** Render, validate, submit, and close a transaction using the supplied item. */
 export function TransactionModal({
   item,
   lot,
   lots = [],
   action,
   open,
-  onOpenChange,
+  onClose,
 }: TransactionModalProps): import('react').JSX.Element | null {
   const { t } = useTranslations();
   const queryClient = useQueryClient();
   const [validationError, setValidationError] = useState<string | null>(null);
   const [selectedLotId, setSelectedLotId] = useState<string | null>(null);
-  const availableLots = lots.length > 0 ? lots : lot ? [lot] : [];
+
+  const availableLots = useMemo(() => {
+    return lots.length > 0 ? lots : lot ? [lot] : [];
+  }, [lots, lot]);
+
   const selectedLot =
     availableLots.find(({ id }): boolean => id === selectedLotId) ??
     availableLots[0] ??
@@ -58,19 +52,21 @@ export function TransactionModal({
   /** Select the first available instance whenever a transaction is opened or its item changes. */
   useEffect((): void => {
     setSelectedLotId(availableLots[0]?.id ?? null);
-  }, [item?.id, action, open, lots]);
+  }, [item?.id, action, open, lots, availableLots]);
 
   const buyStackable = usePostApiV1TransactionBuyStackable();
   const buyUnstackable = usePostApiV1TransactionBuyUnstackable();
   const sellStackable = usePostApiV1TransactionSellStackable();
   const sellUnstackable = usePostApiV1TransactionSellUnstackable();
-  const isStackable = Boolean(item && isStackableItem(item) && !selectedLot);
+  const isStackable = Boolean(item && item.details.isStackable && !selectedLot);
 
   /** Persist the transaction through the mutation matching its action and stackability. */
   const handleSubmit = async (
     formValues: TransactionFormValues,
   ): Promise<void> => {
     if (!item) return;
+
+    const kind = getTransactionKind(item);
 
     if (
       action === 'sell' &&
@@ -87,13 +83,6 @@ export function TransactionModal({
     }
 
     setValidationError(null);
-
-    const kind =
-      item.kind === 'material'
-        ? 'material'
-        : item.kind === 'enhancer'
-          ? 'enhancer'
-          : 'tool';
 
     if (action === 'sell') {
       if (isStackable) {
@@ -120,7 +109,7 @@ export function TransactionModal({
         data: {
           quantity: formValues.quantity,
           kind,
-          type_detail: 'TT',
+          type_detail: formValues.type_detail,
           item_id: item.id,
           fee: formValues.fee,
           ttc: formValues.ttc,
@@ -131,7 +120,7 @@ export function TransactionModal({
         data: {
           quantity: 1,
           kind,
-          type_detail: 'TT',
+          type_detail: formValues.type_detail,
           item_id: item.id,
           tt: formValues.tt,
           fee: formValues.fee,
@@ -167,7 +156,7 @@ export function TransactionModal({
       ),
     );
 
-    onOpenChange(false);
+    onClose();
   };
 
   if (!item) return null;
@@ -175,7 +164,7 @@ export function TransactionModal({
   return (
     <Modal
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={onClose}
       title={action === 'buy' ? 'Achat' : 'Vente'}
       description={`${item.name} · ${isStackable ? 'Stackable' : 'Unstackable'}`}
     >
@@ -187,17 +176,19 @@ export function TransactionModal({
           tt: 0,
           fee: 0,
           ttc: 0,
-          autoCompute: true,
+          type_detail: 'AUCTION',
         }}
         onSubmit={handleSubmit}
         className={styles.form}
       >
         <TransactionModalInfo item={item} lot={selectedLot} />
+
         {validationError ? (
           <p className={styles.validationError} role="alert">
             {validationError}
           </p>
         ) : null}
+
         <TransactionForm
           action={action}
           isStackable={isStackable}
@@ -207,9 +198,11 @@ export function TransactionModal({
           selectedLotId={selectedLot?.id ?? null}
           onLotChange={setSelectedLotId}
         />
+
         <TransactionSummary stackable={isStackable} />
+
         <FormButtonsSection
-          onCancel={(): void => onOpenChange(false)}
+          onCancel={(): void => onClose()}
           cancelLabel="Annuler"
           submitLabel="Valider"
           align="right"

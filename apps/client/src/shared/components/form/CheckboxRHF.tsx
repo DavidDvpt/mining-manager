@@ -8,17 +8,21 @@ type CheckboxRHFProps = {
   name: string;
   label?: string;
   checkedValue?: string;
+  checked?: boolean;
+  bindToForm?: boolean;
   disabled?: boolean;
   wrapperClassName?: string;
   labelClassName?: string;
   onCheckedChange?: (checked: boolean) => void;
 };
 
-/** Bind the shared checkbox primitive to the current React Hook Form context. */
+/** Bind or control a checkbox while optionally excluding it from form state. */
 export function CheckboxRHF({
   name,
   label,
   checkedValue,
+  checked,
+  bindToForm = true,
   disabled = false,
   wrapperClassName,
   labelClassName,
@@ -27,13 +31,17 @@ export function CheckboxRHF({
   const form = useFormContext();
 
   useEffect((): void => {
-    form.register(name);
-  }, [form, name]);
+    if (bindToForm) form.register(name);
+  }, [bindToForm, form, name]);
 
   const fieldValue = form.watch(name);
-  const value = checkedValue
-    ? Array.isArray(fieldValue) && fieldValue.includes(checkedValue)
-    : Boolean(fieldValue);
+  const formValue =
+    bindToForm && checkedValue
+      ? Array.isArray(fieldValue) && fieldValue.includes(checkedValue)
+      : bindToForm
+        ? Boolean(fieldValue)
+        : false;
+  const value = checked ?? formValue;
 
   /** Store the checkbox value in RHF and notify the consumer of the new state. */
   const handleCheckedChange = (checked: boolean): void => {
@@ -48,11 +56,13 @@ export function CheckboxRHF({
               );
         })()
       : nextChecked;
-    form.setValue(name, nextValue, {
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: true,
-    });
+    if (bindToForm) {
+      form.setValue(name, nextValue, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+    }
     onCheckedChange?.(nextChecked);
   };
 

@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { isLimitedItem } from '@/shared/utils';
 import type { ItemRow } from '@/shared/types/listItem';
 
 export type ToolEditValues = {
@@ -16,7 +15,7 @@ export function shouldShowTier(item: ItemRow | null): boolean {
 export function shouldShowTt(item: ItemRow | null): boolean {
   return (
     item !== null &&
-    !isLimitedItem(item) &&
+    !item.details.isLimited &&
     (item.kind === 'finder' ||
       item.kind === 'excavator' ||
       item.kind === 'refiner' ||

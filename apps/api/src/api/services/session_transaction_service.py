@@ -103,8 +103,12 @@ class SessionTransactionService:
         fee: Decimal | None,
         ttc: Decimal,
         type_detail: SessionTransactionTypeDetail,
+        purchase_quantity: int = 1,
     ) -> Session:
-        """Create a non-stackable BUY line with a lot and null quantity."""
+        """Create the requested number of identical non-stackable BUY sessions."""
+
+        if purchase_quantity < 1:
+            raise UnprocessingError("Purchase quantity must be at least 1")
 
         stackable = await self._item_service.is_item_stackable(item_id=item_id)
         if stackable is None:
@@ -115,27 +119,24 @@ class SessionTransactionService:
         tier = 0 if await self._item_service.is_item_tierable(item_id=item_id) else None
 
         async with _transaction_scope(self._session):
-            transaction_session, line = await self._repository.create_buy(
-                user_id=user_id, item_id=item_id, lot_id=None, quantity=1,
-                tt=tt, fee=fee, ttc=ttc, type_detail=type_detail,
-            )
-            if tier is not None:
-                await self._lot_service.create_transaction_lot(
-                    user_id=user_id,
-                    session_line=line,
-                    kind=LotKind(kind.upper()),
-                    quantity=1,
-                    tt=tt,
-                    tier=tier,
+            transaction_session: Session | None = None
+            for _ in range(purchase_quantity):
+                transaction_session, line = await self._repository.create_buy(
+                    user_id=user_id, item_id=item_id, lot_id=None, quantity=1,
+                    tt=tt, fee=fee, ttc=ttc, type_detail=type_detail,
                 )
-            else:
-                await self._lot_service.create_transaction_lot(
-                    user_id=user_id,
-                    session_line=line,
-                    kind=LotKind(kind.upper()),
-                    quantity=1,
-                    tt=tt,
-                )
+                lot_kwargs = {
+                    "user_id": user_id,
+                    "session_line": line,
+                    "kind": LotKind(kind.upper()),
+                    "quantity": 1,
+                    "tt": tt,
+                }
+                if tier is not None:
+                    lot_kwargs["tier"] = tier
+                await self._lot_service.create_transaction_lot(**lot_kwargs)
+            if transaction_session is None:
+                raise RuntimeError("No unstackable purchase session was created")
             return transaction_session
 
     async def create_sell_stackable(

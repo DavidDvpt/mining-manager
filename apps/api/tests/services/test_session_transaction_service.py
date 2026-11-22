@@ -181,6 +181,33 @@ async def test_create_buy_unstackable_persists_one_lot(service):
     )
 
 
+async def test_create_buy_unstackable_creates_requested_number_of_purchases(service):
+    """Create one independent unstackable purchase session per requested unit."""
+
+    expected_sessions = [
+        transaction_session(SessionTransactionType.BUY, SessionTransactionStatus.SOLDED)
+        for _ in range(3)
+    ]
+    lines = [SimpleNamespace(id=uuid4()) for _ in range(3)]
+    service._item_service.is_item_stackable.return_value = False
+    service._repository.create_buy.side_effect = list(zip(expected_sessions, lines))
+
+    result = await service.create_buy_unstackable(
+        user_id=uuid4(),
+        item_id=uuid4(),
+        kind="tool",
+        tt=Decimal("12.345"),
+        fee=None,
+        ttc=Decimal("15"),
+        type_detail=SessionTransactionTypeDetail.AUCTION,
+        purchase_quantity=3,
+    )
+
+    assert result is expected_sessions[-1]
+    assert service._repository.create_buy.await_count == 3
+    assert service._lot_service.create_transaction_lot.await_count == 3
+
+
 async def test_create_sell_stackable_allocates_fifo_lots(service):
     """Reserve the requested stackable quantity across FIFO lots."""
 

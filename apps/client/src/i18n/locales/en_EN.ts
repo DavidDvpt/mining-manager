@@ -82,6 +82,13 @@ export const en_EN: TranslationSchema = {
     QUANTITY: 'Quantity',
     INSTANCE: 'Tool',
     AUTO_COMPUTE: 'Automatic calculation',
+    TYPE_DETAIL: 'Purchase mode',
+    PURCHASE_QUANTITY: 'Purchase quantity',
+    TYPE_DETAIL_HAND_TO_HAND: 'Hand to hand',
+    TYPE_DETAIL_FOUND: 'Found',
+    TYPE_DETAIL_GIFT: 'Gift',
+    TYPE_DETAIL_EXISTING_STOCK: 'Existing stock',
+    TYPE_DETAIL_GIVEN: 'Given',
   },
   RUNNING_TRANSACTIONS_MODAL: {
     TITLE: 'Running transactions',
