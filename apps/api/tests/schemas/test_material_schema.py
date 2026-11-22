@@ -18,6 +18,7 @@ def test_material_details_serializes_material_type_object():
     response = MaterialDetailsResponse.model_validate(details)
 
     assert response.model_dump() == {
+        "is_stackable": True,
         "type": {
             "id": material_type_id,
             "name": "Natural Material",

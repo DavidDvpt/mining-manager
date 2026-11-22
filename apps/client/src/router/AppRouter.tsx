@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 
 import HomePage from '@/pages/homePage/HomePage';
 import MainLayout from '@/layouts/mainLayout/MainLayout';
@@ -13,7 +13,6 @@ import { toSlug } from '@/shared/utils/string';
 export function AppRouter(): import('react').JSX.Element {
   const { data: materialTypes = [] } = useGetApiV1MaterialTypes();
   const parsed = materialTypes?.map(({ name }): string => toSlug(name)) ?? [];
-
   return (
     <Routes>
       <Route element={<GuestOnly />}>

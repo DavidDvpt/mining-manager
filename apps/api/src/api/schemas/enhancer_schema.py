@@ -11,6 +11,7 @@ from .item_schema import ItemResponse
 class EnhancerDetailsResponse(ApiResponseModel):
     """Enhancer-specific data exposed under ``details``."""
 
+    is_stackable: bool = True
     bonus: Decimal
     decay_improvement: Decimal | None
     socket: int

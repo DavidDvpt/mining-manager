@@ -6,12 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.db.models import Item
 from api.db.repositories import ItemRepository
-
-
-def is_limited_item(item: Item) -> bool:
-    """Return whether the catalogue name marks an item as limited."""
-
-    return item.name.endswith("(L)")
+from api.entities.item_rules import is_limited_item
 
 
 class ItemService:

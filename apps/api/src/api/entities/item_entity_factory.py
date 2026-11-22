@@ -4,6 +4,7 @@ from typing import TypeVar
 
 from api.db.models import Item
 
+from .item_rules import is_limited_item
 from .item_entity import ItemEntity
 
 TDetails = TypeVar("TDetails")
@@ -14,6 +15,9 @@ def build_item_entity(item: Item, details: TDetails | None) -> ItemEntity[TDetai
 
     if item.economy is None or details is None:
         raise RuntimeError("Item is missing economy data or type-specific details")
+
+    # Catalogue detail schemas expose this computed flag without persisting it.
+    setattr(details, "is_limited", is_limited_item(item))
 
     return ItemEntity(
         id=item.id,

@@ -9,6 +9,8 @@ from .item_schema import ItemResponse
 class FinderAmplifierDetailsResponse(ApiResponseModel):
     """Finder amplifier-specific data exposed under ``details``."""
 
+    is_stackable: bool = False
+    is_limited: bool
     efficiency: Decimal | None
     profession_level_min: Decimal | None
 
