@@ -74,9 +74,13 @@ export function ItemPageContent({
           isLoading={isLoading}
           isError={isError}
           showMaterialType={kind === 'material'}
-          onBuy={(row) => navigate(`${row.id}/buy`)}
-          onSell={(row) => navigate(`${row.id}/sell`)}
-          onEdit={(row) => navigate(`${row.id}/edit`)}
+          onBuy={(row) => navigate(`${row.id}/buy?item=${JSON.stringify(row)}`)}
+          onSell={(row) =>
+            navigate(`${row.id}/sell?item=${JSON.stringify(row)}`)
+          }
+          onEdit={(row) =>
+            navigate(`${row.id}/edit?item=${JSON.stringify(row)}`)
+          }
         />
       </Section>
       <Outlet />

@@ -7,6 +7,8 @@
  * Finder-specific data exposed under ``details``.
  */
 export interface FinderDetailsResponse {
+  isStackable?: boolean;
+  isLimited: boolean;
   usePerMinute: number | null;
   depth: string | null;
   range: string | null;

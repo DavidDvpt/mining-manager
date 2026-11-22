@@ -8,5 +8,6 @@ import type { MaterialTypeResponse } from './materialTypeResponse.js';
  * Material-specific data exposed under ``details``.
  */
 export interface MaterialDetailsResponse {
+  isStackable?: boolean;
   type: MaterialTypeResponse;
 }

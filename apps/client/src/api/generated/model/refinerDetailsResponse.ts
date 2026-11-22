@@ -7,5 +7,7 @@
  * Refiner-specific data exposed under ``details``.
  */
 export interface RefinerDetailsResponse {
+  isStackable?: boolean;
+  isLimited: boolean;
   usePerMinute: number | null;
 }

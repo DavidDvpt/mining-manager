@@ -7,6 +7,8 @@
  * Finder amplifier-specific data exposed under ``details``.
  */
 export interface FinderAmplifierDetailsResponse {
+  isStackable?: boolean;
+  isLimited: boolean;
   efficiency: string | null;
   professionLevelMin: string | null;
 }

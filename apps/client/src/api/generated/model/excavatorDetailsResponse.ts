@@ -7,6 +7,8 @@
  * Excavator-specific data exposed under ``details``.
  */
 export interface ExcavatorDetailsResponse {
+  isStackable?: boolean;
+  isLimited: boolean;
   usePerMinute: number | null;
   efficiency: string | null;
 }

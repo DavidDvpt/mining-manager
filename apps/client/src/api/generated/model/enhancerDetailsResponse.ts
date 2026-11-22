@@ -9,6 +9,7 @@ import type { Tool } from './tool.js';
  * Enhancer-specific data exposed under ``details``.
  */
 export interface EnhancerDetailsResponse {
+  isStackable?: boolean;
   bonus: string;
   decayImprovement: string | null;
   socket: number;
