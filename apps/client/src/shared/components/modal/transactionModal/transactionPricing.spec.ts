@@ -17,7 +17,7 @@ const item: ItemRow = {
 
 describe('TransactionPricing', () => {
   it('allows editing the buy fee and keeps TTC above TT plus fee', async () => {
-    const pricing = new TransactionPricing('buy', item, null);
+    const pricing = new TransactionPricing('buy', item);
 
     const afterFee = await pricing.update('fee', 3);
 
@@ -29,11 +29,22 @@ describe('TransactionPricing', () => {
   });
 
   it('keeps a temporarily low TTC while editing a sale', async () => {
-    const pricing = new TransactionPricing('sell', item, null);
+    const pricing = new TransactionPricing('sell', item);
 
     const afterFee = await pricing.update('fee', 3);
     const values = await pricing.update('ttc', 11);
 
     expect(values).toMatchObject({ tt: 10, fee: afterFee.fee, ttc: 11 });
+  });
+
+  it('rounds calculated decimal values to two places', async () => {
+    const pricing = new TransactionPricing('buy', {
+      ...item,
+      tt: 10.123,
+    });
+
+    const values = await pricing.update('quantity', 3);
+
+    expect(values).toMatchObject({ tt: 30.37, fee: 0, ttc: 31 });
   });
 });

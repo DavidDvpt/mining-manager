@@ -1,10 +1,16 @@
 import type { ItemRow } from '../listItem';
 import type { CreateStackableBuyRequestTypeDetail } from '@/api/generated/model/createStackableBuyRequestTypeDetail';
 import type { UnstackableLotResponse } from '@/api/generated/model/unstackableLotResponse';
+import type { ReactNode } from 'react';
 
 /** API lot shape accepted by the transaction modal, including remaining TT when provided. */
 export type TransactionLot = UnstackableLotResponse & {
   ttRemaining?: string | null;
+};
+
+/** Normalized transaction entity passed to the shared transaction modal. */
+export type TransactionItem = ItemRow & {
+  ttRemaining?: number | string | null;
 };
 
 /** Supported transaction directions for the transaction modal. */
@@ -25,10 +31,10 @@ export type TransactionFormValues = {
 
 /** Props required to render and submit the transaction modal. */
 export type TransactionModalProps = {
-  item: ItemRow | null;
-  lot: TransactionLot | null;
-  lots?: TransactionLot[];
+  item: TransactionItem | null;
   action: TransactionAction;
-  open: boolean;
   onClose: () => void;
+  onSubmit: (values: TransactionFormValues) => Promise<void>;
+  validationError?: string | null;
+  children: ReactNode;
 };

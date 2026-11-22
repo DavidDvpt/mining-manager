@@ -44,7 +44,7 @@ export function TransactionInputs({
     const parsedValue = parseInputValue(value);
     setValue(field, parsedValue as never, setValueOptions);
 
-    if (!pricingRef.current || value === undefined) return;
+    if (!pricingRef.current || parsedValue === undefined) return;
     setCalculatedValues(
       await pricingRef.current.update(field, parsedValue, autoCompute),
     );

@@ -1,5 +1,4 @@
-import { ItemRow } from '@/shared/types';
-import type { TransactionAction, TransactionLot } from '@/shared/types/modal';
+import type { TransactionAction, TransactionItem } from '@/shared/types/modal';
 import { numericValue } from '@/shared/utils';
 
 export type PricingAction = TransactionAction;
@@ -21,15 +20,15 @@ export class TransactionPricing {
 
   constructor(
     private readonly action: PricingAction,
-    item: ItemRow | null,
-    lot: TransactionLot | null,
+    item: TransactionItem | null,
   ) {
-    this.isStackable = Boolean(item && item.details.isStackable && !lot);
+    this.isStackable = Boolean(item?.details.isStackable);
     this.itemTtValue = item?.tt ?? 0;
 
-    const tt = lot
-      ? numericValue(lot.ttRemaining ?? lot.tt ?? '')
-      : (item?.tt ?? 0);
+    const tt =
+      item?.ttRemaining !== undefined && item.ttRemaining !== null
+        ? numericValue(item.ttRemaining)
+        : (item?.tt ?? 0);
 
     this.values = {
       quantity: 1,
@@ -49,7 +48,8 @@ export class TransactionPricing {
     field: TransactionPricingField,
     value: number,
   ): number {
-    return field === 'quantity' ? Math.max(1, Math.floor(value)) : value;
+    if (field === 'quantity') return Math.max(1, Math.floor(value));
+    return Math.round(value * 100) / 100;
   }
 
   /** Update one field and asynchronously return the recalculated transaction values. */
@@ -63,10 +63,11 @@ export class TransactionPricing {
     }
 
     const normalizedValue = this.normalizeValue(field, value);
-    this.values =
+    const nextValues =
       this.action === 'buy'
         ? this.updateBuy(field, normalizedValue)
         : this.updateSell(field, normalizedValue, autoCompute);
+    this.values = this.roundPricingValues(nextValues);
 
     return this.values;
   }
@@ -130,7 +131,12 @@ export class TransactionPricing {
           : this.feeFromMarkup(ttc - values.tt);
     }
 
-    return { ...values, fee: calculatedFee, ttc };
+    return {
+      ...values,
+      fee: this.roundToTwoDecimals(calculatedFee),
+      ttc: this.roundToTwoDecimals(ttc),
+      tt: this.roundToTwoDecimals(values.tt),
+    };
   }
 
   /** Calculate the fee according to the transaction mode and current markup. */
@@ -150,6 +156,23 @@ export class TransactionPricing {
 
     const fee = (99.5 * value + 995) / (value + 1990);
     const result = Math.min(100, Math.floor(fee * 100) / 100);
-    return result;
+    return this.roundToTwoDecimals(result);
+  }
+
+  /** Round calculated monetary values to the two decimals supported by the form. */
+  private roundToTwoDecimals(value: number): number {
+    return Math.round((value + Number.EPSILON) * 100) / 100;
+  }
+
+  /** Round every decimal pricing field while leaving quantity as an integer. */
+  private roundPricingValues(
+    values: TransactionPricingValues,
+  ): TransactionPricingValues {
+    return {
+      quantity: Math.max(1, Math.floor(values.quantity)),
+      tt: this.roundToTwoDecimals(values.tt),
+      fee: this.roundToTwoDecimals(values.fee),
+      ttc: this.roundToTwoDecimals(values.ttc),
+    };
   }
 }

@@ -1,67 +1,45 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { CheckboxRHF } from '@/shared/components/form/CheckboxRHF';
 import type {
+  TransactionAction,
   TransactionFormValues,
-  TransactionLot,
+  TransactionItem,
 } from '@/shared/types/modal';
 import {
   TransactionPricing,
   type TransactionPricingValues,
 } from './transactionPricing';
 import styles from './transaction-modal.module.scss';
-import { ItemRow } from '@/shared/types';
 import { useTranslations } from '@/i18n/useTranslations';
-import { Label } from '@/components/ui/label/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select/select';
 import { TransactionInputs } from './TransactionInputs';
 import { TransactionTypeAndQuantityFields } from './TransactionTypeAndQuantityFields';
 
 type TransactionFormProps = {
-  action: 'buy' | 'sell';
   isStackable: boolean;
-  item: ItemRow | null;
-  lot: TransactionLot | null;
-  lots: TransactionLot[];
-  selectedLotId: string | null;
-  onLotChange: (lotId: string) => void;
+  item: TransactionItem | null;
+  action: TransactionAction;
 };
 
-/** Format a lot's TT with exactly two decimal places for consistent instance labels. */
-function formatLotTt(tt: string | null): string {
-  const numericTt = Number(tt);
-  return Number.isFinite(numericTt) ? numericTt.toFixed(2) : '—';
-}
-
-/** Render transaction inputs and synchronize every edit with transaction pricing. */
+/** Render transaction fields and synchronize pricing according to the action. */
 export function TransactionForm({
-  action,
   isStackable,
   item,
-  lot,
-  lots,
-  selectedLotId,
-  onLotChange,
-}: TransactionFormProps): import('react').JSX.Element {
+  action,
+}: TransactionFormProps): JSX.Element {
   const pricingRef = useRef<TransactionPricing | null>(null);
   const { setValue } = useFormContext<TransactionFormValues>();
   const { t } = useTranslations();
   const [autoCompute, setAutoCompute] = useState(action === 'sell');
+  const setValueOptions = useMemo(
+    (): { shouldDirty: boolean; shouldValidate: boolean } => ({
+      shouldDirty: true,
+      shouldValidate: true,
+    }),
+    [],
+  );
 
-  const setValueOptions = useMemo((): {
-    shouldDirty: boolean;
-    shouldValidate: boolean;
-  } => {
-    return { shouldDirty: true, shouldValidate: true };
-  }, []);
-
-  /** Apply recalculated values to React Hook Form. */
+  /** Apply recalculated transaction values to React Hook Form. */
   const setCalculatedValues = useCallback(
     (values: TransactionPricingValues): void => {
       setValue('quantity', values.quantity, {
@@ -76,13 +54,12 @@ export function TransactionForm({
   );
 
   useEffect((): void => {
-    const pricing = new TransactionPricing(action, item, lot);
+    const pricing = new TransactionPricing(action, item);
     pricingRef.current = pricing;
-    setAutoCompute(action === 'sell');
     setCalculatedValues(pricing.getValues());
-  }, [action, setCalculatedValues, item, lot, setValue]);
+  }, [setCalculatedValues, item, action]);
 
-  /** Toggle automatic pricing and synchronize recalculated values. */
+  /** Toggle automatic transaction pricing. */
   const handleAutoComputeChange = (checked: boolean): void => {
     if (!pricingRef.current) return;
     setAutoCompute(checked);
@@ -90,33 +67,12 @@ export function TransactionForm({
 
   return (
     <div className={styles.fields}>
-      {action === 'sell' && lots.length > 1 ? (
-        <div className={styles.lotSelector}>
-          <Label htmlFor="transaction-lot">
-            {t('TRANSACTION_MODAL.INSTANCE')}
-          </Label>
-          <Select
-            value={selectedLotId ?? lots[0]?.id ?? ''}
-            onValueChange={onLotChange}
-          >
-            <SelectTrigger id="transaction-lot">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {lots.map((availableLot): import('react').JSX.Element => (
-                <SelectItem key={availableLot.id} value={availableLot.id}>
-                  <span className={styles.lotOptionLabel}>
-                    <span>
-                      {availableLot.item.name} T{availableLot.tier ?? 0}
-                    </span>
-                    <span>TT {formatLotTt(availableLot.tt)}</span>
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      ) : null}
+      {action === 'buy' && (
+        <TransactionTypeAndQuantityFields
+          action="buy"
+          isStackable={isStackable}
+        />
+      )}
       <TransactionInputs
         isStackable={isStackable}
         feeReadOnly={action === 'sell' && autoCompute}
@@ -133,10 +89,6 @@ export function TransactionForm({
         onCheckedChange={(checked): undefined =>
           void handleAutoComputeChange(checked)
         }
-      />
-      <TransactionTypeAndQuantityFields
-        action={action}
-        isStackable={isStackable}
       />
     </div>
   );

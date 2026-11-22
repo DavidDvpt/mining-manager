@@ -1,29 +1,26 @@
 import { EntropiaImage } from '@/shared/components/entropiaImage';
 import { formatDecimalValue } from '@/shared/utils';
-import type { ItemRow } from '@/shared/types/listItem';
-import type { TransactionLot } from '@/shared/types/modal';
+import type { TransactionItem } from '@/shared/types/modal';
 import styles from './transaction-modal.module.scss';
 
 type TransactionModalInfoProps = {
-  item: ItemRow | null;
-  lot?: TransactionLot | null;
+  item: TransactionItem | null;
 };
 
 /** Render the selected item information displayed in the transaction modal. */
 export function TransactionModalInfo({
   item,
-  lot = null,
 }: TransactionModalInfoProps): import('react').JSX.Element {
-  const name = item?.name ?? lot?.item.name ?? 'Item';
+  const name = item?.name ?? 'Item';
   const imageUrl = item?.imageUrl ?? null;
-  const tt = lot?.ttRemaining ?? lot?.tt ?? item?.tt ?? null;
+  const tt = item?.ttRemaining ?? item?.tt ?? null;
 
   return (
     <div className={styles.itemInfo}>
       <EntropiaImage url={imageUrl} alt={name} size="small" />
 
       <div className={styles.itemDetails}>
-        <strong>{lot ? `${name} T${lot.tier ?? 0}` : name}</strong>
+        <strong>{name}</strong>
         <span>TT : {formatDecimalValue(tt)}</span>
         <span>Stock : {item?.stock ?? '—'}</span>
       </div>

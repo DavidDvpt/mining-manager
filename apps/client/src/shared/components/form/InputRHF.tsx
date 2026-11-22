@@ -19,6 +19,7 @@ export function InputRHF({
   label,
   className,
   id,
+  onChange,
   ...props
 }: InputRHFProps): import('react').JSX.Element {
   const form = useSafeFormContext();
@@ -29,7 +30,12 @@ export function InputRHF({
   const isPasswordField = props.type === 'password';
   const inputType = isPasswordField && isPasswordVisible ? 'text' : props.type;
   const registration = form.register(name, {
-    valueAsNumber: props.type === 'number',
+    setValueAs: (value: unknown): unknown => {
+      if (props.type !== 'number') return value;
+      if (value === '') return undefined;
+      const parsedValue = Number(value);
+      return Number.isFinite(parsedValue) ? parsedValue : undefined;
+    },
   });
 
   return (
@@ -41,6 +47,10 @@ export function InputRHF({
           {...props}
           id={inputId}
           type={inputType}
+          onChange={(event): void => {
+            void registration.onChange(event);
+            onChange?.(event);
+          }}
           aria-invalid={fieldState.invalid || undefined}
           aria-describedby={fieldState.error ? `${inputId}-error` : undefined}
           className={cn(
