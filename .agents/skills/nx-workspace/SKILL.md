@@ -7,21 +7,31 @@ description: "Explore and understand Nx workspaces. USE WHEN answering questions
 
 This skill provides read-only exploration of Nx workspaces. Use it to understand workspace structure, project configuration, available targets, and dependencies.
 
-Keep in mind that you might have to prefix commands with `npx`/`pnpx`/`yarn` if nx isn't installed globally. Check the lockfile to determine the package manager in use.
+Before running Nx, identify the package manager from the lockfile and use the workspace-local Nx binary. For this repository, `package-lock.json` means commands must use `npm exec nx -- ...`.
+
+In restricted agent sandboxes, Nx's daemon and isolated plugin workers may fail with `listen EPERM` when they try to create Unix sockets. When that error occurs, use this environment prefix for all read-only exploration commands:
+
+```bash
+env NX_DAEMON=false NX_ISOLATE_PLUGINS=false npm exec nx -- ...
+```
+
+`NX_DAEMON=false` avoids the long-running project-graph daemon and `NX_ISOLATE_PLUGINS=false` prevents plugin workers from opening additional sockets. Do not apply this fallback preemptively on a normal developer machine unless Nx reports the socket error. If a previous daemon is stuck, run `npm exec nx -- reset` once before retrying.
 
 ## Listing Projects
 
 Use `nx show projects` to list projects in the workspace.
 
+The examples below use the short `nx` form for readability. In this workspace, invoke them through `npm exec nx --`; if the sandbox socket fallback above is active, prepend `env NX_DAEMON=false NX_ISOLATE_PLUGINS=false` to every command.
+
 The project filtering syntax (`-p`/`--projects`) works across many Nx commands including `nx run-many`, `nx release`, `nx show projects`, and more. Filters support explicit names, glob patterns, tag references (e.g. `tag:name`), directories, and negation (e.g. `!project-name`).
 
 ```bash
 # List all projects
-nx show projects
+env NX_DAEMON=false NX_ISOLATE_PLUGINS=false npm exec nx -- show projects
 
 # Filter by pattern (glob)
-nx show projects --projects "apps/*"
-nx show projects --projects "shared-*"
+env NX_DAEMON=false NX_ISOLATE_PLUGINS=false npm exec nx -- show projects --projects "apps/*"
+env NX_DAEMON=false NX_ISOLATE_PLUGINS=false npm exec nx -- show projects --projects "shared-*"
 
 # Filter by tag
 nx show projects --projects "tag:publishable"
@@ -53,7 +63,7 @@ You can read the full project schema at `node_modules/nx/schemas/project-schema.
 
 ```bash
 # Get full project configuration
-nx show project my-app --json
+env NX_DAEMON=false NX_ISOLATE_PLUGINS=false npm exec nx -- show project my-app --json
 
 # Extract specific parts from the JSON
 nx show project my-app --json | jq '.targets'
@@ -277,6 +287,17 @@ nx show project X --json | jq '.targets | keys'
 # Check if any projects have that target
 nx show projects --withTarget target
 ```
+
+### "Nx was denied permission to use its unix socket" or the project graph hangs
+
+This is an execution-environment restriction, not evidence that the repository cannot be read. Stop any stale daemon and rerun the exploration command without Nx's daemon or isolated plugin workers:
+
+```bash
+npm exec nx -- reset
+env NX_DAEMON=false NX_ISOLATE_PLUGINS=false npm exec nx -- show projects --json
+```
+
+If this still fails, report the exact socket path and `EPERM` message. Do not work around the issue by reading partial `project.json` files when the resolved project configuration is required.
 
 ### "The workspace is out of sync"
 
