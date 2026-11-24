@@ -18,6 +18,7 @@ export class TransactionPricing {
   private isStackable = false;
   private values: TransactionPricingValues;
 
+  /** Initialize one pricing draft using catalogue TT or the selected lot’s remaining TT. */
   constructor(
     private readonly action: PricingAction,
     item: TransactionItem | null,
@@ -35,6 +36,33 @@ export class TransactionPricing {
       tt,
       fee: 0,
       ttc: Math.ceil(tt),
+    };
+  }
+
+  /** Summarize form prices, scaling identical purchases while preserving per-instance API amounts. */
+  static summarize(
+    values: TransactionPricingValues,
+    action: PricingAction,
+    stackable: boolean,
+    purchaseQuantity: number,
+  ): {
+    quantity: number;
+    tt: number;
+    fee: number;
+    ttc: number;
+    gross: number;
+    net: number;
+    markup: number;
+  } {
+    const count = !stackable && action === 'buy' ? purchaseQuantity : 1;
+    return {
+      quantity: stackable ? values.quantity : count,
+      tt: values.tt * count,
+      fee: values.fee * count,
+      ttc: values.ttc * count,
+      gross: values.tt > 0 ? (values.ttc / values.tt) * 100 : 0,
+      net: values.tt > 0 ? ((values.ttc - values.fee) / values.tt) * 100 : 0,
+      markup: (values.ttc - values.tt) * count,
     };
   }
 

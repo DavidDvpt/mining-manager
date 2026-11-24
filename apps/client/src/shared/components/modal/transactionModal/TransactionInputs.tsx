@@ -42,9 +42,9 @@ export function TransactionInputs({
     value: string,
   ): Promise<void> => {
     const parsedValue = parseInputValue(value);
-    setValue(field, parsedValue as never, setValueOptions);
-
-    if (!pricingRef.current || parsedValue === undefined) return;
+    if (parsedValue === undefined) return;
+    setValue(field, parsedValue, setValueOptions);
+    if (!pricingRef.current) return;
     setCalculatedValues(
       await pricingRef.current.update(field, parsedValue, autoCompute),
     );
@@ -78,7 +78,7 @@ export function TransactionInputs({
       />
       <InputRHF
         name="fee"
-        label="Fee"
+        label={t('TRANSACTION_MODAL.FEE')}
         type="number"
         min={0}
         step="0.01"
@@ -92,7 +92,7 @@ export function TransactionInputs({
         label="TTC"
         type="number"
         min={0}
-        step={1}
+        step="0.01"
         onChange={(event): Promise<void> =>
           handleChange('ttc', event.target.value)
         }

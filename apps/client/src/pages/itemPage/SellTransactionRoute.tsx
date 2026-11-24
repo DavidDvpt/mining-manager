@@ -1,79 +1,73 @@
 import {
   getGetApiV1LotsUnstackableItemItemIdQueryKey,
-  useGetApiV1LotsUnstackableItemItemId,
-  getGetApiV1StorageMaterialMaterialIdStockQueryKey,
+  getGetApiV1LotsItemIdQueryKey,
   getGetApiV1StorageMaterialStockQueryKey,
+  getGetApiV1StorageMaterialMaterialIdStockQueryKey,
+  getGetApiV1FindersStockQueryKey,
+  getGetApiV1ExcavatorsStockQueryKey,
+  getGetApiV1RefinersStockQueryKey,
+  getGetApiV1FinderAmplifiersStockQueryKey,
+  getGetApiV1TransactionRunningQueryKey,
+  useGetApiV1LotsUnstackableItemItemId,
+  useGetApiV1LotsItemId,
   usePostApiV1TransactionSellStackable,
   usePostApiV1TransactionSellUnstackable,
 } from '@/api/generated/miningManagerAPI';
-import { TransactionModal, TransactionForm } from '@/shared';
-import type { ItemRow } from '@/shared';
-import type {
-  TransactionFormValues,
-  TransactionItem,
-  TransactionLot,
-} from '@/shared/types/modal';
-import { JSX, useMemo, useState } from 'react';
+import { TransactionModal } from '@/shared';
+import type { TransactionFormValues } from '@/shared/types/modal';
 import { useQueryClient } from '@tanstack/react-query';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Navigate, useSearchParams, useNavigate } from 'react-router-dom';
+import { useTranslations } from '@/i18n/useTranslations';
+import { useTransactionItem } from './useTransactionItem';
+import { TransactionRouteStatus } from './TransactionRouteStatus';
+import { ItemChoiceModal } from '@/shared/components/modal/itemChoiceModal/ItemChoiceModal';
+import { isAvailableTransactionLot } from '@/shared/components/modal/transactionModal/transactionModal.utils';
 
-/** Parse the catalogue item and prepare owned lots before opening the sell modal. */
-function SellTransactionRoute(): JSX.Element | null {
+/** Resolve live stock or the explicitly selected equipment lot and submit the existing sell contract. */
+function SellTransactionRoute({
+  isChoosing = false,
+}: {
+  isChoosing?: boolean;
+}): import('react').JSX.Element {
   const navigate = useNavigate();
+  const { t } = useTranslations();
   const [searchParams] = useSearchParams();
-  const serializedItem = searchParams.get('item');
-  const item: ItemRow | null = useMemo(
-    () => (serializedItem ? JSON.parse(serializedItem) : null),
-    [serializedItem],
-  );
+  const { item, isLoading, isError } = useTransactionItem();
   const queryClient = useQueryClient();
   const sellStackable = usePostApiV1TransactionSellStackable();
   const sellUnstackable = usePostApiV1TransactionSellUnstackable();
-  const [validationError, setValidationError] = useState<string | null>(null);
   const isStackable = Boolean(item?.details.isStackable);
   const requestedLotId = searchParams.get('lotId');
-  const lotsQuery = useGetApiV1LotsUnstackableItemItemId(item?.id ?? '', {
+  const itemId = item?.id ?? '';
+  const stockQuery = useGetApiV1LotsItemId(itemId, {
     query: {
-      queryKey: getGetApiV1LotsUnstackableItemItemIdQueryKey(item?.id ?? ''),
-      enabled: item !== null && !isStackable,
+      queryKey: getGetApiV1LotsItemIdQueryKey(itemId),
+      enabled: Boolean(item) && isStackable,
     },
   });
-  const selectedLot: TransactionLot | null = requestedLotId
-    ? (lotsQuery.data?.find(({ id }): boolean => id === requestedLotId) ?? null)
-    : (lotsQuery.data?.[0] ?? null);
-  const transactionItem: TransactionItem | null = useMemo(
-    () =>
-      !item
-        ? null
-        : isStackable
-          ? item
-          : selectedLot
-            ? {
-                ...item,
-                name: `${item.name} T${selectedLot.tier ?? 0}`,
-                ttRemaining: selectedLot.ttRemaining ?? selectedLot.tt,
-              }
-            : null,
-    [item, isStackable, selectedLot],
+  const lotsQuery = useGetApiV1LotsUnstackableItemItemId(itemId, {
+    query: {
+      queryKey: getGetApiV1LotsUnstackableItemItemIdQueryKey(itemId),
+      enabled: Boolean(item) && !isStackable,
+    },
+  });
+  const selectedLot = lotsQuery.data?.find(
+    (lot): boolean =>
+      lot.id === requestedLotId && isAvailableTransactionLot(lot, itemId),
   );
 
-  /** Validate the requested quantity or TT, submit the sale, and refresh stock. */
+  /** Close all workflow steps at the catalogue route, including filtered material views. */
+  const close = (): void => navigate(isChoosing ? '../../..' : '../..');
+
+  /** Recheck availability immediately before mutation; the API remains authoritative for concurrent sales. */
   const handleSubmit = async (values: TransactionFormValues): Promise<void> => {
     if (!item) return;
-    if (isStackable && values.quantity > (item.stock ?? 0)) {
-      setValidationError(
-        'La quantité ne peut pas dépasser le stock disponible.',
-      );
-      return;
-    }
-    if (!isStackable && values.tt > (item.tt ?? 0)) {
-      setValidationError(
-        'Le TT ne peut pas dépasser la valeur TT de base de l’objet.',
-      );
-      return;
-    }
-    setValidationError(null);
     if (isStackable) {
+      const freshStock = await stockQuery.refetch();
+      if (freshStock.isError) throw new Error(t('ITEM_STORE.ERROR'));
+      if (!freshStock.data || values.quantity > freshStock.data.totalQuantity) {
+        throw new Error(t('TRANSACTIONS.QUANTITY_EXCEEDS_STOCK'));
+      }
       await sellStackable.mutateAsync({
         data: {
           quantity: values.quantity,
@@ -82,29 +76,21 @@ function SellTransactionRoute(): JSX.Element | null {
           ttc: values.ttc,
         },
       });
-      if (item.kind === 'material') {
-        const stockKey = getGetApiV1StorageMaterialStockQueryKey();
-        queryClient.setQueryData<Record<string, number>>(
-          stockKey,
-          (stock = {}) => ({
-            ...stock,
-            [item.id]: Math.max(
-              0,
-              (stock[item.id] ?? item.stock ?? 0) - values.quantity,
-            ),
-          }),
-        );
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: stockKey }),
-          queryClient.invalidateQueries({
-            queryKey: getGetApiV1StorageMaterialMaterialIdStockQueryKey(
-              item.id,
-            ),
-          }),
-        ]);
-      }
     } else {
-      if (!selectedLot) return;
+      const freshLots = await lotsQuery.refetch();
+      if (freshLots.isError) throw new Error(t('ITEM_STORE.ERROR'));
+      if (
+        !freshLots.data?.some(
+          (lot): boolean =>
+            lot.id === requestedLotId &&
+            isAvailableTransactionLot(lot, item.id),
+        )
+      ) {
+        throw new Error(t('TRANSACTION_MODAL.UNAVAILABLE'));
+      }
+      if (values.tt > (item.tt ?? 0))
+        throw new Error(t('TRANSACTIONS.TT_EXCEEDS_BASE'));
+      if (!selectedLot) throw new Error(t('TRANSACTION_MODAL.UNAVAILABLE'));
       await sellUnstackable.mutateAsync({
         data: {
           quantity: 1,
@@ -113,27 +99,65 @@ function SellTransactionRoute(): JSX.Element | null {
           ttc: values.ttc,
         },
       });
-      await queryClient.invalidateQueries({
-        queryKey: getGetApiV1LotsUnstackableItemItemIdQueryKey(item.id),
-      });
     }
-    navigate('../..');
+    await Promise.all(
+      [
+        getGetApiV1LotsUnstackableItemItemIdQueryKey(item.id),
+        getGetApiV1LotsItemIdQueryKey(item.id),
+        getGetApiV1StorageMaterialStockQueryKey(),
+        getGetApiV1StorageMaterialMaterialIdStockQueryKey(item.id),
+        getGetApiV1FindersStockQueryKey(),
+        getGetApiV1ExcavatorsStockQueryKey(),
+        getGetApiV1RefinersStockQueryKey(),
+        getGetApiV1FinderAmplifiersStockQueryKey(),
+        getGetApiV1TransactionRunningQueryKey(),
+      ].map((queryKey): Promise<void> =>
+        queryClient.invalidateQueries({ queryKey }),
+      ),
+    );
+    close();
   };
 
+  if (isLoading || isError || !item)
+    return <TransactionRouteStatus loading={isLoading} onClose={close} />;
+  const inventory = isStackable ? stockQuery : lotsQuery;
+  if (inventory.isLoading || inventory.isError)
+    return (
+      <TransactionRouteStatus loading={inventory.isLoading} onClose={close} />
+    );
+  if (isStackable) {
+    if (isChoosing) return <Navigate to=".." replace />;
+    return (
+      <TransactionModal
+        item={item}
+        stock={stockQuery.data?.totalQuantity ?? 0}
+        action="sell"
+        onSubmit={handleSubmit}
+        onClose={close}
+      />
+    );
+  }
+  if (isChoosing)
+    return (
+      <ItemChoiceModal
+        item={item}
+        lots={lotsQuery.data ?? []}
+        onCancel={close}
+        onConfirm={(lotId): void =>
+          navigate(`..?lotId=${encodeURIComponent(lotId)}`)
+        }
+      />
+    );
+  if (!requestedLotId) return <Navigate to="item-choice" replace />;
+  if (!selectedLot) return <TransactionRouteStatus onClose={close} />;
   return (
     <TransactionModal
-      item={transactionItem}
+      item={item}
+      lot={selectedLot}
       action="sell"
       onSubmit={handleSubmit}
-      onClose={(): void => navigate('../..')}
-      validationError={validationError}
-    >
-      <TransactionForm
-        action="sell"
-        isStackable={isStackable}
-        item={transactionItem}
-      />
-    </TransactionModal>
+      onClose={close}
+    />
   );
 }
 

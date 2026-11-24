@@ -1,5 +1,5 @@
-import { JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { JSX, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { CheckboxRHF } from '@/shared/components/form/CheckboxRHF';
 import type {
   TransactionAction,
@@ -28,9 +28,11 @@ export function TransactionForm({
   action,
 }: TransactionFormProps): JSX.Element {
   const pricingRef = useRef<TransactionPricing | null>(null);
-  const { setValue } = useFormContext<TransactionFormValues>();
+  const { setValue, getValues } = useFormContext<TransactionFormValues>();
   const { t } = useTranslations();
-  const [autoCompute, setAutoCompute] = useState(action === 'sell');
+  const autoCompute = useWatch<TransactionFormValues, 'autoCompute'>({
+    name: 'autoCompute',
+  });
   const setValueOptions = useMemo(
     (): { shouldDirty: boolean; shouldValidate: boolean } => ({
       shouldDirty: true,
@@ -62,17 +64,23 @@ export function TransactionForm({
   /** Toggle automatic transaction pricing. */
   const handleAutoComputeChange = (checked: boolean): void => {
     if (!pricingRef.current) return;
-    setAutoCompute(checked);
+    if (checked) {
+      const values = getValues();
+      void pricingRef.current
+        .update('fee', values.fee, true)
+        .then(setCalculatedValues);
+    }
   };
 
   return (
     <div className={styles.fields}>
-      {action === 'buy' && (
-        <TransactionTypeAndQuantityFields
-          action="buy"
-          isStackable={isStackable}
-        />
-      )}
+      <TransactionTypeAndQuantityFields
+        action={action}
+        isStackable={isStackable}
+      />
+      {action === 'sell' ? (
+        <p>{t('TRANSACTION_MODAL.SELL_DETAILS_NOTICE')}</p>
+      ) : null}
       <TransactionInputs
         isStackable={isStackable}
         feeReadOnly={action === 'sell' && autoCompute}
@@ -82,8 +90,6 @@ export function TransactionForm({
       />
       <CheckboxRHF
         name="autoCompute"
-        checked={autoCompute}
-        bindToForm={false}
         label={t('TRANSACTION_MODAL.AUTO_COMPUTE')}
         wrapperClassName={styles.autoComputeToggle}
         onCheckedChange={(checked): undefined =>

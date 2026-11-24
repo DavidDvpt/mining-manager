@@ -1,12 +1,9 @@
 import type { ItemRow } from '../listItem';
 import type { CreateStackableBuyRequestTypeDetail } from '@/api/generated/model/createStackableBuyRequestTypeDetail';
 import type { UnstackableLotResponse } from '@/api/generated/model/unstackableLotResponse';
-import type { ReactNode } from 'react';
 
-/** API lot shape accepted by the transaction modal, including remaining TT when provided. */
-export type TransactionLot = UnstackableLotResponse & {
-  ttRemaining?: string | null;
-};
+/** Owned equipment instance; the API exposes its remaining TT as `tt`. */
+export type TransactionLot = UnstackableLotResponse;
 
 /** Normalized transaction entity passed to the shared transaction modal. */
 export type TransactionItem = ItemRow & {
@@ -27,14 +24,13 @@ export type TransactionFormValues = {
   ttc: number;
   type_detail: CreateStackableBuyRequestTypeDetail;
   purchase_quantity: number;
+  autoCompute: boolean;
 };
 
 /** Props required to render and submit the transaction modal. */
 export type TransactionModalProps = {
-  item: TransactionItem | null;
-  action: TransactionAction;
+  item: TransactionItem;
   onClose: () => void;
   onSubmit: (values: TransactionFormValues) => Promise<void>;
-  validationError?: string | null;
-  children: ReactNode;
-};
+  stock?: number;
+} & ({ action: 'buy'; lot?: never } | { action: 'sell'; lot?: TransactionLot });

@@ -86,10 +86,22 @@ export const fr_FR: TranslationSchema = {
       'Sélectionnez une vue à gauche pour gérer votre activité de mining.',
   },
   TRANSACTION_MODAL: {
+    CONFIRM: 'Valider',
+    CHOOSE_INSTANCE: 'Choisir un équipement',
+    UNAVAILABLE: 'Cet objet ou équipement est indisponible.',
+    SUBMIT_ERROR:
+      'Impossible d’enregistrer la transaction. Veuillez réessayer.',
+    SELL_DETAILS_NOTICE: 'Le mode de vente et les frais sont indicatifs.',
+    GROSS: 'Brut',
+    NET: 'Net',
+    MARKUP: 'Plus-value',
+    FEE: 'Frais',
+    TOTAL: 'Total',
+
     QUANTITY: 'Quantité',
     INSTANCE: 'Outil',
     AUTO_COMPUTE: 'Calcul automatique',
-    TYPE_DETAIL: "Mode d'achat",
+    TYPE_DETAIL: 'Mode de transaction',
     PURCHASE_QUANTITY: "Quantité d'achat",
     TYPE_DETAIL_HAND_TO_HAND: 'Main à main',
     TYPE_DETAIL_FOUND: 'Trouvé',

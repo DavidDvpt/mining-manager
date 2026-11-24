@@ -3,47 +3,90 @@ import {
   formatPercentageValue,
   formatRoundedDecimalValue,
 } from '@/shared/utils';
-import type { TransactionFormValues } from '@/shared/types/modal';
+import type {
+  TransactionAction,
+  TransactionFormValues,
+} from '@/shared/types/modal';
+import { useTranslations } from '@/i18n/useTranslations';
+import { TransactionPricing } from './transactionPricing';
 import styles from './transaction-modal.module.scss';
 
 type TransactionSummaryProps = {
   stackable: boolean;
+  action: TransactionAction;
+  itemName: string;
 };
 
-/** Render the live transaction summary from React Hook Form values. */
+/** Render the live action, quantity, and price totals using the existing pricing rules. */
 export function TransactionSummary({
   stackable,
+  action,
+  itemName,
 }: TransactionSummaryProps): import('react').JSX.Element {
-  const formValues = useWatch<TransactionFormValues>();
-  const tt = formValues.tt ?? 0;
-  const fee = formValues.fee ?? 0;
-  const ttc = formValues.ttc ?? 0;
-
-  if (stackable) {
-    const gross = tt > 0 ? (ttc / tt) * 100 : 0;
-    const net = tt > 0 ? ((ttc - fee) / tt) * 100 : 0;
-    return (
-      <div className={styles.summary}>
-        <div>
-          <span>Brut:</span>
-          <span className={styles.value}>{formatPercentageValue(gross)}%</span>
-        </div>
-        <div>
-          <span>Net:</span>
-          <span className={styles.value}>{formatPercentageValue(net)}%</span>
-        </div>
-      </div>
-    );
-  }
-
+  const values = useWatch<TransactionFormValues>();
+  const { t } = useTranslations();
+  const summary = TransactionPricing.summarize(
+    {
+      quantity: values.quantity ?? 1,
+      tt: values.tt ?? 0,
+      fee: values.fee ?? 0,
+      ttc: values.ttc ?? 0,
+    },
+    action,
+    stackable,
+    values.purchase_quantity ?? 1,
+  );
   return (
-    <div className={styles.summary}>
+    <div className={styles.summary} aria-live="polite">
+      <strong>
+        {t(action === 'buy' ? 'ITEM_STORE.BUY' : 'ITEM_STORE.SELL')} ·{' '}
+        {itemName}
+      </strong>
       <div>
-        <span>Plus-value</span>
+        <span>{t('TRANSACTION_MODAL.QUANTITY')}:</span>
+        <span className={styles.value}>{summary.quantity}</span>
+      </div>
+      <div>
+        <span>TT:</span>
         <span className={styles.value}>
-          {formatRoundedDecimalValue(ttc - tt)} Peds
+          {formatRoundedDecimalValue(summary.tt)} PED
         </span>
       </div>
+      <div>
+        <span>{t('TRANSACTION_MODAL.FEE')}:</span>
+        <span className={styles.value}>
+          {formatRoundedDecimalValue(summary.fee)} PED
+        </span>
+      </div>
+      <div>
+        <span>{t('TRANSACTION_MODAL.TOTAL')} TTC:</span>
+        <span className={styles.value}>
+          {formatRoundedDecimalValue(summary.ttc)} PED
+        </span>
+      </div>
+      {stackable ? (
+        <>
+          <div>
+            <span>{t('TRANSACTION_MODAL.GROSS')}:</span>
+            <span className={styles.value}>
+              {formatPercentageValue(summary.gross)}%
+            </span>
+          </div>
+          <div>
+            <span>{t('TRANSACTION_MODAL.NET')}:</span>
+            <span className={styles.value}>
+              {formatPercentageValue(summary.net)}%
+            </span>
+          </div>
+        </>
+      ) : (
+        <div>
+          <span>{t('TRANSACTION_MODAL.MARKUP')}:</span>
+          <span className={styles.value}>
+            {formatRoundedDecimalValue(summary.markup)} PED
+          </span>
+        </div>
+      )}
     </div>
   );
 }

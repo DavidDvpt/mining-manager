@@ -1,5 +1,7 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, type QueryKey } from '@tanstack/react-query';
 import {
+  getGetApiV1LotsItemIdQueryKey,
+  getGetApiV1LotsUnstackableItemItemIdQueryKey,
   getGetApiV1ExcavatorsStockQueryKey,
   getGetApiV1FinderAmplifiersStockQueryKey,
   getGetApiV1FindersStockQueryKey,
@@ -10,21 +12,16 @@ import {
   usePostApiV1TransactionBuyUnstackable,
 } from '@/api/generated/miningManagerAPI';
 import type { TransactionFormValues } from '@/shared/types/modal';
-import { TransactionForm, TransactionModal } from '@/shared';
+import { TransactionModal } from '@/shared';
 import { getTransactionKind } from '@/shared/components/modal/transactionModal/transactionModal.utils';
-import type { ItemRow } from '@/shared/types';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTransactionItem } from './useTransactionItem';
+import { TransactionRouteStatus } from './TransactionRouteStatus';
 
 /** Prepare the selected item and submit purchases through the shared modal. */
 function BuyTransactionRoute(): import('react').JSX.Element | null {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const serializedItem = searchParams.get('item');
-  const item: ItemRow | null = useMemo(
-    () => (serializedItem ? JSON.parse(serializedItem) : null),
-    [serializedItem],
-  );
+  const { item, isLoading, isError } = useTransactionItem();
   const queryClient = useQueryClient();
   const buyStackable = usePostApiV1TransactionBuyStackable();
   const buyUnstackable = usePostApiV1TransactionBuyUnstackable();
@@ -35,12 +32,9 @@ function BuyTransactionRoute(): import('react').JSX.Element | null {
     formValues: TransactionFormValues,
   ): Promise<void> => {
     if (!item) return;
-    let queryKeys = [];
+    let queryKeys: QueryKey[] = [];
     const kind = getTransactionKind(item);
 
-    if (isStackable && item.stock === null) {
-      throw new Error('Stackable buy requires item stock.');
-    }
     if (isStackable) {
       await buyStackable.mutateAsync({
         data: {
@@ -76,6 +70,10 @@ function BuyTransactionRoute(): import('react').JSX.Element | null {
         getGetApiV1FinderAmplifiersStockQueryKey(),
       ];
     }
+    queryKeys.push(
+      getGetApiV1LotsItemIdQueryKey(item.id),
+      getGetApiV1LotsUnstackableItemItemIdQueryKey(item.id),
+    );
     await Promise.all(
       queryKeys.map((queryKey): Promise<void> =>
         queryClient.invalidateQueries({ queryKey }),
@@ -84,16 +82,20 @@ function BuyTransactionRoute(): import('react').JSX.Element | null {
     navigate('../..');
   };
 
-  if (!item) return null;
+  if (isLoading || isError || !item)
+    return (
+      <TransactionRouteStatus
+        loading={isLoading}
+        onClose={(): void => navigate('../..')}
+      />
+    );
   return (
     <TransactionModal
       item={item}
       action="buy"
       onSubmit={handleSubmit}
       onClose={(): void => navigate('../..')}
-    >
-      <TransactionForm action="buy" isStackable={isStackable} item={item} />
-    </TransactionModal>
+    />
   );
 }
 

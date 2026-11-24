@@ -76,6 +76,17 @@ export type TranslationSchema = {
     DESCRIPTION: string;
   };
   TRANSACTION_MODAL: {
+    CONFIRM: string;
+    CHOOSE_INSTANCE: string;
+    UNAVAILABLE: string;
+    SUBMIT_ERROR: string;
+    SELL_DETAILS_NOTICE: string;
+    GROSS: string;
+    NET: string;
+    MARKUP: string;
+    FEE: string;
+    TOTAL: string;
+
     QUANTITY: string;
     INSTANCE: string;
     AUTO_COMPUTE: string;

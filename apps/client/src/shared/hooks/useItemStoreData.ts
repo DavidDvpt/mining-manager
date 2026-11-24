@@ -24,7 +24,7 @@ import type {
 } from '@/shared/types/listItem';
 
 /** Normalize one OpenAPI catalogue response into the row shape used by the flex list. */
-const toRow = <K extends ItemKind>(
+export const toRow = <K extends ItemKind>(
   item: ItemCatalogueItem<ItemDetailsByKind[K]>,
   kind: K,
   stock: number | null = null,

@@ -50,10 +50,12 @@ export function ItemPageContent({
     ? filteredRows.filter((row) => (row.stock ?? 0) > 0)
     : filteredRows;
 
-  const handleClick = (row: ItemRow, type: TransactionAction | 'edit') => {
-    const query = `?item=${encodeURIComponent(JSON.stringify(row))}`;
-
-    navigate(`${row.id}/${type}${query}`);
+  /** Open the resource route using only its identifier. */
+  const handleClick = (
+    row: ItemRow,
+    type: TransactionAction | 'edit',
+  ): void => {
+    navigate(`${row.id}/${type}`);
   };
   return (
     <Panel className={styles.page}>
@@ -85,7 +87,7 @@ export function ItemPageContent({
           onEdit={(row) => handleClick(row, 'edit')}
         />
       </Section>
-      <Outlet />
+      <Outlet context={{ kind }} />
     </Panel>
   );
 }
