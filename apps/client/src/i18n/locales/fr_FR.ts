@@ -67,9 +67,12 @@ export const fr_FR: TranslationSchema = {
       AMMO: 'Munitions',
       AMP_MODEL: 'Modèle d’amplificateur',
       NO_AMP: 'Sans amplificateur',
+      AMP_REQUIRES_FINDER:
+        'Vous devez choisir un finder pour accéder au choix d’amplificateurs.',
       AVAILABLE: 'disponibles',
       CLICKS: 'clics',
       SESSION_COST: 'PED pour cette session',
+      AMP_INSUFFICIENT_QUANTITY: 'Quantité insuffisante',
       COMMON_TIER: 'Tier commun',
       DEFERRED_USAGE: 'Consommation et coût à la fermeture.',
       UNIT_COST: 'PED / unité · coût réel à la fermeture',

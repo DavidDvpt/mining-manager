@@ -59,9 +59,11 @@ export type TranslationSchema = {
       AMMO: string;
       AMP_MODEL: string;
       NO_AMP: string;
+      AMP_REQUIRES_FINDER: string;
       AVAILABLE: string;
       CLICKS: string;
       SESSION_COST: string;
+      AMP_INSUFFICIENT_QUANTITY: string;
       COMMON_TIER: string;
       DEFERRED_USAGE: string;
       UNIT_COST: string;

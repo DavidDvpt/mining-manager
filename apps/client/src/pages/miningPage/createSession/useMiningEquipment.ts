@@ -4,8 +4,8 @@ import {
   getGetApiV1FindersLotsQueryKey,
   useGetApiV1Excavators,
   useGetApiV1ExcavatorsStock,
-  useGetApiV1FinderAmplifiers,
-  useGetApiV1FinderAmplifiersStock,
+  useGetApiV1FinderAmplifiersLots,
+  getGetApiV1FinderAmplifiersLotsQueryKey,
   useGetApiV1Enhancers,
   getGetApiV1LotsItemIdQueryOptions,
   getGetApiV1LotsUnstackableItemItemIdQueryOptions,
@@ -27,28 +27,25 @@ export type MiningEquipment = {
   enhancerStock: Record<string, number>;
 };
 
-/** Load owned equipment lots and enhancer stocks, exposing errors before submission. */
+/** Load grouped finder and amplifier lots, owned excavators, and enhancer stocks. */
 export function useMiningEquipment() {
   const finderInventory = useGetApiV1FindersLots({
     query: { queryKey: getGetApiV1FindersLotsQueryKey(), staleTime: 0 },
   });
   const excavators = useGetApiV1Excavators();
   const excavatorStock = useGetApiV1ExcavatorsStock();
-  const amplifiers = useGetApiV1FinderAmplifiers();
-  const amplifierStock = useGetApiV1FinderAmplifiersStock();
+  const amplifierInventory = useGetApiV1FinderAmplifiersLots({
+    query: { queryKey: getGetApiV1FinderAmplifiersLotsQueryKey(), staleTime: 0 },
+  });
   const enhancers = useGetApiV1Enhancers();
   const finderGroups = Object.values(finderInventory.data ?? {});
+  const amplifierGroups = Object.values(amplifierInventory.data ?? {});
   const ownedExcavators = (excavators.data ?? []).filter(
     (item) =>
       item.isActive !== false && (excavatorStock.data?.[item.id] ?? 0) > 0,
   );
-  const ownedAmplifiers = (amplifiers.data ?? []).filter(
-    (item) =>
-      item.isActive !== false && (amplifierStock.data?.[item.id] ?? 0) > 0,
-  );
-  const owned = [...ownedExcavators, ...ownedAmplifiers];
   const lots = useQueries({
-    queries: owned.map((item) =>
+    queries: ownedExcavators.map((item) =>
       getGetApiV1LotsUnstackableItemItemIdQueryOptions(item.id),
     ),
   });
@@ -61,8 +58,7 @@ export function useMiningEquipment() {
     finderInventory,
     excavators,
     excavatorStock,
-    amplifiers,
-    amplifierStock,
+    amplifierInventory,
     enhancers,
     ...lots,
     ...stock,
@@ -70,10 +66,13 @@ export function useMiningEquipment() {
   const equipment: MiningEquipment = {
     finders: finderGroups.flatMap((group) => (group[0] ? [group[0].item] : [])),
     excavators: ownedExcavators,
-    amplifiers: ownedAmplifiers,
+    amplifiers: amplifierGroups.flatMap((group) =>
+      group[0] ? [group[0].item] : [],
+    ),
     enhancers: enhancers.data ?? [],
     lots: [
       ...finderGroups.flat(),
+      ...amplifierGroups.flat(),
       ...lots.flatMap((query) => query.data ?? []),
     ].filter((lot) => lot.isActive && lot.qty > lot.reserved),
     enhancerStock: Object.fromEntries(

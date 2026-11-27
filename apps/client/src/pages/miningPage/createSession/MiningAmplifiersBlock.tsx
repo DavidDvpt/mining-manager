@@ -8,15 +8,25 @@ import { getAmplifierClicks, getMiningDecayMultiplier } from '../utils';
 import type { MiningEquipment } from './useMiningEquipment';
 import styles from './mining-session-form.module.scss';
 
-/** Choose one amplifier model, showing owned quantity, per-lot floored capacity and cost. */
+/** Show amplifier choices, click capacity, and cost or stock error once a finder is selected. */
 export function MiningAmplifiersBlock({
   equipment,
+  hasFinder,
 }: {
   equipment: MiningEquipment;
+  hasFinder: boolean;
 }): import('react').JSX.Element {
   const { t } = useTranslations();
   const { control } = useFormContext<MiningSessionFormValues>();
   const values = useWatch({ control }) as MiningSessionFormValues;
+  if (!hasFinder) {
+    return (
+      <SubSection>
+        <h3>{t('MINING.AMPLIFIERS')}</h3>
+        <p className={styles.muted}>{t('MINING.SETUP.AMP_REQUIRES_FINDER')}</p>
+      </SubSection>
+    );
+  }
   return (
     <SubSection>
       <h3>{t('MINING.AMPLIFIERS')}</h3>
@@ -25,7 +35,9 @@ export function MiningAmplifiersBlock({
         aria-label={t('MINING.SETUP.AMP_MODEL')}
         className={styles.lotList}
       >
-        <RadioRHFItem value="">{t('MINING.SETUP.NO_AMP')}</RadioRHFItem>
+        <RadioRHFItem value="" className={styles.itemRow}>
+          <span>{t('MINING.SETUP.NO_AMP')}</span>
+        </RadioRHFItem>
         {equipment.amplifiers.map((item) => {
           const lots = equipment.lots.filter((lot) => lot.item.id === item.id);
           const capacity = item.details.isLimited
@@ -67,9 +79,15 @@ export function MiningAmplifiersBlock({
                   {t('MINING.SETUP.CLICKS')}
                 </small>
                 <br />
-                <small>
-                  {cost.toFixed(2)} {t('MINING.SETUP.SESSION_COST')}
-                </small>
+                {capacity < values.clicks ? (
+                  <small className={styles.error}>
+                    {t('MINING.SETUP.AMP_INSUFFICIENT_QUANTITY')}
+                  </small>
+                ) : (
+                  <small>
+                    {cost.toFixed(2)} {t('MINING.SETUP.SESSION_COST')}
+                  </small>
+                )}
               </span>
             </RadioRHFItem>
           );

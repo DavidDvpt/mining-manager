@@ -51,6 +51,34 @@ class FinderAmplifierService:
             item_ids=[amplifier.id for amplifier in amplifiers],
         )
 
+    async def get_available_lots(
+        self, *, user_id: UUID
+    ) -> dict[UUID, list[tuple[Lot, ItemEntity[FinderAmplifier]]]]:
+        """Group the user's available lots by active amplifier model with catalogue data."""
+
+        if self._lot_service is None:
+            raise RuntimeError("LotService is required for finder amplifier lot queries")
+        amplifiers = {
+            amplifier.id: amplifier
+            for amplifier in await self.get_all()
+            if amplifier.is_active is not False
+        }
+        lots = await self._lot_service.get_unstackable_lots_for_items(
+            user_id=user_id, item_ids=amplifiers.keys()
+        )
+        inventory: dict[UUID, list[tuple[Lot, ItemEntity[FinderAmplifier]]]] = {}
+        for lot in lots:
+            amplifier = (
+                amplifiers.get(lot.origin.item_id) if lot.origin is not None else None
+            )
+            if amplifier is not None:
+                inventory.setdefault(amplifier.id, []).append((lot, amplifier))
+        return {
+            item_id: inventory[item_id]
+            for item_id in amplifiers
+            if item_id in inventory
+        }
+
     async def get_owned_lot(self, *, user_id: UUID, lot_id: UUID) -> Lot:
         """Return an owned lot after confirming that it contains an amplifier."""
 

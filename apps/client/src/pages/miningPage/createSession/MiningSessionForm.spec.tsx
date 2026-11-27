@@ -207,6 +207,53 @@ describe('mining creation route', () => {
     );
   });
 
+  it('shows amplifier choices only while a finder is selected', async () => {
+    renderCreation();
+    const message =
+      'Vous devez choisir un finder pour accéder au choix d’amplificateurs.';
+    expect(screen.getByText(message)).toBeTruthy();
+    expect(
+      screen.queryByRole('radio', { name: 'Sans amplificateur' }),
+    ).toBeNull();
+
+    selectFinder('Sélectionner un finder', /Finder \(L\).*T4/);
+    expect(screen.queryByText(message)).toBeNull();
+    expect(screen.getByRole('radio', { name: /Amp 1/ })).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Retirer Finder (L) · T4' }),
+      );
+    });
+    expect(screen.getByText(message)).toBeTruthy();
+    expect(screen.queryByRole('radio', { name: /Amp 1/ })).toBeNull();
+  });
+
+  it('replaces the amplifier session cost only when requested clicks exceed capacity', async () => {
+    renderCreation();
+    selectFinder('Sélectionner un finder', /Unlimited finder.*T2/);
+    const clicks = screen.getByLabelText('Nombre de clics');
+    fireEvent.click(screen.getByRole('radio', { name: /Amp 1/ }));
+    const amplifier = within(
+      screen.getByRole('radio', { name: /Amp 1/ }).closest('label')!,
+    );
+    await act(async () => {
+      fireEvent.change(clicks, { target: { value: '91' } });
+    });
+    expect(amplifier.getByText('182.00 PED pour cette session')).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.change(clicks, { target: { value: '92' } });
+    });
+    expect(amplifier.getByText('Quantité insuffisante')).toBeTruthy();
+    expect(amplifier.queryByText(/PED pour cette session/)).toBeNull();
+
+    await act(async () => {
+      fireEvent.change(clicks, { target: { value: '91' } });
+    });
+    expect(amplifier.getByText('182.00 PED pour cette session')).toBeTruthy();
+  });
+
   it('clears selected enhancers when adding a needed tier-zero finder', async () => {
     renderCreation();
     fireEvent.change(screen.getByLabelText('Nombre de clics'), {

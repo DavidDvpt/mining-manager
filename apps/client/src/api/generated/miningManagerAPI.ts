@@ -38,6 +38,7 @@ import type {
   FinderAmplifierResponse,
   FinderResponse,
   GetApiV1ExcavatorsStock200,
+  GetApiV1FinderAmplifiersLots200,
   GetApiV1FinderAmplifiersStock200,
   GetApiV1FindersLots200,
   GetApiV1FindersStock200,
@@ -1480,6 +1481,76 @@ export function useGetApiV1FinderAmplifiersStock<TData = Awaited<ReturnType<type
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetApiV1FinderAmplifiersStockQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Return available amplifier lots for the authenticated user, grouped by item ID.
+ * @summary Get Available Finder Amplifier Lots
+ */
+export const getApiV1FinderAmplifiersLots = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<GetApiV1FinderAmplifiersLots200>(
+      {url: `/api/v1/finder-amplifiers/lots`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1FinderAmplifiersLotsQueryKey = () => {
+    return [
+    `/api/v1/finder-amplifiers/lots`
+    ] as const;
+    }
+
+
+export const getGetApiV1FinderAmplifiersLotsQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1FinderAmplifiersLots>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1FinderAmplifiersLots>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1FinderAmplifiersLotsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1FinderAmplifiersLots>>> = ({ signal }) => getApiV1FinderAmplifiersLots(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1FinderAmplifiersLots>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetApiV1FinderAmplifiersLotsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1FinderAmplifiersLots>>>
+export type GetApiV1FinderAmplifiersLotsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get Available Finder Amplifier Lots
+ */
+
+export function useGetApiV1FinderAmplifiersLots<TData = Awaited<ReturnType<typeof getApiV1FinderAmplifiersLots>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1FinderAmplifiersLots>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetApiV1FinderAmplifiersLotsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

@@ -11,7 +11,7 @@ import {
 } from './miningSessionCalculation';
 import styles from './mining-session-form.module.scss';
 
-/** Render finder in three columns or excavators in two, with sockets shared at the lowest tier. */
+/** Render the equipment sections and unlock amplifier choices once a finder is selected. */
 export function MiningFinderSection({
   equipment,
   estimate,
@@ -43,7 +43,12 @@ export function MiningFinderSection({
         ) : (
           <MiningExcavatorsBlock equipment={equipment} />
         )}
-        {role === 'finder' && <MiningAmplifiersBlock equipment={equipment} />}
+        {role === 'finder' && (
+          <MiningAmplifiersBlock
+            equipment={equipment}
+            hasFinder={Boolean(estimate.finder)}
+          />
+        )}
         <MiningEnhancersBlock
           equipment={equipment}
           minimumFinderTier={minimumTier(selectedLots)}
