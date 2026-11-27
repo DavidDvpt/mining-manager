@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from .base import ApiResponseModel
 from .item_schema import ItemResponse
+from .lot_schema import ToolLotResponse
 
 
 class ExcavatorDetailsResponse(ApiResponseModel):
@@ -17,3 +18,7 @@ class ExcavatorDetailsResponse(ApiResponseModel):
 
 class ExcavatorResponse(ItemResponse[ExcavatorDetailsResponse]):
     """Flattened item response with excavator details."""
+
+
+class ExcavatorLotResponse(ToolLotResponse[ExcavatorResponse]):
+    """An available excavator lot with its catalogue details."""

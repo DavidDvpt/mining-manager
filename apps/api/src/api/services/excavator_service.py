@@ -47,6 +47,30 @@ class ExcavatorService:
             item_ids=[excavator.id for excavator in excavators],
         )
 
+    async def get_available_lots(
+        self, *, user_id: UUID
+    ) -> dict[UUID, list[tuple[Lot, ItemEntity[Excavator]]]]:
+        """Group the user's available lots by active excavator model with catalogue data."""
+
+        if self._lot_service is None:
+            raise RuntimeError("LotService is required for excavator lot queries")
+        excavators = {
+            excavator.id: excavator
+            for excavator in await self.get_all()
+            if excavator.is_active is not False
+        }
+        lots = await self._lot_service.get_unstackable_lots_for_items(
+            user_id=user_id, item_ids=excavators.keys()
+        )
+        inventory: dict[UUID, list[tuple[Lot, ItemEntity[Excavator]]]] = {}
+        for lot in lots:
+            excavator = (
+                excavators.get(lot.origin.item_id) if lot.origin is not None else None
+            )
+            if excavator is not None:
+                inventory.setdefault(excavator.id, []).append((lot, excavator))
+        return inventory
+
     async def get_owned_lot(self, *, user_id: UUID, lot_id: UUID) -> Lot:
         """Return an owned lot after confirming that it contains an excavator."""
 

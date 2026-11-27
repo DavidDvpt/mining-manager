@@ -37,6 +37,7 @@ import type {
   ExcavatorResponse,
   FinderAmplifierResponse,
   FinderResponse,
+  GetApiV1ExcavatorsLots200,
   GetApiV1ExcavatorsStock200,
   GetApiV1FinderAmplifiersLots200,
   GetApiV1FinderAmplifiersStock200,
@@ -993,6 +994,76 @@ export function useGetApiV1ExcavatorsStock<TData = Awaited<ReturnType<typeof get
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetApiV1ExcavatorsStockQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Return the authenticated user's available excavator lots grouped by catalogue ID.
+ * @summary Get Available Excavator Lots
+ */
+export const getApiV1ExcavatorsLots = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<GetApiV1ExcavatorsLots200>(
+      {url: `/api/v1/excavators/lots`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1ExcavatorsLotsQueryKey = () => {
+    return [
+    `/api/v1/excavators/lots`
+    ] as const;
+    }
+
+
+export const getGetApiV1ExcavatorsLotsQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1ExcavatorsLots>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1ExcavatorsLots>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1ExcavatorsLotsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1ExcavatorsLots>>> = ({ signal }) => getApiV1ExcavatorsLots(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1ExcavatorsLots>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetApiV1ExcavatorsLotsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1ExcavatorsLots>>>
+export type GetApiV1ExcavatorsLotsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get Available Excavator Lots
+ */
+
+export function useGetApiV1ExcavatorsLots<TData = Awaited<ReturnType<typeof getApiV1ExcavatorsLots>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1ExcavatorsLots>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetApiV1ExcavatorsLotsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

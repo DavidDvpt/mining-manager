@@ -8,14 +8,14 @@ import styles from './mining-session-form.module.scss';
 
 type Props = {
   equipment: MiningEquipment;
-  minimumFinderTier: number;
+  minimumToolTier: number;
   tool?: 'FINDER' | 'EXCAVATOR';
 };
 
 /** Show one picker or selected enhancer per unlocked socket and clear incompatible selections. */
 export function MiningEnhancersBlock({
   equipment,
-  minimumFinderTier,
+  minimumToolTier,
   tool = 'FINDER',
 }: Props): import('react').JSX.Element {
   const { t } = useTranslations();
@@ -34,21 +34,21 @@ export function MiningEnhancersBlock({
           (item) =>
             item.id === id &&
             socket === `s${item.details.socket}` &&
-            item.details.socket <= minimumFinderTier,
+            item.details.socket <= minimumToolTier,
         )
       )
         setValue(`${field}.${socket}`, '', { shouldValidate: true });
     }
-  }, [selected, available, minimumFinderTier, field, setValue]);
+  }, [selected, available, minimumToolTier, field, setValue]);
   return (
     <SubSection>
       <h3>{t('MINING.ENHANCERS')}</h3>
       <p className={styles.muted}>
-        {t('MINING.SETUP.COMMON_TIER')} : {minimumFinderTier} ·{' '}
+        {t('MINING.SETUP.COMMON_TIER')} : {minimumToolTier} ·{' '}
         {t('MINING.SETUP.DEFERRED_USAGE')}
       </p>
       <div className={styles.socketList}>
-        {Array.from({ length: minimumFinderTier }, (_, index) => {
+        {Array.from({ length: minimumToolTier }, (_, index) => {
           const socket = index + 1;
           const socketKey = `s${socket}` as const;
           const name = `${field}.${socketKey}` as const;
@@ -96,7 +96,7 @@ export function MiningEnhancersBlock({
           );
         })}
       </div>
-      {!minimumFinderTier && (
+      {!minimumToolTier && (
         <p className={styles.muted}>{t('MINING.SETUP.NO_SOCKETS')}</p>
       )}
     </SubSection>

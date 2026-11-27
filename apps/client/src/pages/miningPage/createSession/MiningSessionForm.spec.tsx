@@ -82,6 +82,13 @@ vi.mock('./useMiningEquipment', () => ({
           economy: { decay: '1' },
           details: { isLimited: false },
         },
+        {
+          id: 'limited-excavator',
+          name: 'Excavator (L)',
+          imgId: null,
+          economy: { decay: '2' },
+          details: { isLimited: true },
+        },
       ],
       amplifiers: [1, 2].map((id) => ({
         id: `amp${id}`,
@@ -108,8 +115,18 @@ vi.mock('./useMiningEquipment', () => ({
           name: 'T2 Mining Finder Range Enhancer',
           details: { tool: 'FINDER', socket: 2, type: 'RANGE', bonus: '1' },
         },
+        {
+          id: 'excavator-enhancer',
+          name: 'T1 Mining Excavator Speed Enhancer',
+          details: { tool: 'EXCAVATOR', socket: 1, type: 'SPEED', bonus: '10' },
+        },
       ],
-      enhancerStock: { enhancer: 5, depth2: 3, range2: 1 },
+      enhancerStock: {
+        enhancer: 5,
+        depth2: 3,
+        range2: 1,
+        'excavator-enhancer': 2,
+      },
       lots: [
         { id: 'f4', item: { id: 'finder' }, tt: '10', tier: 4 },
         { id: 'f0', item: { id: 'finder' }, tt: '10', tier: 0 },
@@ -117,6 +134,8 @@ vi.mock('./useMiningEquipment', () => ({
         { id: 'fu', item: { id: 'unlimited' }, tt: '1', tier: 2 },
         { id: 'fu2', item: { id: 'unlimited' }, tt: '2.12340', tier: 3 },
         { id: 'e0', item: { id: 'excavator' }, tt: '0', tier: 0 },
+        { id: 'e2', item: { id: 'excavator' }, tt: '3', tier: 2 },
+        { id: 'e3', item: { id: 'limited-excavator' }, tt: '5', tier: 3 },
         { id: 'a1', item: { id: 'amp1' }, tt: '183', tier: 0 },
         { id: 'a2', item: { id: 'amp2' }, tt: '183', tier: 0 },
       ],
@@ -148,8 +167,8 @@ function renderCreation() {
   );
 }
 
-/** Open the accessible finder picker and choose a specific lot. */
-function selectFinder(trigger: string, option: RegExp): void {
+/** Open the accessible tool picker and choose a specific lot. */
+function selectTool(trigger: string, option: RegExp): void {
   fireEvent.keyDown(screen.getByRole('combobox', { name: trigger }), {
     key: 'ArrowDown',
   });
@@ -190,7 +209,7 @@ describe('mining creation route', () => {
       options.getByRole('option', { name: /^Unlimited finder · T3 2,1234$/ }),
     ).toBeTruthy();
     fireEvent.click(finderOption);
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Excavator · T0' }));
+    selectTool('Sélectionner un excavateur', /Excavator · T0/);
     fireEvent.click(screen.getByRole('radio', { name: /Amp 1/ }));
     fireEvent.click(screen.getByRole('radio', { name: /Amp 2/ }));
     expect(
@@ -218,6 +237,57 @@ describe('mining creation route', () => {
     );
   });
 
+  it('selects distinct excavator lots across models and defers their decay and enhancer use', async () => {
+    renderCreation();
+    selectTool('Sélectionner un finder', /Finder \(L\).*T4/);
+    const total = screen.getByText(/Coût estimé/).textContent;
+    const excavation = within(
+      screen.getByRole('heading', { name: 'Excavation' }).closest('section')!,
+    );
+
+    selectTool('Sélectionner un excavateur', /Excavator \(L\) · T3/);
+    expect(
+      excavation.getByText('Decay à renseigner à la clôture'),
+    ).toBeTruthy();
+    const addLabel = 'Ajouter un excavateur';
+    fireEvent.click(excavation.getByRole('button', { name: addLabel }));
+    const options = within(screen.getByRole('listbox'));
+    expect(options.getAllByRole('option')).toHaveLength(2);
+    expect(options.queryByRole('option', { name: /T3/ })).toBeNull();
+    fireEvent.click(options.getByRole('option', { name: /Excavator · T2/ }));
+
+    const socket = excavation.getByRole('combobox', { name: 'Socket 1' });
+    expect(within(socket).getAllByRole('option')).toHaveLength(2);
+    fireEvent.change(socket, { target: { value: 'excavator-enhancer' } });
+    const enhancerLabel = 'Mining Excavator Speed Enhancer · 2';
+    expect(excavation.getByText(enhancerLabel)).toBeTruthy();
+
+    fireEvent.click(excavation.getByRole('button', { name: addLabel }));
+    fireEvent.click(screen.getByRole('option', { name: /Excavator · T0/ }));
+    expect(excavation.queryByRole('button', { name: addLabel })).toBeNull();
+    expect(excavation.queryByText(enhancerLabel)).toBeNull();
+
+    fireEvent.click(
+      excavation.getByRole('button', { name: 'Retirer Excavator · T0' }),
+    );
+    const restored = excavation.getByRole<HTMLSelectElement>('combobox', {
+      name: 'Socket 1',
+    });
+    expect(restored.value).toBe('');
+    fireEvent.change(restored, { target: { value: 'excavator-enhancer' } });
+    expect(screen.getByText(/Coût estimé/).textContent).toBe(total);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Créer la session' }));
+    await waitFor(() =>
+      expect(mocks.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          excavators: ['e3', 'e2'],
+          excavatorEnhancers: { s1: 'excavator-enhancer' },
+        }),
+      }),
+    );
+  });
+
   it('shows amplifier choices only while a finder is selected', async () => {
     renderCreation();
     const message =
@@ -227,7 +297,7 @@ describe('mining creation route', () => {
       screen.queryByRole('radio', { name: 'Sans amplificateur' }),
     ).toBeNull();
 
-    selectFinder('Sélectionner un finder', /Finder \(L\).*T4/);
+    selectTool('Sélectionner un finder', /Finder \(L\).*T4/);
     expect(screen.queryByText(message)).toBeNull();
     expect(screen.getByRole('radio', { name: /Amp 1/ })).toBeTruthy();
 
@@ -242,7 +312,7 @@ describe('mining creation route', () => {
 
   it('replaces the amplifier session cost only when requested clicks exceed capacity', async () => {
     renderCreation();
-    selectFinder('Sélectionner un finder', /Unlimited finder.*T2/);
+    selectTool('Sélectionner un finder', /Unlimited finder.*T2/);
     expect(screen.getByText('Profondeur : 350,12 m')).toBeTruthy();
     const clicks = screen.getByLabelText('Nombre de clics');
     fireEvent.click(screen.getByRole('radio', { name: /Amp 1/ }));
@@ -268,7 +338,7 @@ describe('mining creation route', () => {
 
   it('adds the selected depth percentages and highlights the adjusted finder depth', async () => {
     renderCreation();
-    selectFinder('Sélectionner un finder', /Finder \(L\).*T4/);
+    selectTool('Sélectionner un finder', /Finder \(L\).*T4/);
     expect(screen.getByText('Profondeur : 250,00 m').className).toBe('');
 
     await act(async () => {
@@ -310,7 +380,7 @@ describe('mining creation route', () => {
     fireEvent.change(screen.getByLabelText('Nombre de clics'), {
       target: { value: '150' },
     });
-    selectFinder('Sélectionner un finder', /Finder \(L\).*T4.*10,00/);
+    selectTool('Sélectionner un finder', /Finder \(L\).*T4.*10,00/);
     const socket = screen.getByRole<HTMLSelectElement>('combobox', {
       name: 'Socket 1',
     });
@@ -343,7 +413,7 @@ describe('mining creation route', () => {
     );
     expect(screen.queryByText('Socket 1')).toBeNull();
     expect(screen.getAllByText('Profondeur : 250,00 m')).toHaveLength(2);
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Excavator · T0' }));
+    selectTool('Sélectionner un excavateur', /Excavator · T0/);
     fireEvent.click(screen.getByRole('button', { name: 'Créer la session' }));
     await waitFor(() =>
       expect(mocks.create.mock.calls[0][0].data.finderEnhancers).toEqual({}),
@@ -355,7 +425,7 @@ describe('mining creation route', () => {
     expect(
       screen.getByRole('heading', { name: 'Setup de recherche' }),
     ).toBeTruthy();
-    selectFinder('Sélectionner un finder', /Finder \(L\).*T4/);
+    selectTool('Sélectionner un finder', /Finder \(L\).*T4/);
     expect(screen.getByText('Finder (L) · T4')).toBeTruthy();
     expect(screen.getByText('Profondeur : 250,00 m')).toBeTruthy();
     expect(
@@ -408,7 +478,7 @@ describe('mining creation route', () => {
     expect(screen.queryByText('Finder (L) · T6')).toBeNull();
     expect(screen.getByText('Finder (L) · T4')).toBeTruthy();
     expect(screen.getByText('Finder (L) · T0')).toBeTruthy();
-    selectFinder('Ajouter un finder compatible', /Finder \(L\).*T6/);
+    selectTool('Ajouter un finder compatible', /Finder \(L\).*T6/);
 
     fireEvent.change(screen.getByLabelText('Nombre de clics'), {
       target: { value: '100' },
@@ -426,7 +496,7 @@ describe('mining creation route', () => {
       );
     });
     expect(screen.queryByText('Finder (L) · T4')).toBeNull();
-    selectFinder('Sélectionner un finder', /Unlimited finder.*T2.*1,00/);
+    selectTool('Sélectionner un finder', /Unlimited finder.*T2.*1,00/);
     fireEvent.change(screen.getByLabelText('Nombre de clics'), {
       target: { value: '1' },
     });

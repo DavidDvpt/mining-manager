@@ -1,56 +1,47 @@
 import { useTranslations } from '@/i18n/useTranslations';
-import { CheckboxRHF, EntropiaImage, SubSection } from '@/shared/components';
-import { getItemImageUrl } from '@/config/images';
+import { formatDecimalValue } from '@/shared/utils';
+import { MiningToolLots } from './MiningToolLots';
 import type { MiningEquipment } from './useMiningEquipment';
-import styles from './mining-session-form.module.scss';
 
-/** List available excavator lots and bind each checkbox to the selected excavators. */
+/** Select any owned excavator lots, across models, with decay recorded at session close. */
 export function MiningExcavatorsBlock({
   equipment,
+  selectedIds,
 }: {
   equipment: MiningEquipment;
+  selectedIds: string[];
 }): import('react').JSX.Element {
   const { t } = useTranslations();
-  const options = equipment.lots
-    .slice()
-    .sort(
-      (a, b) =>
-        Number(a.tt ?? 0) - Number(b.tt ?? 0) || a.id.localeCompare(b.id),
-    )
-    .flatMap((lot) => {
-      const item = equipment.excavators.find((tool) => tool.id === lot.item.id);
-      return item ? [{ item, lot }] : [];
-    });
+  const options = equipment.lots.flatMap((lot) => {
+    const item = equipment.excavators.find((tool) => tool.id === lot.item.id);
+    return item ? [{ item, lot }] : [];
+  });
+  const selected = selectedIds.flatMap((id) => {
+    const option = options.find(({ lot }) => lot.id === id);
+    if (!option) return [];
+    return [
+      {
+        ...option,
+        subtitle: option.item.details.isLimited
+          ? `${formatDecimalValue(option.lot.tt)} TT · L`
+          : t('MINING.SETUP.REPAIRABLE'),
+        details: t('MINING.SETUP.CLOSING_COST'),
+      },
+    ];
+  });
+
   return (
-    <SubSection>
-      <h3>{t('MINING.SETUP.EXCAVATORS')}</h3>
-      <div className={styles.lotList}>
-        {options.map(({ item, lot }) => (
-          <div key={lot.id} className={styles.itemRow}>
-            <EntropiaImage
-              url={getItemImageUrl(item.imgId)}
-              alt={item.name}
-              size="small"
-            />
-            <div>
-              <CheckboxRHF
-                name="excavatorLotIds"
-                checkedValue={lot.id}
-                label={`${item.name} · T${lot.tier ?? 0}`}
-              />
-              <small>
-                {item.details.isLimited
-                  ? `${lot.tt ?? '—'} TT · L`
-                  : t('MINING.SETUP.REPAIRABLE')}
-              </small>
-              <p className={styles.muted}>{t('MINING.SETUP.CLOSING_COST')}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-      {!options.length && (
-        <p className={styles.muted}>{t('MINING.SETUP.NO_TOOLS')}</p>
+    <MiningToolLots
+      field="excavatorLotIds"
+      title={t('MINING.SETUP.EXCAVATORS')}
+      chooseLabel={t('MINING.SETUP.CHOOSE_EXCAVATOR')}
+      addLabel={t('MINING.SETUP.ADD_EXCAVATOR')}
+      options={options}
+      selectedIds={selectedIds}
+      selected={selected}
+      additionalOptions={options.filter(
+        ({ lot }) => !selectedIds.includes(lot.id),
       )}
-    </SubSection>
+    />
   );
 }

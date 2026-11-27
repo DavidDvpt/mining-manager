@@ -2,13 +2,12 @@ import { useQueries } from '@tanstack/react-query';
 import {
   useGetApiV1FindersLots,
   getGetApiV1FindersLotsQueryKey,
-  useGetApiV1Excavators,
-  useGetApiV1ExcavatorsStock,
+  useGetApiV1ExcavatorsLots,
+  getGetApiV1ExcavatorsLotsQueryKey,
   useGetApiV1FinderAmplifiersLots,
   getGetApiV1FinderAmplifiersLotsQueryKey,
   useGetApiV1Enhancers,
   getGetApiV1LotsItemIdQueryOptions,
-  getGetApiV1LotsUnstackableItemItemIdQueryOptions,
 } from '@/api/generated/miningManagerAPI';
 import type {
   FinderResponse,
@@ -27,28 +26,21 @@ export type MiningEquipment = {
   enhancerStock: Record<string, number>;
 };
 
-/** Load grouped finder and amplifier lots, owned excavators, and enhancer stocks. */
+/** Load available lots grouped by model for each tool category, along with enhancer stocks. */
 export function useMiningEquipment() {
   const finderInventory = useGetApiV1FindersLots({
     query: { queryKey: getGetApiV1FindersLotsQueryKey(), staleTime: 0 },
   });
-  const excavators = useGetApiV1Excavators();
-  const excavatorStock = useGetApiV1ExcavatorsStock();
+  const excavatorInventory = useGetApiV1ExcavatorsLots({
+    query: { queryKey: getGetApiV1ExcavatorsLotsQueryKey(), staleTime: 0 },
+  });
   const amplifierInventory = useGetApiV1FinderAmplifiersLots({
     query: { queryKey: getGetApiV1FinderAmplifiersLotsQueryKey(), staleTime: 0 },
   });
   const enhancers = useGetApiV1Enhancers();
   const finderGroups = Object.values(finderInventory.data ?? {});
+  const excavatorGroups = Object.values(excavatorInventory.data ?? {});
   const amplifierGroups = Object.values(amplifierInventory.data ?? {});
-  const ownedExcavators = (excavators.data ?? []).filter(
-    (item) =>
-      item.isActive !== false && (excavatorStock.data?.[item.id] ?? 0) > 0,
-  );
-  const lots = useQueries({
-    queries: ownedExcavators.map((item) =>
-      getGetApiV1LotsUnstackableItemItemIdQueryOptions(item.id),
-    ),
-  });
   const stock = useQueries({
     queries: (enhancers.data ?? []).map((item) =>
       getGetApiV1LotsItemIdQueryOptions(item.id),
@@ -56,16 +48,16 @@ export function useMiningEquipment() {
   });
   const queries = [
     finderInventory,
-    excavators,
-    excavatorStock,
+    excavatorInventory,
     amplifierInventory,
     enhancers,
-    ...lots,
     ...stock,
   ];
   const equipment: MiningEquipment = {
     finders: finderGroups.flatMap((group) => (group[0] ? [group[0].item] : [])),
-    excavators: ownedExcavators,
+    excavators: excavatorGroups.flatMap((group) =>
+      group[0] ? [group[0].item] : [],
+    ),
     amplifiers: amplifierGroups.flatMap((group) =>
       group[0] ? [group[0].item] : [],
     ),
@@ -73,7 +65,7 @@ export function useMiningEquipment() {
     lots: [
       ...finderGroups.flat(),
       ...amplifierGroups.flat(),
-      ...lots.flatMap((query) => query.data ?? []),
+      ...excavatorGroups.flat(),
     ].filter((lot) => lot.isActive && lot.qty > lot.reserved),
     enhancerStock: Object.fromEntries(
       (enhancers.data ?? []).map((item, index) => [

@@ -28,12 +28,12 @@ export function MiningSessionFormContent({
       <MiningFinderSection
         equipment={equipment}
         estimate={estimate}
-        selectedFinderIds={values.finderLotIds}
+        selectedIds={values.finderLotIds}
       />
       <MiningFinderSection
         equipment={equipment}
         estimate={estimate}
-        selectedFinderIds={values.finderLotIds}
+        selectedIds={values.excavatorLotIds}
         toolRole="excavator"
       />
       <div aria-live="polite">

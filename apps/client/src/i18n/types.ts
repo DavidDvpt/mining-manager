@@ -48,12 +48,15 @@ export type TranslationSchema = {
       TITLE: string;
       SEARCH_SETUP: string;
       ADD_FINDER: string;
-      REMOVE_FINDER: string;
+      REMOVE_TOOL: string;
       REMOVE_ENHANCER: string;
       FINDER_DEPTH: string;
       FINDER_DECAY: string;
       CHOOSE_FINDER: string;
+      EXCAVATION: string;
       EXCAVATORS: string;
+      CHOOSE_EXCAVATOR: string;
+      ADD_EXCAVATOR: string;
       REPAIRABLE: string;
       CLOSING_COST: string;
       NO_TOOLS: string;

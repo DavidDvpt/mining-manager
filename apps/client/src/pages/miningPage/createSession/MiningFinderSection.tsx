@@ -11,16 +11,16 @@ import {
 } from './miningSessionCalculation';
 import styles from './mining-session-form.module.scss';
 
-/** Render the equipment sections and unlock amplifier choices once a finder is selected. */
+/** Render the selected equipment role with its common enhancer sockets and finder-only amplifiers. */
 export function MiningFinderSection({
   equipment,
   estimate,
-  selectedFinderIds,
+  selectedIds,
   toolRole: role = 'finder',
 }: {
   equipment: MiningEquipment;
   estimate: ReturnType<typeof calculateMiningSession>;
-  selectedFinderIds: string[];
+  selectedIds: string[];
   toolRole?: 'finder' | 'excavator';
 }): import('react').JSX.Element {
   const { t } = useTranslations();
@@ -31,17 +31,20 @@ export function MiningFinderSection({
       <h2>
         {role === 'finder'
           ? t('MINING.SETUP.SEARCH_SETUP')
-          : t('MINING.SETUP.EXCAVATORS')}
+          : t('MINING.SETUP.EXCAVATION')}
       </h2>
       <div className={styles.finderBlocks}>
         {role === 'finder' ? (
           <MiningFindersBlock
             equipment={equipment}
             estimate={estimate}
-            selectedIds={selectedFinderIds}
+            selectedIds={selectedIds}
           />
         ) : (
-          <MiningExcavatorsBlock equipment={equipment} />
+          <MiningExcavatorsBlock
+            equipment={equipment}
+            selectedIds={selectedIds}
+          />
         )}
         {role === 'finder' && (
           <MiningAmplifiersBlock
@@ -51,7 +54,7 @@ export function MiningFinderSection({
         )}
         <MiningEnhancersBlock
           equipment={equipment}
-          minimumFinderTier={minimumTier(selectedLots)}
+          minimumToolTier={minimumTier(selectedLots)}
           tool={role === 'finder' ? 'FINDER' : 'EXCAVATOR'}
         />
       </div>

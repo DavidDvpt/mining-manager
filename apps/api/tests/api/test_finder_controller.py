@@ -14,9 +14,9 @@ from api.db.models import LotType
 from api.main import app
 
 
-@pytest.mark.parametrize("endpoint", ["finders", "finder-amplifiers"])
+@pytest.mark.parametrize("endpoint", ["finders", "finder-amplifiers", "excavators"])
 def test_available_tool_lots_are_scoped_and_grouped(item_data, monkeypatch, endpoint):
-    """Verify both inventories return owned lots by model ID with TT and catalogue data."""
+    """Verify each tool inventory returns owned lots by model ID with TT and catalogue data."""
 
     user_id = uuid4()
     item, economy, _ = item_data
@@ -25,6 +25,9 @@ def test_available_tool_lots_are_scoped_and_grouped(item_data, monkeypatch, endp
     )
     item.finder_amplifier = SimpleNamespace(
         is_limited=True, efficiency=Decimal("5"), profession_level_min=None
+    )
+    item.excavator = SimpleNamespace(
+        is_limited=True, efficiency=Decimal("5"), use_per_minute=12
     )
     economy.avg_mu_percent = None
     economy.avg_mu_plus = None
@@ -79,6 +82,8 @@ def test_available_tool_lots_are_scoped_and_grouped(item_data, monkeypatch, endp
         assert details["ammoBurn"] == 10
     else:
         assert details["efficiency"] == "5"
+    if endpoint == "excavators":
+        assert details["usePerMinute"] == 12
     assert owned_lots[0]["item"]["economy"]["decay"] == "2"
     query = session.scalars.await_args_list[1].args[0]
     assert set(query.compile().params["item_id_1"]) == {item.id}
