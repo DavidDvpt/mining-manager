@@ -35,6 +35,8 @@ Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
 
 const mocks = vi.hoisted(() => ({
   create: vi.fn(),
+  createZone: vi.fn(),
+  zones: [] as { id: string; name: string }[],
   current: {
     data: null as null | { id: string },
     isPending: false,
@@ -46,12 +48,28 @@ vi.mock('@/api/generated/miningManagerAPI', () => ({
   useGetApiV1MiningCurrent: () => mocks.current,
   usePostApiV1MiningCreate: () => ({
     mutateAsync: mocks.create,
+    reset: vi.fn(),
     isPending: false,
     error: null,
   }),
-  useGetApiV1Planet: () => ({ data: [{ id: 'planet', name: 'Calypso' }] }),
-  useGetApiV1PlanetPlanetIdZone: () => ({ data: [] }),
-  getGetApiV1PlanetPlanetIdZoneQueryKey: () => ['zones'],
+  useGetApiV1Planet: () => ({
+    data: [
+      { id: 'planet', name: 'Calypso' },
+      { id: 'arkadia', name: 'Arkadia' },
+    ],
+  }),
+  useGetApiV1PlanetPlanetIdZone: (planetId: string) => ({
+    data: planetId === 'planet' ? mocks.zones : [],
+  }),
+  getGetApiV1PlanetPlanetIdZoneQueryKey: (planetId: string) => [
+    'zones',
+    planetId,
+  ],
+  getGetApiV1PlanetPlanetIdZoneQueryOptions: (planetId: string) => ({
+    queryKey: ['zones', planetId],
+    queryFn: async () => (planetId === 'planet' ? mocks.zones : []),
+  }),
+  usePostApiV1PlanetPlanetIdZone: () => ({ mutateAsync: mocks.createZone }),
 }));
 vi.mock('./useMiningEquipment', () => ({
   useMiningEquipment: () => ({
@@ -192,6 +210,8 @@ describe('mining creation route', () => {
     document.documentElement.lang = 'fr';
     mocks.current.data = null;
     mocks.create.mockReset().mockResolvedValue({ sessionId: 'created' });
+    mocks.zones = [{ id: 'saved-zone', name: 'Port Atlantis' }];
+    mocks.createZone.mockReset();
   });
 
   it('opens a modal, selects one amp model and submits lot IDs through the existing contract', async () => {
@@ -241,6 +261,69 @@ describe('mining creation route', () => {
         '/mining/created/running',
       ),
     );
+  });
+
+  it('suggests saved zones for the selected planet and submits the existing zone ID', async () => {
+    renderCreation();
+    const zone = screen.getByRole<HTMLInputElement>('combobox', {
+      name: 'Zone',
+    });
+    expect(zone.list?.options[0]?.value).toBe('Port Atlantis');
+    fireEvent.change(zone, { target: { value: 'Port Atlantis' } });
+
+    const planet = screen.getByRole('combobox', { name: 'Planète' });
+    fireEvent.change(planet, { target: { value: 'arkadia' } });
+    expect(zone.value).toBe('');
+    expect(zone.list?.options).toHaveLength(0);
+
+    fireEvent.change(planet, { target: { value: 'planet' } });
+    fireEvent.change(zone, { target: { value: 'Port Atlantis' } });
+    selectTool('Sélectionner un finder', /Finder \(L\).*T4/);
+    selectTool('Sélectionner un excavateur', /Excavator · T0/);
+    fireEvent.click(screen.getByRole('button', { name: 'Créer la session' }));
+    await waitFor(() =>
+      expect(mocks.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ sessionZone: 'saved-zone' }),
+      }),
+    );
+    expect(mocks.createZone).not.toHaveBeenCalled();
+  });
+
+  it('creates a typed zone before the session and reuses it if session creation must be retried', async () => {
+    mocks.create.mockRejectedValueOnce(new Error('Session failed'));
+    /** Simulate persisting the zone so the subsequent lookup can resolve its name. */
+    mocks.createZone.mockImplementationOnce(async () => {
+      const created = { id: 'new-zone', name: 'Cape Corinth' };
+      mocks.zones = [...mocks.zones, created];
+      return created;
+    });
+    renderCreation();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Zone' }), {
+      target: { value: '  Cape Corinth  ' },
+    });
+    selectTool('Sélectionner un finder', /Finder \(L\).*T4/);
+    selectTool('Sélectionner un excavateur', /Excavator · T0/);
+
+    const submit = screen.getByRole<HTMLButtonElement>('button', {
+      name: 'Créer la session',
+    });
+    fireEvent.click(submit);
+    await waitFor(() => expect(mocks.create).toHaveBeenCalledTimes(1));
+    expect(mocks.createZone).toHaveBeenCalledWith({
+      planetId: 'planet',
+      data: { name: 'Cape Corinth' },
+    });
+    expect(mocks.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ sessionZone: 'new-zone' }),
+    });
+    expect(mocks.createZone.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.create.mock.invocationCallOrder[0],
+    );
+
+    await waitFor(() => expect(submit.disabled).toBe(false));
+    fireEvent.click(submit);
+    await waitFor(() => expect(mocks.create).toHaveBeenCalledTimes(2));
+    expect(mocks.createZone).toHaveBeenCalledTimes(1);
   });
 
   it('shows a shared enhancer list up to the highest excavator tier and defers usage', async () => {

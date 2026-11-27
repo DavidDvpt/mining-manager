@@ -1,11 +1,14 @@
 import { useTranslations } from '@/i18n/useTranslations';
+import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { GenericForm, Modal } from '@/shared/components';
 import {
   getGetApiV1MiningCurrentQueryKey,
+  getGetApiV1PlanetPlanetIdZoneQueryOptions,
   useGetApiV1MiningCurrent,
   usePostApiV1MiningCreate,
+  usePostApiV1PlanetPlanetIdZone,
 } from '@/api/generated/miningManagerAPI';
 import type { MiningSessionFormValues } from '@/shared/types/mining';
 import MiningSessionFormContent from './MiningSessionFormContent';
@@ -25,28 +28,70 @@ export function MiningSessionForm(): import('react').JSX.Element {
   const current = useGetApiV1MiningCurrent();
   const { equipment, isPending, isError } = useMiningEquipment();
   const mutation = usePostApiV1MiningCreate();
+  const zoneMutation = usePostApiV1PlanetPlanetIdZone();
+  const [isSaving, setIsSaving] = useState(false);
+  const [zoneError, setZoneError] = useState(false);
   /** Close the route-controlled modal when no request is being persisted. */
   const close = (): void => {
-    if (!mutation.isPending) navigate('/mining');
+    if (!isSaving) navigate('/mining');
   };
-  /** Validate current stock and capacities before mapping form fields to the existing API contract. */
+
+  /** Resolve the optional zone for the submitted planet, creating it only when its name is new. */
+  const resolveZone = async (
+    planetId: string,
+    value: string,
+  ): Promise<string | null> => {
+    if (!value) return null;
+
+    const query = getGetApiV1PlanetPlanetIdZoneQueryOptions(planetId);
+    const zones = await client.fetchQuery(query);
+    const existing =
+      zones.find(({ id }) => id === value) ??
+      zones.find(({ name }) => name.trim() === value);
+    if (existing) return existing.id;
+
+    const created = await zoneMutation.mutateAsync({
+      planetId,
+      data: { name: value },
+    });
+    client.setQueryData<typeof zones>(query.queryKey, (cached) => [
+      ...(cached ?? zones).filter(({ id }) => id !== created.id),
+      created,
+    ]);
+    return created.id;
+  };
+
+  /** Validate equipment, resolve the selected or new zone, and save the mining session. */
   const submit = async (values: MiningSessionFormValues): Promise<void> => {
     const estimate = calculateMiningSession(values, equipment);
     if (
       estimate.issues.length ||
+      isSaving ||
       current.data ||
       current.isPending ||
       current.isError
     )
       return;
+
+    setIsSaving(true);
+    setZoneError(false);
+    mutation.reset();
     try {
+      const sessionZone = await resolveZone(values.planet, values.zone).catch(
+        () => {
+          setZoneError(true);
+          return undefined;
+        },
+      );
+      if (sessionZone === undefined) return;
+
       const created = await mutation.mutateAsync({
         data: {
           clics: values.clicks,
           searchType: values.searchType === 'OE' ? 'EO' : values.searchType,
           finder: values.finderLotIds,
           excavators: values.excavatorLotIds,
-          sessionZone: values.zone || null,
+          sessionZone,
           finderAmplifiers: estimate.amplifierLots.map((lot) => lot.id),
           finderEnhancers: Object.fromEntries(
             Object.entries(values.enhancers).filter(([, id]) => Boolean(id)),
@@ -67,6 +112,8 @@ export function MiningSessionForm(): import('react').JSX.Element {
       await client.invalidateQueries({
         queryKey: getGetApiV1MiningCurrentQueryKey(),
       });
+    } finally {
+      setIsSaving(false);
     }
   };
   if (current.data)
@@ -77,7 +124,7 @@ export function MiningSessionForm(): import('react').JSX.Element {
       onOpenChange={(open) => {
         if (!open) close();
       }}
-      noClose={mutation.isPending}
+      noClose={isSaving}
       title={t('MINING.SETUP.TITLE')}
       className={styles.modal}
     >
@@ -103,8 +150,13 @@ export function MiningSessionForm(): import('react').JSX.Element {
           <MiningSessionFormContent
             equipment={equipment}
             onCancel={close}
-            pending={mutation.isPending}
+            pending={isSaving}
           />
+          {zoneError && (
+            <p role="alert" className={styles.error}>
+              {t('MINING.SETUP.ZONE_SAVE_ERROR')}
+            </p>
+          )}
           {mutation.error && (
             <p role="alert" className={styles.error}>
               {mutation.error.message}

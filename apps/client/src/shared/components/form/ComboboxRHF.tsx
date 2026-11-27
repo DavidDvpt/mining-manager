@@ -56,9 +56,6 @@ export function ComboboxRHF({
         ref={field.ref}
         value={displayedValue}
         list={listId}
-        role="combobox"
-        aria-autocomplete="list"
-        aria-expanded={!props.disabled}
         aria-invalid={fieldState.invalid || undefined}
         aria-describedby={fieldState.error ? `${inputId}-error` : undefined}
         className={cn(fieldState.error && styles.invalid, className)}

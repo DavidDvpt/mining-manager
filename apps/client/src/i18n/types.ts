@@ -77,6 +77,8 @@ export type TranslationSchema = {
       DEFERRED_COST: string;
       LOADING: string;
       LOAD_ERROR: string;
+      ZONE_PLACEHOLDER: string;
+      ZONE_SAVE_ERROR: string;
       SUBMIT: string;
       INVALID_FINDERS: string;
       INCOMPLETE_FINDER: string;

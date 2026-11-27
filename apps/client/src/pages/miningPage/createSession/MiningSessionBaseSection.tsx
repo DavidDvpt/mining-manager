@@ -13,7 +13,7 @@ import { useTranslations } from '@/i18n/useTranslations';
 import type { MiningSessionFormValues } from '@/shared/types/mining';
 import styles from './mining-session-form.module.scss';
 
-/** Render and validate the base fields of a mining-session configuration. */
+/** Render the base fields and suggest saved zones for the selected planet. */
 export function MiningSessionBaseSection(): import('react').JSX.Element {
   const { t } = useTranslations();
   const { setValue } = useFormContext<MiningSessionFormValues>();
@@ -87,6 +87,7 @@ export function MiningSessionBaseSection(): import('react').JSX.Element {
         <ComboboxRHF
           name="zone"
           label={t('MINING.ZONE')}
+          placeholder={t('MINING.SETUP.ZONE_PLACEHOLDER')}
           options={zones.map((zone): { value: string; label: string } => ({
             value: zone.id,
             label: zone.name,

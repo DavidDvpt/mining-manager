@@ -88,6 +88,9 @@ export const fr_FR: TranslationSchema = {
       LOADING: 'Chargement du stock…',
       LOAD_ERROR:
         'Impossible de charger le stock ou la session courante. Fermez puis réessayez.',
+      ZONE_PLACEHOLDER: 'Choisir ou saisir une zone',
+      ZONE_SAVE_ERROR:
+        'Impossible de vérifier ou d’enregistrer la zone. Réessayez.',
       SUBMIT: 'Créer la session',
       INVALID_FINDERS:
         'Sélectionnez au moins un finder disponible du même modèle.',

@@ -83,6 +83,8 @@ export const en_EN: TranslationSchema = {
       LOADING: 'Loading inventory…',
       LOAD_ERROR:
         'Could not load inventory or the current session. Close and retry.',
+      ZONE_PLACEHOLDER: 'Choose or enter a zone',
+      ZONE_SAVE_ERROR: 'Could not look up or save the zone. Try again.',
       SUBMIT: 'Create session',
       INVALID_FINDERS:
         'Select at least one available finder of the same model.',
