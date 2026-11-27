@@ -5,6 +5,16 @@
   gap: 0.5rem;
 }
 
+.inline {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+
+  .error {
+    grid-column: 2;
+  }
+}
+
 .select {
   width: 100%;
   min-height: 2.75rem;

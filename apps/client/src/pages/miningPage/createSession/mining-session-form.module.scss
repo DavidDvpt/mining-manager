@@ -151,7 +151,15 @@
     gap: 0.5rem;
   }
 
-  .removeFinder {
+  .socketSelection {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+  }
+
+  .removeEquipment {
     display: grid;
     flex: 0 0 auto;
     width: 2rem;
@@ -220,5 +228,9 @@
 
   small {
     color: var(--text-muted);
+  }
+
+  .enhancedDepth {
+    color: var(--primary-500);
   }
 }

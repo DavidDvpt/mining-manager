@@ -57,6 +57,7 @@ export const fr_FR: TranslationSchema = {
       SEARCH_SETUP: 'Setup de recherche',
       ADD_FINDER: 'Ajouter un finder compatible',
       REMOVE_FINDER: 'Retirer {finder}',
+      REMOVE_ENHANCER: 'Retirer l’enhancer du {socket}',
       FINDER_DEPTH: 'Profondeur : {depth} m',
       FINDER_DECAY: 'Decay',
       CHOOSE_FINDER: 'Sélectionner un finder',

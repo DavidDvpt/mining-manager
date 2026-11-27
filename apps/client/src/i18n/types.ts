@@ -49,6 +49,7 @@ export type TranslationSchema = {
       SEARCH_SETUP: string;
       ADD_FINDER: string;
       REMOVE_FINDER: string;
+      REMOVE_ENHANCER: string;
       FINDER_DEPTH: string;
       FINDER_DECAY: string;
       CHOOSE_FINDER: string;

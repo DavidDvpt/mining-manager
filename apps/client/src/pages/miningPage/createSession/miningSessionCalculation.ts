@@ -1,5 +1,6 @@
 import type { TranslationKey } from '@/i18n/types';
 import type { MiningSessionFormValues } from '@/shared/types/mining';
+import { numericValue, parseNumber } from '@/shared/utils';
 import type {
   EconomyResponse,
   UnstackableLotResponse,
@@ -46,7 +47,7 @@ export function miningCostTtc(
   return value;
 }
 
-/** Estimate TT/TTC costs using L catalogue markup, allocate finder decay, and validate selections. */
+/** Estimate costs and finder depth from the selected equipment and report invalid selections. */
 export function calculateMiningSession(
   values: MiningSessionFormValues,
   equipment: MiningEquipment,
@@ -149,10 +150,12 @@ export function calculateMiningSession(
       path: 'amplifierItemId',
       message: 'MINING.SETUP.AMP_CAPACITY',
     });
+  let depthBonusPercent = 0;
   for (const [field, selected, tool] of [
     ['enhancers', finderLots, 'FINDER'],
     ['excavatorEnhancers', excavatorLots, 'EXCAVATOR'],
   ] as const) {
+    const tier = minimumTier(selected);
     for (const [socket, id] of Object.entries(values[field])) {
       if (!id) continue;
       const enhancer = enhancers.find((item) => item.id === id);
@@ -160,15 +163,21 @@ export function calculateMiningSession(
         !enhancer ||
         enhancer.details.tool !== tool ||
         socket !== `s${enhancer.details.socket}` ||
-        enhancer.details.socket > minimumTier(selected) ||
+        enhancer.details.socket > tier ||
         (enhancerStock[id] ?? 0) < 1
-      )
+      ) {
         issues.push({
           path: `${field}.${socket}`,
           message: 'MINING.SETUP.INVALID_ENHANCER',
         });
+      } else if (tool === 'FINDER' && enhancer.details.type === 'DEPTH') {
+        depthBonusPercent += numericValue(enhancer.details.bonus);
+      }
     }
   }
+  const baseDepth = parseNumber(finder?.details.depth);
+  const effectiveDepth =
+    baseDepth === null ? null : baseDepth * (1 + depthBonusPercent / 100);
   let remainingDecay = finderDecay;
   const finderDecayByLot = Object.fromEntries(
     finderLots.map((lot) => {
@@ -213,6 +222,7 @@ export function calculateMiningSession(
   }, 0);
   return {
     finder,
+    enhancedFinderDepth: effectiveDepth === baseDepth ? null : effectiveDepth,
     finderLots,
     excavatorLots,
     amplifier,

@@ -10,6 +10,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import MiningSessionForm from './MiningSessionForm';
+import styles from './mining-session-form.module.scss';
 
 /** Supply browser resize observation for Radix controls in JSDOM. */
 class TestResizeObserver {
@@ -70,7 +71,7 @@ vi.mock('./useMiningEquipment', () => ({
           name: 'Unlimited finder',
           imgId: null,
           economy: { decay: '0.00220' },
-          details: { ammoBurn: 10, isLimited: false, depth: '350' },
+          details: { ammoBurn: 10, isLimited: false, depth: '350.123' },
         },
       ],
       excavators: [
@@ -92,13 +93,23 @@ vi.mock('./useMiningEquipment', () => ({
       enhancers: [
         {
           id: 'enhancer',
-          name: 'Depth enhancer',
+          name: 'T1 Mining Finder Depth Enhancer',
           imgId: null,
           economy: { tt: '0.8' },
-          details: { tool: 'FINDER', socket: 1 },
+          details: { tool: 'FINDER', socket: 1, type: 'DEPTH', bonus: '7.43' },
+        },
+        {
+          id: 'depth2',
+          name: 'T2 Mining Finder Depth Enhancer',
+          details: { tool: 'FINDER', socket: 2, type: 'DEPTH', bonus: '5' },
+        },
+        {
+          id: 'range2',
+          name: 'T2 Mining Finder Range Enhancer',
+          details: { tool: 'FINDER', socket: 2, type: 'RANGE', bonus: '1' },
         },
       ],
-      enhancerStock: { enhancer: 5 },
+      enhancerStock: { enhancer: 5, depth2: 3, range2: 1 },
       lots: [
         { id: 'f4', item: { id: 'finder' }, tt: '10', tier: 4 },
         { id: 'f0', item: { id: 'finder' }, tt: '10', tier: 0 },
@@ -232,6 +243,7 @@ describe('mining creation route', () => {
   it('replaces the amplifier session cost only when requested clicks exceed capacity', async () => {
     renderCreation();
     selectFinder('Sélectionner un finder', /Unlimited finder.*T2/);
+    expect(screen.getByText('Profondeur : 350,12 m')).toBeTruthy();
     const clicks = screen.getByLabelText('Nombre de clics');
     fireEvent.click(screen.getByRole('radio', { name: /Amp 1/ }));
     const amplifier = within(
@@ -254,13 +266,71 @@ describe('mining creation route', () => {
     expect(amplifier.getByText('182.00 PED pour cette session')).toBeTruthy();
   });
 
-  it('clears selected enhancers when adding a needed tier-zero finder', async () => {
+  it('adds the selected depth percentages and highlights the adjusted finder depth', async () => {
+    renderCreation();
+    selectFinder('Sélectionner un finder', /Finder \(L\).*T4/);
+    expect(screen.getByText('Profondeur : 250,00 m').className).toBe('');
+
+    await act(async () => {
+      fireEvent.change(screen.getByRole('combobox', { name: 'Socket 1' }), {
+        target: { value: 'enhancer' },
+      });
+    });
+    expect(screen.getByText('Profondeur : 268,58 m').className).toBe(
+      styles.enhancedDepth,
+    );
+    await act(async () => {
+      fireEvent.change(screen.getByRole('combobox', { name: 'Socket 2' }), {
+        target: { value: 'depth2' },
+      });
+    });
+    expect(screen.getByText('Profondeur : 281,08 m')).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Retirer l’enhancer du Socket 2' }),
+      );
+    });
+    await act(async () => {
+      fireEvent.change(screen.getByRole('combobox', { name: 'Socket 2' }), {
+        target: { value: 'range2' },
+      });
+    });
+    expect(screen.getByText('Profondeur : 268,58 m')).toBeTruthy();
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Retirer l’enhancer du Socket 1' }),
+      );
+    });
+    expect(screen.getByText('Profondeur : 250,00 m').className).toBe('');
+  });
+
+  it('replaces the socket picker on selection and clears enhancers on removal or tier changes', async () => {
     renderCreation();
     fireEvent.change(screen.getByLabelText('Nombre de clics'), {
       target: { value: '150' },
     });
     selectFinder('Sélectionner un finder', /Finder \(L\).*T4.*10,00/);
-    fireEvent.change(screen.getByLabelText('Socket 1'), {
+    const socket = screen.getByRole<HTMLSelectElement>('combobox', {
+      name: 'Socket 1',
+    });
+    const enhancerLabel = 'Mining Finder Depth Enhancer · 5';
+    expect(
+      within(socket).getByRole('option', { name: enhancerLabel }),
+    ).toBeTruthy();
+    fireEvent.change(socket, {
+      target: { value: 'enhancer' },
+    });
+    expect(screen.getByText(enhancerLabel)).toBeTruthy();
+    expect(screen.queryByRole('combobox', { name: 'Socket 1' })).toBeNull();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Retirer l’enhancer du Socket 1' }),
+    );
+    const restoredSocket = screen.getByRole<HTMLSelectElement>('combobox', {
+      name: 'Socket 1',
+    });
+    expect(restoredSocket.value).toBe('');
+    fireEvent.change(restoredSocket, {
       target: { value: 'enhancer' },
     });
     fireEvent.click(
@@ -271,7 +341,8 @@ describe('mining creation route', () => {
         name: /Finder \(L\).*T0/,
       }),
     );
-    expect(screen.queryByLabelText('Socket 1')).toBeNull();
+    expect(screen.queryByText('Socket 1')).toBeNull();
+    expect(screen.getAllByText('Profondeur : 250,00 m')).toHaveLength(2);
     fireEvent.click(screen.getByRole('checkbox', { name: 'Excavator · T0' }));
     fireEvent.click(screen.getByRole('button', { name: 'Créer la session' }));
     await waitFor(() =>

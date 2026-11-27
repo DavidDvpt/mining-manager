@@ -1,8 +1,7 @@
 import { useTranslations } from '@/i18n/useTranslations';
 import { useEffect } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { SelectRHF, SubSection, EntropiaImage } from '@/shared/components';
-import { getItemImageUrl } from '@/config/images';
+import { AppIcon, SelectRHF, SubSection } from '@/shared/components';
 import type { MiningSessionFormValues } from '@/shared/types/mining';
 import type { MiningEquipment } from './useMiningEquipment';
 import styles from './mining-session-form.module.scss';
@@ -13,7 +12,7 @@ type Props = {
   tool?: 'FINDER' | 'EXCAVATOR';
 };
 
-/** Render stock per socket up to the lowest selected tier and clear incompatible enhancers. */
+/** Show one picker or selected enhancer per unlocked socket and clear incompatible selections. */
 export function MiningEnhancersBlock({
   equipment,
   minimumFinderTier,
@@ -51,43 +50,49 @@ export function MiningEnhancersBlock({
       <div className={styles.socketList}>
         {Array.from({ length: minimumFinderTier }, (_, index) => {
           const socket = index + 1;
-          const items = available.filter(
-            (item) => item.details.socket === socket,
+          const socketKey = `s${socket}` as const;
+          const name = `${field}.${socketKey}` as const;
+          const label = `${t('MINING.SOCKET')} ${socket}`;
+          const options = available
+            .filter((item) => item.details.socket === socket)
+            .map((item) => ({
+              value: item.id,
+              label: `${item.name.replace(/^.*?\b(?=Mining\b)/u, '')} · ${equipment.enhancerStock[item.id]}`,
+            }));
+          const chosen = options.find(
+            (option) => option.value === selected[socketKey],
           );
-          const selectedItem = items.find(
-            (item) => item.id === selected[`s${socket}`],
-          );
-          return (
-            <div key={socket}>
-              <SelectRHF
-                name={`${field}.s${socket}`}
-                label={`${t('MINING.SOCKET')} ${socket}`}
-                options={[
-                  { value: '', label: t('MINING.NO_ENHANCER') },
-                  ...items.map((item) => ({
-                    value: item.id,
-                    label: `${item.name} · ${equipment.enhancerStock[item.id]} ${t('MINING.SETUP.AVAILABLE')}`,
-                  })),
-                ]}
-              />
-              {selectedItem && (
-                <div className={styles.itemRow}>
-                  <EntropiaImage
-                    url={getItemImageUrl(selectedItem.imgId)}
-                    alt={selectedItem.name}
-                    size="small"
-                  />
-                  <span>
-                    {selectedItem.name}
-                    <br />
-                    <small>
-                      {selectedItem.economy.tt ?? '—'}{' '}
-                      {t('MINING.SETUP.UNIT_COST')}
-                    </small>
-                  </span>
-                </div>
-              )}
+          /** Clear this socket in the form so its picker reappears. */
+          const removeEnhancer = (): void => {
+            setValue(name, '', { shouldDirty: true, shouldValidate: true });
+          };
+          return chosen ? (
+            <div key={socket} className={styles.socketSelection}>
+              <span>{label}</span>
+              <span>{chosen.label}</span>
+              <button
+                type="button"
+                className={styles.removeEquipment}
+                aria-label={t('MINING.SETUP.REMOVE_ENHANCER').replace(
+                  '{socket}',
+                  label,
+                )}
+                onClick={removeEnhancer}
+              >
+                <AppIcon name="Trash2" size={16} aria-hidden="true" />
+              </button>
             </div>
+          ) : (
+            <SelectRHF
+              key={socket}
+              inline
+              name={name}
+              label={label}
+              options={[
+                { value: '', label: t('MINING.NO_ENHANCER') },
+                ...options,
+              ]}
+            />
           );
         })}
       </div>

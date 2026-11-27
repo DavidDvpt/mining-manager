@@ -5,7 +5,11 @@ import { SubSection, EntropiaImage, SelectRHF } from '@/shared/components';
 import { AppIcon } from '@/shared/components/icon';
 import { getItemImageUrl } from '@/config/images';
 import type { MiningSessionFormValues } from '@/shared/types/mining';
-import { formatDecimalValue, formatRoundedDecimalValue } from '@/shared/utils';
+import {
+  formatDecimalValue,
+  formatRoundedDecimalValue,
+  parseNumber,
+} from '@/shared/utils';
 import type {
   FinderResponse,
   UnstackableLotResponse,
@@ -23,19 +27,30 @@ type FinderLot = {
   lot: UnstackableLotResponse;
 };
 
+const finderDepthFormat = new Intl.NumberFormat('fr-FR', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+  useGrouping: false,
+});
+
 /** Format a calculated PED cost to catalogue precision, with at least two decimals. */
 function formatFinderCost(value: number): string {
   return formatDecimalValue(formatRoundedDecimalValue(value));
 }
 
-/** Show the model and tier on one line, with the option TT or finder depth underneath. */
+/** Show option TT or depth rounded to two decimal places, highlighting enhancer changes. */
 function FinderIdentity({
   item,
   lot,
   optionTt,
-}: FinderLot & { optionTt?: string }): import('react').JSX.Element {
+  enhancedDepth = null,
+}: FinderLot & {
+  optionTt?: string;
+  enhancedDepth?: number | null;
+}): import('react').JSX.Element {
   const { t } = useTranslations();
   const tier = `T${lot.tier ?? 0}`;
+  const depth = enhancedDepth ?? parseNumber(item.details.depth);
   return (
     <div className={styles.itemRow}>
       <div aria-hidden="true">
@@ -44,11 +59,13 @@ function FinderIdentity({
       <span>
         {item.name} · {tier}
         <br />{' '}
-        <small>
+        <small
+          className={enhancedDepth !== null ? styles.enhancedDepth : undefined}
+        >
           {optionTt ??
             t('MINING.SETUP.FINDER_DEPTH').replace(
               '{depth}',
-              formatDecimalValue(item.details.depth),
+              depth === null ? '—' : finderDepthFormat.format(depth),
             )}
         </small>
       </span>
@@ -56,7 +73,7 @@ function FinderIdentity({
   );
 }
 
-/** List all owned finder lots and add matching limited lots in the order they will be used. */
+/** List owned finder lots, display their estimated depth, and add matching limited lots in usage order. */
 export function MiningFindersBlock({
   equipment,
   estimate,
@@ -152,10 +169,14 @@ export function MiningFindersBlock({
           finderLots.map((lot) => (
             <div key={lot.id} className={styles.finderCard}>
               <div className={styles.finderCardHeader}>
-                <FinderIdentity item={finder} lot={lot} />
+                <FinderIdentity
+                  item={finder}
+                  lot={lot}
+                  enhancedDepth={estimate.enhancedFinderDepth}
+                />
                 <button
                   type="button"
-                  className={styles.removeFinder}
+                  className={styles.removeEquipment}
                   aria-label={t('MINING.SETUP.REMOVE_FINDER').replace(
                     '{finder}',
                     `${finder.name} · T${lot.tier ?? 0}`,
