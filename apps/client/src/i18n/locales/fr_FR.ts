@@ -78,6 +78,7 @@ export const fr_FR: TranslationSchema = {
       SESSION_COST: 'PED pour cette session',
       AMP_INSUFFICIENT_QUANTITY: 'Quantité insuffisante',
       COMMON_TIER: 'Tier commun',
+      MAX_TIER: 'Tier le plus élevé',
       DEFERRED_USAGE: 'Consommation et coût à la fermeture.',
       UNIT_COST: 'PED / unité · coût réel à la fermeture',
       NO_SOCKETS: 'Aucun socket utilisable.',

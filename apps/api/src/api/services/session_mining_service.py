@@ -97,7 +97,8 @@ class SessionMiningService:
         """Create one owned setup after validating model, pooled L capacity and enhancer tiers.
 
         Plan finder decay in selection order and estimate ammo and other tool costs.
-        Excavator and enhancer use is confirmed at closing.
+        Finder sockets use the lowest selected tier; shared excavator sockets
+        use the highest. Excavator decay and enhancer use are confirmed at closing.
         """
 
         if clic < 1:
@@ -154,15 +155,19 @@ class SessionMiningService:
                 enhancer_lines=[],
             )
             enhancer_data = []
-            for selected, tools, role in (
-                (finder_enhancers, finder_lots, "FINDER"),
-                (excavator_enhancers, excavator_lots, "EXCAVATOR"),
+            for selected, role, max_socket in (
+                (finder_enhancers, "FINDER", min(lot.tool_lot.tier or 0 for lot in finder_lots)),
+                (excavator_enhancers, "EXCAVATOR", max(lot.tool_lot.tier or 0 for lot in excavator_lots)),
             ):
-                tier = min(lot.tool_lot.tier or 0 for lot in tools)
-                enhancer_data.extend(await self._session_line_service.prepare_mining_enhancers(
-                    session_id=session.id, user_id=user_id, item_ids=selected,
-                    tool=role, minimum_tier=tier,
-                ))
+                enhancer_data.extend(
+                    await self._session_line_service.prepare_mining_enhancers(
+                        session_id=session.id,
+                        user_id=user_id,
+                        item_ids=selected,
+                        tool=role,
+                        max_socket=max_socket,
+                    )
+                )
 
             total_tt, total_ttc = self._calculate_costs(
                 finder_lots=finder_lots,

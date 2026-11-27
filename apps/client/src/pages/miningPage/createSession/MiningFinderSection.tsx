@@ -5,13 +5,10 @@ import MiningFindersBlock from './MiningFindersBlock';
 import { MiningExcavatorsBlock } from './MiningExcavatorsBlock';
 import MiningAmplifiersBlock from './MiningAmplifiersBlock';
 import MiningEnhancersBlock from './MiningEnhancersBlock';
-import {
-  calculateMiningSession,
-  minimumTier,
-} from './miningSessionCalculation';
+import type { calculateMiningSession } from './miningSessionCalculation';
 import styles from './mining-session-form.module.scss';
 
-/** Render the selected equipment role with its common enhancer sockets and finder-only amplifiers. */
+/** Render the equipment section with the socket tier calculated for its tool role. */
 export function MiningFinderSection({
   equipment,
   estimate,
@@ -24,8 +21,6 @@ export function MiningFinderSection({
   toolRole?: 'finder' | 'excavator';
 }): import('react').JSX.Element {
   const { t } = useTranslations();
-  const selectedLots =
-    role === 'finder' ? estimate.finderLots : estimate.excavatorLots;
   return (
     <Section>
       <h2>
@@ -54,7 +49,11 @@ export function MiningFinderSection({
         )}
         <MiningEnhancersBlock
           equipment={equipment}
-          minimumToolTier={minimumTier(selectedLots)}
+          socketTier={
+            role === 'finder'
+              ? estimate.finderSocketTier
+              : estimate.excavatorSocketTier
+          }
           tool={role === 'finder' ? 'FINDER' : 'EXCAVATOR'}
         />
       </div>

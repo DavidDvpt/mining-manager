@@ -69,6 +69,7 @@ export type TranslationSchema = {
       SESSION_COST: string;
       AMP_INSUFFICIENT_QUANTITY: string;
       COMMON_TIER: string;
+      MAX_TIER: string;
       DEFERRED_USAGE: string;
       UNIT_COST: string;
       NO_SOCKETS: string;

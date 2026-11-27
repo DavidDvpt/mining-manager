@@ -155,3 +155,45 @@ def test_estimated_ttc_marks_up_only_limited_items(limited, percent, plus, expec
     item.economy.avg_mu_plus = Decimal(plus) if plus is not None else None
     assert SessionMiningService._with_markup(Decimal(2), item) == Decimal(expected)
     assert SessionMiningService._with_markup(Decimal(0), item) == Decimal(0)
+
+
+async def test_creation_uses_highest_excavator_tier_for_the_shared_enhancer_list():
+    """Allow socket four with T2 and T4 excavators and keep the finders' shared tier."""
+
+    first = equipment_lot(tt="0.08", decay="0.1", tier=4)
+    second = equipment_lot(tt="0.08", tier=2, item=first.origin.item)
+    excavators = [equipment_lot(role="excavator", tier=tier) for tier in (2, 4)]
+    for lot in [first, second, *excavators]:
+        lot.is_active, lot.qty, lot.reserved = True, 1, 0
+
+    session = MagicMock()
+    session.in_transaction.return_value = False
+    session.begin.return_value = AsyncMock()
+    repository = AsyncMock()
+    repository.get_open_session.return_value = None
+    repository.create.return_value = SimpleNamespace(id=uuid4())
+    line_service = AsyncMock()
+    line_service.prepare_mining_enhancers.return_value = []
+    finder_service = AsyncMock()
+    finder_service.get_owned_lot.side_effect = [first, second]
+    excavator_service = AsyncMock()
+    excavator_service.get_owned_lot.side_effect = excavators
+    service = SessionMiningService(
+        session, repository, AsyncMock(), line_service,
+        finder_service, excavator_service, AsyncMock(),
+    )
+    finder_enhancer, excavator_enhancer = uuid4(), uuid4()
+    await service.create(
+        user_id=uuid4(), clic=1, zone_id=None, search_type=SessionMiningSearchType.E,
+        finders=[first.id, second.id], excavators=[lot.id for lot in excavators],
+        finder_amplifiers=[], finder_enhancers=[finder_enhancer],
+        excavator_enhancers=[excavator_enhancer],
+    )
+
+    assert [
+        (call.kwargs["tool"], call.kwargs["max_socket"], call.kwargs["item_ids"])
+        for call in line_service.prepare_mining_enhancers.await_args_list
+    ] == [
+        ("FINDER", 2, [finder_enhancer]),
+        ("EXCAVATOR", 4, [excavator_enhancer]),
+    ]

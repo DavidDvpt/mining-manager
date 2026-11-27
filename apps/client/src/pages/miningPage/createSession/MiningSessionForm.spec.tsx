@@ -120,12 +120,18 @@ vi.mock('./useMiningEquipment', () => ({
           name: 'T1 Mining Excavator Speed Enhancer',
           details: { tool: 'EXCAVATOR', socket: 1, type: 'SPEED', bonus: '10' },
         },
+        {
+          id: 'excavator-enhancer-4',
+          name: 'T4 Mining Excavator Speed Enhancer',
+          details: { tool: 'EXCAVATOR', socket: 4, type: 'SPEED', bonus: '10' },
+        },
       ],
       enhancerStock: {
         enhancer: 5,
         depth2: 3,
         range2: 1,
         'excavator-enhancer': 2,
+        'excavator-enhancer-4': 3,
       },
       lots: [
         { id: 'f4', item: { id: 'finder' }, tt: '10', tier: 4 },
@@ -135,7 +141,7 @@ vi.mock('./useMiningEquipment', () => ({
         { id: 'fu2', item: { id: 'unlimited' }, tt: '2.12340', tier: 3 },
         { id: 'e0', item: { id: 'excavator' }, tt: '0', tier: 0 },
         { id: 'e2', item: { id: 'excavator' }, tt: '3', tier: 2 },
-        { id: 'e3', item: { id: 'limited-excavator' }, tt: '5', tier: 3 },
+        { id: 'e4', item: { id: 'limited-excavator' }, tt: '5', tier: 4 },
         { id: 'a1', item: { id: 'amp1' }, tt: '183', tier: 0 },
         { id: 'a2', item: { id: 'amp2' }, tt: '183', tier: 0 },
       ],
@@ -237,7 +243,7 @@ describe('mining creation route', () => {
     );
   });
 
-  it('selects distinct excavator lots across models and defers their decay and enhancer use', async () => {
+  it('shows a shared enhancer list up to the highest excavator tier and defers usage', async () => {
     renderCreation();
     selectTool('Sélectionner un finder', /Finder \(L\).*T4/);
     const total = screen.getByText(/Coût estimé/).textContent;
@@ -245,44 +251,64 @@ describe('mining creation route', () => {
       screen.getByRole('heading', { name: 'Excavation' }).closest('section')!,
     );
 
-    selectTool('Sélectionner un excavateur', /Excavator \(L\) · T3/);
+    selectTool('Sélectionner un excavateur', /Excavator · T2/);
     expect(
       excavation.getByText('Decay à renseigner à la clôture'),
     ).toBeTruthy();
+    expect(excavation.queryByRole('combobox', { name: 'Socket 3' })).toBeNull();
+
     const addLabel = 'Ajouter un excavateur';
     fireEvent.click(excavation.getByRole('button', { name: addLabel }));
     const options = within(screen.getByRole('listbox'));
     expect(options.getAllByRole('option')).toHaveLength(2);
-    expect(options.queryByRole('option', { name: /T3/ })).toBeNull();
-    fireEvent.click(options.getByRole('option', { name: /Excavator · T2/ }));
-
-    const socket = excavation.getByRole('combobox', { name: 'Socket 1' });
-    expect(within(socket).getAllByRole('option')).toHaveLength(2);
-    fireEvent.change(socket, { target: { value: 'excavator-enhancer' } });
-    const enhancerLabel = 'Mining Excavator Speed Enhancer · 2';
-    expect(excavation.getByText(enhancerLabel)).toBeTruthy();
-
-    fireEvent.click(excavation.getByRole('button', { name: addLabel }));
-    fireEvent.click(screen.getByRole('option', { name: /Excavator · T0/ }));
-    expect(excavation.queryByRole('button', { name: addLabel })).toBeNull();
-    expect(excavation.queryByText(enhancerLabel)).toBeNull();
-
     fireEvent.click(
-      excavation.getByRole('button', { name: 'Retirer Excavator · T0' }),
+      options.getByRole('option', { name: /Excavator \(L\) · T4/ }),
     );
-    const restored = excavation.getByRole<HTMLSelectElement>('combobox', {
-      name: 'Socket 1',
+    expect(
+      excavation.getAllByRole('heading', { name: 'Enhancers' }),
+    ).toHaveLength(1);
+    expect(
+      excavation.getAllByRole('combobox', { name: /^Socket [1-4]$/ }),
+    ).toHaveLength(4);
+
+    fireEvent.change(excavation.getByRole('combobox', { name: 'Socket 1' }), {
+      target: { value: 'excavator-enhancer' },
     });
-    expect(restored.value).toBe('');
-    fireEvent.change(restored, { target: { value: 'excavator-enhancer' } });
+    fireEvent.change(excavation.getByRole('combobox', { name: 'Socket 4' }), {
+      target: { value: 'excavator-enhancer-4' },
+    });
+    expect(
+      excavation.getByText('Mining Excavator Speed Enhancer · 3'),
+    ).toBeTruthy();
+    fireEvent.click(
+      excavation.getByRole('button', { name: 'Retirer Excavator (L) · T4' }),
+    );
+    expect(
+      excavation.queryByText('Mining Excavator Speed Enhancer · 3'),
+    ).toBeNull();
+    expect(
+      excavation.getByText('Mining Excavator Speed Enhancer · 2'),
+    ).toBeTruthy();
+
+    selectTool(addLabel, /Excavator \(L\) · T4/);
+    const fourthSocket = excavation.getByRole<HTMLSelectElement>('combobox', {
+      name: 'Socket 4',
+    });
+    expect(fourthSocket.value).toBe('');
+    fireEvent.change(fourthSocket, {
+      target: { value: 'excavator-enhancer-4' },
+    });
     expect(screen.getByText(/Coût estimé/).textContent).toBe(total);
 
     fireEvent.click(screen.getByRole('button', { name: 'Créer la session' }));
     await waitFor(() =>
       expect(mocks.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
-          excavators: ['e3', 'e2'],
-          excavatorEnhancers: { s1: 'excavator-enhancer' },
+          excavators: ['e2', 'e4'],
+          excavatorEnhancers: {
+            s1: 'excavator-enhancer',
+            s4: 'excavator-enhancer-4',
+          },
         }),
       }),
     );

@@ -195,9 +195,9 @@ class SessionLineService:
 
     async def prepare_mining_enhancers(
         self, *, session_id: UUID, user_id: UUID, item_ids: list[UUID],
-        tool: str, minimum_tier: int,
+        tool: str, max_socket: int,
     ) -> list[tuple[Item, int]]:
-        """Validate selected socket stock and initialize zero-use FIFO lines for closing."""
+        """Validate sockets against the supplied maximum and stock, then create zero-use FIFO lines."""
 
         if not item_ids:
             return []
@@ -217,7 +217,7 @@ class SessionLineService:
             )
             self._enhancer_service.validate_item(item)
             enhancer = item.enhancer
-            if enhancer.tool.value != tool or enhancer.socket > minimum_tier:
+            if enhancer.tool.value != tool or enhancer.socket > max_socket:
                 raise UnprocessingError("Enhancer is incompatible with the selected tool tiers")
             if enhancer.socket in sockets:
                 raise UnprocessingError("Only one enhancer may be selected per socket")

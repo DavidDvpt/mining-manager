@@ -47,7 +47,7 @@ export function miningCostTtc(
   return value;
 }
 
-/** Estimate costs and finder depth from the selected equipment and report invalid selections. */
+/** Estimate costs and finder depth, derive eligible socket tiers, and report invalid selections. */
 export function calculateMiningSession(
   values: MiningSessionFormValues,
   equipment: MiningEquipment,
@@ -66,6 +66,11 @@ export function calculateMiningSession(
     (lot) =>
       values.excavatorLotIds.includes(lot.id) &&
       excavators.some((item) => item.id === lot.item.id),
+  );
+  const finderSocketTier = minimumTier(finderLots);
+  const excavatorSocketTier = excavatorLots.reduce(
+    (highest, lot) => Math.max(highest, lot.tier ?? 0),
+    0,
   );
   const amplifier = amplifiers.find(
     (item) => item.id === values.amplifierItemId,
@@ -151,11 +156,10 @@ export function calculateMiningSession(
       message: 'MINING.SETUP.AMP_CAPACITY',
     });
   let depthBonusPercent = 0;
-  for (const [field, selected, tool] of [
-    ['enhancers', finderLots, 'FINDER'],
-    ['excavatorEnhancers', excavatorLots, 'EXCAVATOR'],
+  for (const [field, tier, tool] of [
+    ['enhancers', finderSocketTier, 'FINDER'],
+    ['excavatorEnhancers', excavatorSocketTier, 'EXCAVATOR'],
   ] as const) {
-    const tier = minimumTier(selected);
     for (const [socket, id] of Object.entries(values[field])) {
       if (!id) continue;
       const enhancer = enhancers.find((item) => item.id === id);
@@ -225,6 +229,8 @@ export function calculateMiningSession(
     enhancedFinderDepth: effectiveDepth === baseDepth ? null : effectiveDepth,
     finderLots,
     excavatorLots,
+    finderSocketTier,
+    excavatorSocketTier,
     amplifier,
     amplifierLots,
     finderDecay,

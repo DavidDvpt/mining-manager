@@ -8,14 +8,14 @@ import styles from './mining-session-form.module.scss';
 
 type Props = {
   equipment: MiningEquipment;
-  minimumToolTier: number;
+  socketTier: number;
   tool?: 'FINDER' | 'EXCAVATOR';
 };
 
-/** Show one picker or selected enhancer per unlocked socket and clear incompatible selections. */
+/** Show a shared enhancer list up to the supplied socket tier and clear incompatible selections. */
 export function MiningEnhancersBlock({
   equipment,
-  minimumToolTier,
+  socketTier,
   tool = 'FINDER',
 }: Props): import('react').JSX.Element {
   const { t } = useTranslations();
@@ -34,21 +34,26 @@ export function MiningEnhancersBlock({
           (item) =>
             item.id === id &&
             socket === `s${item.details.socket}` &&
-            item.details.socket <= minimumToolTier,
+            item.details.socket <= socketTier,
         )
       )
         setValue(`${field}.${socket}`, '', { shouldValidate: true });
     }
-  }, [selected, available, minimumToolTier, field, setValue]);
+  }, [selected, available, socketTier, field, setValue]);
   return (
     <SubSection>
       <h3>{t('MINING.ENHANCERS')}</h3>
       <p className={styles.muted}>
-        {t('MINING.SETUP.COMMON_TIER')} : {minimumToolTier} ·{' '}
-        {t('MINING.SETUP.DEFERRED_USAGE')}
+        {t(
+          tool === 'FINDER'
+            ? 'MINING.SETUP.COMMON_TIER'
+            : 'MINING.SETUP.MAX_TIER',
+        )}
+        {' : '}
+        {socketTier} · {t('MINING.SETUP.DEFERRED_USAGE')}
       </p>
       <div className={styles.socketList}>
-        {Array.from({ length: minimumToolTier }, (_, index) => {
+        {Array.from({ length: socketTier }, (_, index) => {
           const socket = index + 1;
           const socketKey = `s${socket}` as const;
           const name = `${field}.${socketKey}` as const;
@@ -96,7 +101,7 @@ export function MiningEnhancersBlock({
           );
         })}
       </div>
-      {!minimumToolTier && (
+      {!socketTier && (
         <p className={styles.muted}>{t('MINING.SETUP.NO_SOCKETS')}</p>
       )}
     </SubSection>

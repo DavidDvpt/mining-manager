@@ -250,7 +250,7 @@ async def test_prepare_mining_enhancers_checks_tier_and_initializes_zero_consump
     lots = [SimpleNamespace(qty=2, reserved=0), SimpleNamespace(qty=3, reserved=0)]
     service._lot_service.get_fifo_lots.return_value = (item, lots, 5)
     result = await service.prepare_mining_enhancers(
-        session_id=uuid4(), user_id=uuid4(), item_ids=[item.id], tool="FINDER", minimum_tier=4
+        session_id=uuid4(), user_id=uuid4(), item_ids=[item.id], tool="FINDER", max_socket=4
     )
     assert result == [(item, 5)]
     assert repository.create_consumed_enhancer_line.await_count == 2
@@ -259,6 +259,6 @@ async def test_prepare_mining_enhancers_checks_tier_and_initializes_zero_consump
     repository.create_consumed_enhancer_line.reset_mock()
     with pytest.raises(UnprocessingError):
         await service.prepare_mining_enhancers(
-            session_id=uuid4(), user_id=uuid4(), item_ids=[item.id], tool="FINDER", minimum_tier=0
+            session_id=uuid4(), user_id=uuid4(), item_ids=[item.id], tool="FINDER", max_socket=0
         )
     repository.create_consumed_enhancer_line.assert_not_awaited()
