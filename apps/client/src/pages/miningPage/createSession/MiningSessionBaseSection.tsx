@@ -65,9 +65,15 @@ export function MiningSessionBaseSection(): import('react').JSX.Element {
             aria-label={t('MINING.SEARCH_TYPE')}
             className={styles.options}
           >
-            <RadioRHFItem value="E">{t('MINING.ENMATTER')}</RadioRHFItem>
-            <RadioRHFItem value="O">{t('MINING.ORE')}</RadioRHFItem>
-            <RadioRHFItem value="OE">{t('MINING.ORE_ENMATTER')}</RadioRHFItem>
+            <RadioRHFItem value="E" className={styles.option}>
+              {t('MINING.ENMATTER')}
+            </RadioRHFItem>
+            <RadioRHFItem value="O" className={styles.option}>
+              {t('MINING.ORE')}
+            </RadioRHFItem>
+            <RadioRHFItem value="OE" className={styles.option}>
+              {t('MINING.ORE_ENMATTER')}
+            </RadioRHFItem>
           </RadioRHF>
         </fieldset>
         <SelectRHF

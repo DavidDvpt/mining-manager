@@ -28,7 +28,7 @@
 
     .searchTypeField {
       flex-grow: 0.9;
-      flex-basis: 12rem;
+      flex-basis: max-content;
     }
 
     .wideInput {
@@ -84,7 +84,9 @@
   }
 
   .options {
-    align-items: flex-start;
+    min-height: 2.75rem;
+    flex-wrap: wrap;
+    align-items: center;
   }
 
   .searchTypeColumn {
