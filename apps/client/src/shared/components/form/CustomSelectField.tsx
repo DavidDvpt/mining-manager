@@ -40,7 +40,11 @@ export function CustomSelectField({
   const selectOption = (id: string): void => {
     if (!id) return;
     if (!selection) field.onChange(id);
-    else field.onChange(selection === 'append' ? [...ids, id] : [id]);
+    else
+      field.onChange(
+        selection === 'append' ? [...ids, id] : [id],
+        { shouldDirty: true, shouldValidate: true },
+      );
     onSelect?.();
   };
 
