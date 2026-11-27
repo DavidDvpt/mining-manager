@@ -180,6 +180,7 @@ export const fr_FR: TranslationSchema = {
     USE_PER_MINUTE: 'Utilisation / min',
   },
   TOOL_EDIT_MODAL: {
+    REQUIRED: 'Ce champ est obligatoire.',
     TITLE: 'Modifier l’outil',
     CANCEL: 'Annuler',
     SAVE: 'Enregistrer',

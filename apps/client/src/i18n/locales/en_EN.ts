@@ -171,6 +171,7 @@ export const en_EN: TranslationSchema = {
     USE_PER_MINUTE: 'Use / min',
   },
   TOOL_EDIT_MODAL: {
+    REQUIRED: 'This field is required.',
     TITLE: 'Edit tool',
     CANCEL: 'Cancel',
     SAVE: 'Save',

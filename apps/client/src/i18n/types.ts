@@ -163,6 +163,7 @@ export type TranslationSchema = {
     USE_PER_MINUTE: string;
   };
   TOOL_EDIT_MODAL: {
+    REQUIRED: string;
     TITLE: string;
     CANCEL: string;
     SAVE: string;

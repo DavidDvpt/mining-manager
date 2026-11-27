@@ -139,6 +139,7 @@ beforeEach(() => {
   request.mockReset();
   request.mockImplementation(
     async ({ url, method }: AxiosRequestConfig): Promise<unknown> => {
+      if (method === 'PUT') return firstLot;
       if (method === 'POST') return { session_id: 'session-1' };
       if (url === '/api/v1/finders/item-1') return equipment;
       if (url === '/api/v1/materials/item-1') return material;
@@ -152,6 +153,47 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('transaction routes', () => {
+  it('opens edit by URL with current lot values, saves, and returns to the catalogue', async () => {
+    renderWorkflow('/items/finders/item-1/edit');
+    const tt = await screen.findByLabelText(/^TT/);
+    const tier = screen.getByLabelText(/^Tier/);
+    expect((tt as HTMLInputElement).value).toBe('6.25');
+    expect((tier as HTMLInputElement).value).toBe('2');
+    fireEvent.change(tt, { target: { value: '9' } });
+    fireEvent.change(tier, { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() =>
+      expect(request).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: '/api/v1/lots/unstackable/lot-1',
+          method: 'PUT',
+          data: { tt: 9, tier: 10 },
+        }),
+        undefined,
+      ),
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId('url').textContent).toBe('/items/finders'),
+    );
+  });
+
+  it('defaults a missing tier to zero and rejects tiers above ten', async () => {
+    lots = [{ ...firstLot, tier: null }];
+    renderWorkflow('/items/finders/item-1/edit');
+    const tier = await screen.findByLabelText(/^Tier/);
+    expect((tier as HTMLInputElement).value).toBe('0');
+    fireEvent.change(tier, { target: { value: '11' } });
+    fireEvent.submit(
+      screen.getByRole('button', { name: 'Save' }).closest('form')!,
+    );
+    await screen.findByRole('alert');
+    expect(request.mock.calls.some(([config]) => config.method === 'PUT')).toBe(
+      false,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByTestId('url').textContent).toBe('/items/finders');
+  });
+
   it('loads a stackable buy from the item ID on direct navigation without stock', async () => {
     renderWorkflow('/items/materials/ore/item-1/buy', true);
     await screen.findByLabelText('Quantity');
