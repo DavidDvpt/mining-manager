@@ -1,97 +1,73 @@
+import { useTranslations } from '@/i18n/useTranslations';
 import { useFormContext, useWatch } from 'react-hook-form';
-
-import type { EnhancerResponse } from '@/api/generated/model/enhancerResponse';
-import type { FinderAmplifierResponse } from '@/api/generated/model/finderAmplifierResponse';
-import type { FinderResponse } from '@/api/generated/model/finderResponse';
-import {
-  getGetApiV1LotsUnstackableItemItemIdQueryKey,
-  useGetApiV1LotsUnstackableItemItemId,
-} from '@/api/generated/miningManagerAPI';
+import { FormButtonsSection } from '@/shared/components';
 import type { MiningSessionFormValues } from '@/shared/types/mining';
-
 import MiningFinderSection from './MiningFinderSection';
 import MiningSessionBaseSection from './MiningSessionBaseSection';
-import {
-  getAmplifierClicks,
-  getMiningDecayMultiplier,
-  toPositiveNumber,
-} from '../utils';
+import { calculateMiningSession } from './miningSessionCalculation';
+import type { MiningEquipment } from './useMiningEquipment';
+import styles from './mining-session-form.module.scss';
 
-type MiningSessionFormContentProps = {
-  finders: FinderResponse[];
-  finderStock: Record<string, number>;
-  amplifiers: FinderAmplifierResponse[];
-  amplifierStock: Record<string, number>;
-  enhancers: EnhancerResponse[];
-  enhancerStock: Record<string, number>;
-};
-
-/** Render form sections whose values depend on the selected finder and stock. */
+/** Render equipment and live TT/TTC estimates, blocking submission until selection rules pass. */
 export function MiningSessionFormContent({
-  finders,
-  finderStock,
-  amplifiers,
-  amplifierStock,
-  enhancers,
-  enhancerStock,
-}: MiningSessionFormContentProps): import('react').JSX.Element {
-  const { control } = useFormContext<MiningSessionFormValues>();
-  const finderItemId = useWatch({ control, name: 'finderItemId' });
-  const clicks = useWatch({ control, name: 'clicks' });
-  const searchType = useWatch({ control, name: 'searchType' });
-  const finderLotsQuery = useGetApiV1LotsUnstackableItemItemId(finderItemId, {
-    query: {
-      queryKey: getGetApiV1LotsUnstackableItemItemIdQueryKey(finderItemId),
-      enabled: Boolean(finderItemId),
-    },
-  });
-  const selectedFinder = finders.find(
-    (finder): boolean => finder.id === finderItemId,
-  );
-  const selectedFinderLots = finderLotsQuery.data ?? [];
-  const finderDecay = toPositiveNumber(selectedFinder?.economy.decay);
-  const requiredFinderTt =
-    finderDecay * getMiningDecayMultiplier(searchType) * (clicks || 0);
-  const selectedFindersTt = selectedFinderLots.reduce(
-    (total, lot): number => total + toPositiveNumber(lot.tt),
-    0,
-  );
-  const finderCapacityValid =
-    selectedFinderLots.every((lot): boolean => lot.tt === null) ||
-    selectedFindersTt >= requiredFinderTt;
-  const minimumFinderTier = selectedFinderLots.length
-    ? Math.min(...selectedFinderLots.map((lot): number => lot.tier ?? 0))
-    : 0;
-
-  /** Calculate amplifier clicks using the current form search mode. */
-  const amplifierClicks = (amplifier: FinderAmplifierResponse): number =>
-    getAmplifierClicks(
-      amplifier.economy.tt,
-      amplifier.economy.decay,
-      amplifierStock[amplifier.id] ?? 0,
-      searchType,
-    );
-
+  equipment,
+  onCancel,
+  pending,
+}: {
+  equipment: MiningEquipment;
+  onCancel: () => void;
+  pending: boolean;
+}): import('react').JSX.Element {
+  const { t } = useTranslations();
+  const { control, formState } = useFormContext<MiningSessionFormValues>();
+  const values = useWatch({ control }) as MiningSessionFormValues;
+  const estimate = calculateMiningSession(values, equipment);
   return (
     <>
       <MiningSessionBaseSection />
       <MiningFinderSection
-        finders={finders}
-        finderStock={finderStock}
-        finderLots={selectedFinderLots}
-        selectedFinder={selectedFinder}
-        requiredFinderTt={requiredFinderTt}
-        selectedFindersTt={selectedFindersTt}
-        finderCapacityValid={finderCapacityValid}
-        amplifiers={amplifiers}
-        amplifierStock={amplifierStock}
-        getAmplifierClicks={amplifierClicks}
-        minimumFinderTier={minimumFinderTier}
-        enhancers={enhancers}
-        enhancerStock={enhancerStock}
+        equipment={equipment}
+        selectedLots={estimate.finderLots}
+      />
+      <MiningFinderSection
+        equipment={equipment}
+        selectedLots={estimate.excavatorLots}
+        toolRole="excavator"
+      />
+      <div aria-live="polite">
+        <strong>
+          {t('MINING.SETUP.ESTIMATE')} : {estimate.total.toFixed(2)} PED TT
+          {' · '}
+          {estimate.totalTtc.toFixed(2)} PED TTC
+        </strong>
+        <p className={styles.muted}>
+          {t('MINING.SETUP.AMMO')} : {estimate.ammo.toFixed(2)} · finder :{' '}
+          {estimate.finderDecay.toFixed(2)} · {t('MINING.AMPLIFIERS')} :{' '}
+          {estimate.amplifierCost.toFixed(2)} PED
+        </p>
+        <p className={styles.muted}>{t('MINING.SETUP.DEFERRED_COST')}</p>
+        {estimate.issues.map((issue) => (
+          <p key={`${issue.path}:${t(issue.message)}`} className={styles.error}>
+            {t(issue.message)}
+          </p>
+        ))}
+        {Object.entries(formState.errors).map(
+          ([key, error]) =>
+            error?.message && (
+              <p key={key} role="alert" className={styles.error}>
+                {String(error.message)}
+              </p>
+            ),
+        )}
+      </div>
+      <FormButtonsSection
+        onCancel={onCancel}
+        cancelLabel={t('TOOL_EDIT_MODAL.CANCEL')}
+        submitLabel={t('MINING.SETUP.SUBMIT')}
+        submitDisabled={pending || estimate.issues.length > 0}
+        cancelDisabled={pending}
       />
     </>
   );
 }
-
 export default MiningSessionFormContent;

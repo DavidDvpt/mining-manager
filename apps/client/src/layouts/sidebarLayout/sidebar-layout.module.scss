@@ -119,3 +119,10 @@
     padding-inline: 0.25rem;
   }
 }
+
+.link[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: transparent;
+  box-shadow: none;
+}

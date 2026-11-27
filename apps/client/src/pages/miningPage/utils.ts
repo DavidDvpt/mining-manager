@@ -1,9 +1,4 @@
-import type { TranslationKey } from '@/i18n/types';
 import type { MiningSearchType } from '@/shared/types/mining';
-
-import type { MiningButtonId } from './constants';
-
-type Translate = (key: TranslationKey) => string;
 
 const MINING_SEARCH_COST_MULTIPLIERS: Record<
   MiningSearchType,
@@ -39,37 +34,9 @@ export function getAmplifierClicks(
 ): number {
   const costPerClick =
     toPositiveNumber(decay) * getMiningDecayMultiplier(searchType);
-  return costPerClick > 0
-    ? Math.floor((toPositiveNumber(tt) * quantity) / costPerClick)
-    : 0;
-}
-
-/** Resolve the URL page into the page that can currently be rendered. */
-export function getMiningActivePage(
-  page: MiningButtonId | undefined,
-  hasCurrentSession: boolean,
-): MiningButtonId {
-  if (page === 'create-session') return page;
-  if (hasCurrentSession && (page === 'current-session' || page === 'close')) {
-    return page;
-  }
-
-  return 'sessions-list';
-}
-
-/** Translate the selected mining navigation page for the active-view label. */
-export function getMiningActiveView(
-  page: MiningButtonId,
-  t: Translate,
-): string {
-  switch (page) {
-    case 'create-session':
-      return t('MINING.CREATE_SESSION');
-    case 'current-session':
-      return t('MINING.CURRENT_SESSION');
-    case 'close':
-      return t('MINING.CLOSE');
-    case 'sessions-list':
-      return t('MINING.SESSIONS_LIST');
-  }
+  if (costPerClick <= 0) return 0;
+  const clicks = toPositiveNumber(tt) / costPerClick;
+  return (
+    Math.floor(clicks + Number.EPSILON * Math.max(1, clicks) * 4) * quantity
+  );
 }

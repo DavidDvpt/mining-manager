@@ -161,3 +161,24 @@
     }
   }
 }
+
+.modal {
+  width: min(1200px, calc(100vw - 2rem));
+}
+
+.itemRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+
+  > div:last-child,
+  > span:last-child {
+    min-width: 0;
+    flex: 1;
+  }
+
+  small {
+    color: var(--text-muted);
+  }
+}

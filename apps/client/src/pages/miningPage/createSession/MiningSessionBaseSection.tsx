@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { useController, useFormContext, useWatch } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { RadioRHF, RadioRHFItem } from '@/shared/components/form/RadioRHF';
 import {
   getGetApiV1PlanetPlanetIdZoneQueryKey,
   useGetApiV1Planet,
@@ -16,12 +16,8 @@ import styles from './mining-session-form.module.scss';
 /** Render and validate the base fields of a mining-session configuration. */
 export function MiningSessionBaseSection(): import('react').JSX.Element {
   const { t } = useTranslations();
-  const { control, setValue } = useFormContext<MiningSessionFormValues>();
+  const { setValue } = useFormContext<MiningSessionFormValues>();
   const planet = useWatch<MiningSessionFormValues>({ name: 'planet' });
-  const { field: searchTypeField } = useController({
-    control,
-    name: 'searchType',
-  });
   const planetsQuery = useGetApiV1Planet();
   const zonesQuery = useGetApiV1PlanetPlanetIdZone(String(planet ?? ''), {
     query: {
@@ -64,32 +60,15 @@ export function MiningSessionBaseSection(): import('react').JSX.Element {
           <legend id="mining-session-search-type-label">
             {t('MINING.SEARCH_TYPE')}
           </legend>
-          <RadioGroup
-            name={searchTypeField.name}
-            value={searchTypeField.value}
-            onValueChange={searchTypeField.onChange}
-            onBlur={searchTypeField.onBlur}
-            aria-labelledby="mining-session-search-type-label"
+          <RadioRHF
+            name="searchType"
+            aria-label={t('MINING.SEARCH_TYPE')}
             className={styles.options}
           >
-            <div className={styles.searchTypeColumn}>
-              {[
-                ['E', t('MINING.ENMATTER')],
-                ['O', t('MINING.ORE')],
-              ].map(([value, label]): import('react').JSX.Element => (
-                <label key={value} className={styles.option}>
-                  <RadioGroupItem value={value} id={`search-type-${value}`} />
-                  <span>{label}</span>
-                </label>
-              ))}
-            </div>
-            <div className={styles.searchTypeColumn}>
-              <label className={styles.option}>
-                <RadioGroupItem value="OE" id="search-type-oe" />
-                <span>{t('MINING.ORE_ENMATTER')}</span>
-              </label>
-            </div>
-          </RadioGroup>
+            <RadioRHFItem value="E">{t('MINING.ENMATTER')}</RadioRHFItem>
+            <RadioRHFItem value="O">{t('MINING.ORE')}</RadioRHFItem>
+            <RadioRHFItem value="OE">{t('MINING.ORE_ENMATTER')}</RadioRHFItem>
+          </RadioRHF>
         </fieldset>
         <SelectRHF
           name="planet"

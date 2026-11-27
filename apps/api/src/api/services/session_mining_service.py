@@ -20,7 +20,6 @@ from api.db.models import (
 )
 from api.db.repositories import SessionMiningRepository
 
-from .enhancer_service import EnhancerService, get_enhancer_service
 from .excavator_service import ExcavatorService, get_excavator_service
 from .finder_amplifier_service import (
     FinderAmplifierService,
@@ -28,6 +27,7 @@ from .finder_amplifier_service import (
 )
 from .finder_service import FinderService, get_finder_service
 from .item_service import is_limited_item
+from .session_line_service import SessionLineService, get_session_line_service
 from .lot_service import LotService, get_lot_service
 
 
@@ -61,18 +61,25 @@ class SessionMiningService:
         session: AsyncSession,
         repository: SessionMiningRepository,
         lot_service: LotService,
-        enhancer_service: EnhancerService,
+        session_line_service: SessionLineService,
         finder_service: FinderService,
         excavator_service: ExcavatorService,
         finder_amplifier_service: FinderAmplifierService,
     ) -> None:
+        """Bind mining persistence and domain services for owned equipment and session lines."""
+
         self._session = session
         self._repository = repository
         self._lot_service = lot_service
-        self._enhancer_service = enhancer_service
+        self._session_line_service = session_line_service
         self._finder_service = finder_service
         self._excavator_service = excavator_service
         self._finder_amplifier_service = finder_amplifier_service
+
+    async def get_open_session(self, *, user_id: UUID) -> Session | None:
+        """Return the user's open mining session for navigation availability."""
+
+        return await self._repository.get_open_session(user_id=user_id)
 
     async def create(
         self,
@@ -87,10 +94,18 @@ class SessionMiningService:
         finder_enhancers: list[UUID],
         excavator_enhancers: list[UUID],
     ) -> MiningSessionCreation:
-        """Create a mining session and calculate its initial cost summary."""
+        """Create one owned setup after validating model, pooled L capacity and enhancer tiers.
+
+        Estimate ammo and tool decay; excavator and enhancer use is confirmed at closing.
+        """
 
         if clic < 1:
             raise UnprocessingError("clic must be greater than zero")
+        if not finders or not excavators:
+            raise UnprocessingError("Select at least one finder and excavator")
+        all_tools = finders + excavators + finder_amplifiers
+        if len(set(all_tools)) != len(all_tools):
+            raise UnprocessingError("An equipment lot cannot be selected twice")
         multiplier = Decimal(len(search_type.value))
 
         async with _transaction_scope(self._session):
@@ -107,6 +122,7 @@ class SessionMiningService:
                 for lot_id in finders
             ]
             self._validate_identical_finders(finder_lots)
+            finder_lots.sort(key=lambda lot: (lot.tool_lot.tt or Decimal(0), str(lot.id)))
             self._validate_limited_tool_capacity(
                 finder_lots, role="finder", clic=clic, multiplier=multiplier
             )
@@ -117,12 +133,6 @@ class SessionMiningService:
                 )
                 for lot_id in excavators
             ]
-            self._validate_limited_tool_capacity(
-                excavator_lots,
-                role="excavator",
-                clic=clic,
-                multiplier=multiplier,
-            )
             amplifier_lots = [
                 await self._required_tool(
                     user_id=user_id, lot_id=lot_id, role="finder amplifier"
@@ -134,50 +144,32 @@ class SessionMiningService:
                     amplifier_lots, clic=clic, multiplier=multiplier
                 )
 
-            tool_lines: list[dict[str, object]] = []
-            tool_lines.extend(
-                self._tool_line(lot, clic, multiplier, is_finder=True)
-                for lot in finder_lots
+            tool_lines = self._build_tool_lines(
+                finder_lots=finder_lots, excavator_lots=excavator_lots,
+                amplifier_lots=amplifier_lots, clic=clic, multiplier=multiplier,
             )
-            tool_lines.extend(
-                self._tool_line(lot, clic, multiplier)
-                for lot in excavator_lots
-            )
-            tool_lines.extend(
-                self._tool_line(lot, clic, multiplier)
-                for lot in amplifier_lots
-            )
-            enhancer_lines = finder_enhancers + excavator_enhancers
             session = await self._repository.create(
-                user_id=user_id,
-                clic=clic,
-                zone_id=zone_id,
-                search_type=search_type,
-                tool_lines=tool_lines,
-                enhancer_lines=enhancer_lines,
+                user_id=user_id, clic=clic, zone_id=zone_id,
+                search_type=search_type, tool_lines=tool_lines,
+                enhancer_lines=[],
             )
             enhancer_data = []
-            for item_id in enhancer_lines:
-                item, _lots, _stock = await self._lot_service.get_fifo_lots(
-                    user_id=user_id,
-                    item_id=item_id,
-                )
-                self._enhancer_service.validate_item(item)
-                enhancer = item.enhancer
-                if enhancer is None:
-                    raise AppError(404, "Enhancer item not found")
-                max_stock = await self._enhancer_service.get_stock_by_type_socket(
-                    user_id=user_id,
-                    enhancer_type=enhancer.type.value,
-                    socket=enhancer.socket,
-                )
-                enhancer_data.append((item, max_stock))
+            for selected, tools, role in (
+                (finder_enhancers, finder_lots, "FINDER"),
+                (excavator_enhancers, excavator_lots, "EXCAVATOR"),
+            ):
+                tier = min(lot.tool_lot.tier or 0 for lot in tools)
+                enhancer_data.extend(await self._session_line_service.prepare_mining_enhancers(
+                    session_id=session.id, user_id=user_id, item_ids=selected,
+                    tool=role, minimum_tier=tier,
+                ))
 
             total_tt, total_ttc = self._calculate_costs(
                 finder_lots=finder_lots,
                 amplifier_lots=amplifier_lots,
                 clic=clic,
                 multiplier=multiplier,
+                search_type=search_type,
             )
             return MiningSessionCreation(
                 session=session,
@@ -201,6 +193,7 @@ class SessionMiningService:
     ) -> Session:
         """Close a mining session after confirming every final line value.
 
+        Finder decay is distributed once by ascending TT and consumed from L lots.
         Every excavator line must have a decay entry, enhancer quantities are
         finalized from the payload, produced quantities are reconciled, and a
         transaction lot is created for every produced line before the session
@@ -235,6 +228,22 @@ class SessionMiningService:
                 {line.id for line in tool_lines},
                 "tool decays",
             )
+            finder_lines = [line for line in tool_lines if self._line_item(line).finder is not None]
+            if finder_lines:
+                if any(line.decay is None for line in finder_lines):
+                    raise UnprocessingError("Finder lines are missing their planned decay")
+                total_decay = sum((line.decay.decay_ttc for line in finder_lines), Decimal(0))
+                allocations = {
+                    values["lot_id"]: values["decay"]
+                    for values in self._allocate_finder_decay([line.lot for line in finder_lines], total_decay)
+                }
+                for line in sorted(finder_lines, key=lambda line: (line.lot.tool_lot.tt or Decimal(0), str(line.lot_id))):
+                    decay = allocations[line.lot_id]
+                    if tool_decays[line.id] != decay:
+                        raise UnprocessingError("Finder decay must follow the ascending TT allocation")
+                    await self._lot_service.consume_tool_decay(
+                        user_id=user_id, lot_id=line.lot_id, decay=decay
+                    )
             for line in tool_lines:
                 await self._repository.update_session_line_decay(
                     line=line, decay=tool_decays[line.id]
@@ -343,96 +352,108 @@ class SessionMiningService:
 
 
     async def _required_tool(self, *, user_id: UUID, lot_id: UUID, role: str):
-        """Load an owned tool lot and reject missing or incompatible tools."""
+        """Load an owned role-compatible tool and reject inactive, empty or reserved stock."""
 
         if role == "finder":
-            return await self._finder_service.get_owned_lot(
-                user_id=user_id, lot_id=lot_id
-            )
-        if role == "excavator":
-            return await self._excavator_service.get_owned_lot(
-                user_id=user_id, lot_id=lot_id
-            )
-        if role == "finder amplifier":
-            return await self._finder_amplifier_service.get_owned_lot(
-                user_id=user_id, lot_id=lot_id
-            )
-        raise UnprocessingError("Unknown tool role")
+            lot = await self._finder_service.get_owned_lot(user_id=user_id, lot_id=lot_id)
+        elif role == "excavator":
+            lot = await self._excavator_service.get_owned_lot(user_id=user_id, lot_id=lot_id)
+        elif role == "finder amplifier":
+            lot = await self._finder_amplifier_service.get_owned_lot(user_id=user_id, lot_id=lot_id)
+        else:
+            raise UnprocessingError("Unknown tool role")
+        if not lot.is_active or lot.qty - lot.reserved < 1:
+            raise UnprocessingError("The selected tool is no longer available")
+        return lot
 
     @staticmethod
     def _validate_identical_finders(finder_lots: list) -> None:
-        """Ensure all selected finders share item and tier values."""
+        """Require one finder model while allowing different tiers and distinct owned lots."""
 
-        first = finder_lots[0]
-        first_item = first.origin.item.id
-        first_tier = first.tool_lot.tier
-        if any(
-            lot.origin.item.id != first_item or lot.tool_lot.tier != first_tier
-            for lot in finder_lots[1:]
-        ):
-            raise UnprocessingError("All finders must have the same item and tier")
+        first_item = finder_lots[0].origin.item.id
+        if len({lot.id for lot in finder_lots}) != len(finder_lots):
+            raise UnprocessingError("A finder lot cannot be selected twice")
+        if any(lot.origin.item.id != first_item for lot in finder_lots):
+            raise UnprocessingError("All finders must have the same item")
 
     @classmethod
     def _validate_limited_tool_capacity(
         cls, lots: list, *, role: str, clic: int, multiplier: Decimal
     ) -> None:
-        """Ensure each limited tool covers the requested decay before repair."""
+        """Require sufficient pooled L TT and reject redundant finders; one repairable UL suffices."""
 
-        for lot in lots:
-            if not is_limited_item(lot.origin.item):
-                continue
-            tt = lot.tool_lot.tt
-            if tt is None:
-                raise UnprocessingError(f"A limited {role} has no TT value")
-            try:
-                decay = cls._item_decay(lot.origin.item)
-            except UnprocessingError:
-                raise UnprocessingError(f"A limited {role} has no decay value")
-            if tt < Decimal(clic) * decay * multiplier:
-                raise UnprocessingError(
-                    f"A limited {role} cannot cover the requested session"
-                )
+        if any(not is_limited_item(lot.origin.item) for lot in lots):
+            if len(lots) > 1:
+                raise UnprocessingError("Only one unlimited finder is needed")
+            return
+        if any(lot.tool_lot.tt is None for lot in lots):
+            raise UnprocessingError(f"A limited {role} has no TT value")
+        total_tt = sum((lot.tool_lot.tt for lot in lots), Decimal(0))
+        required = Decimal(clic) * cls._item_decay(lots[0].origin.item) * multiplier
+        if total_tt < required:
+            raise UnprocessingError(f"Limited {role} TT must cover the requested decay")
+        if len(lots) > 1 and any(total_tt - lot.tool_lot.tt >= required for lot in lots):
+            raise UnprocessingError("Remove finders that are not needed for the session")
 
     @classmethod
     def _validate_amplifier_capacity(
         cls, lots: list, *, clic: int, multiplier: Decimal
     ) -> None:
-        """Ensure amplifier capacities cover the session without pooling residue."""
+        """Require one amplifier model and pool whole clicks per L lot, ignoring residue."""
 
-        remaining_clicks = clic
+        if len({lot.id for lot in lots}) != len(lots):
+            raise UnprocessingError("An amplifier lot cannot be selected twice")
+        if len({lot.origin.item.id for lot in lots}) != 1:
+            raise UnprocessingError("All finder amplifiers must have the same item")
+        if any(not is_limited_item(lot.origin.item) for lot in lots):
+            return
+        capacity = 0
         for lot in lots:
-            item = lot.origin.item
-            if not is_limited_item(item):
-                continue
             tt = lot.tool_lot.tt
             if tt is None:
                 raise UnprocessingError("A selected limited finder amplifier has no TT value")
-            try:
-                decay = cls._item_decay(item)
-            except UnprocessingError:
-                raise UnprocessingError(
-                    "A selected finder amplifier has no decay value"
-                )
-            clicks_supported = int(tt / (decay * multiplier))
-            remaining_clicks -= clicks_supported
-            if remaining_clicks <= 0:
-                return
-        raise UnprocessingError(
-            "The selected finder amplifiers cannot cover the requested session"
-        )
+            decay = cls._item_decay(lot.origin.item)
+            if decay <= 0:
+                raise UnprocessingError("A selected finder amplifier has no decay value")
+            capacity += int(tt / (decay * multiplier))
+        if capacity < clic:
+            raise UnprocessingError("The selected finder amplifiers cannot cover the requested session")
 
     @classmethod
-    def _tool_line(
-        cls, lot, clic: int, multiplier: Decimal, *, is_finder: bool = False
-    ) -> dict[str, object]:
-        """Build a consumed line using the tool cost and search multiplier."""
+    def _build_tool_lines(
+        cls, *, finder_lots: list, excavator_lots: list, amplifier_lots: list,
+        clic: int, multiplier: Decimal,
+    ) -> list[dict[str, object]]:
+        """Allocate finder decay by ascending TT and amp clicks once; defer excavator use."""
 
-        item = lot.origin.item
-        decay = cls._finder_probe_cost(item) if is_finder else cls._item_decay(item)
-        return {
-            "lot_id": lot.id,
-            "decay": Decimal(clic) * decay * multiplier,
-        }
+        required_decay = Decimal(clic) * cls._item_decay(finder_lots[0].origin.item) * multiplier
+        lines = cls._allocate_finder_decay(finder_lots, required_decay)
+        lines.extend({"lot_id": lot.id} for lot in excavator_lots)
+        remaining_clicks = clic
+        for lot in amplifier_lots:
+            decay = cls._item_decay(lot.origin.item) * multiplier
+            if decay <= 0:
+                raise UnprocessingError("A selected finder amplifier has no decay value")
+            capacity = int((lot.tool_lot.tt or 0) / decay) if is_limited_item(lot.origin.item) else remaining_clicks
+            used = min(remaining_clicks, capacity)
+            lines.append({"lot_id": lot.id, "decay": Decimal(used) * decay})
+            remaining_clicks -= used
+        return lines
+
+    @staticmethod
+    def _allocate_finder_decay(lots: list, total_decay: Decimal) -> list[dict[str, object]]:
+        """Distribute a single decay budget across selected finders in ascending TT order."""
+
+        remaining = total_decay
+        lines = []
+        for lot in sorted(lots, key=lambda lot: (lot.tool_lot.tt or Decimal(0), str(lot.id))):
+            available = lot.tool_lot.tt if is_limited_item(lot.origin.item) else remaining
+            used = min(remaining, available or Decimal(0))
+            lines.append({"lot_id": lot.id, "decay": used})
+            remaining -= used
+        if remaining > 0:
+            raise UnprocessingError("The selected finders cannot cover the session decay")
+        return lines
 
     @staticmethod
     def _item_decay(item: Item) -> Decimal:
@@ -458,11 +479,13 @@ class SessionMiningService:
         amplifier_lots: list,
         clic: int,
         multiplier: Decimal,
+        search_type: SessionMiningSearchType,
     ) -> tuple[Decimal, Decimal]:
-        """Calculate TT and markup-adjusted TTC for probes and tool decay."""
+        """Estimate ammo (E=1/O=2/EO=3), finder decay once, and sequential amplifier use."""
 
         finder_item = finder_lots[0].origin.item
-        probe_tt = Decimal(clic) * cls._finder_probe_cost(finder_item) * multiplier
+        ammo_multiplier = sum({"E": 1, "O": 2, "T": 1}[kind] for kind in search_type.value)
+        probe_tt = Decimal(clic) * cls._finder_probe_cost(finder_item) * ammo_multiplier
         finder_decay_tt = Decimal(clic) * cls._item_decay(finder_item) * multiplier
         total_tt = probe_tt + finder_decay_tt
         total_ttc = probe_tt + cls._with_markup(finder_decay_tt, finder_item)
@@ -471,13 +494,9 @@ class SessionMiningService:
         for lot in amplifier_lots:
             if remaining_clicks <= 0:
                 break
-            if not is_limited_item(lot.origin.item):
-                continue
-            tt = lot.tool_lot.tt
-            if tt is None:
-                continue
             decay = cls._item_decay(lot.origin.item)
-            supported_clicks = min(remaining_clicks, int(tt / (decay * multiplier)))
+            capacity = int((lot.tool_lot.tt or 0) / (decay * multiplier)) if is_limited_item(lot.origin.item) else remaining_clicks
+            supported_clicks = min(remaining_clicks, capacity)
             amp_decay_tt = Decimal(supported_clicks) * decay * multiplier
             total_tt += amp_decay_tt
             total_ttc += cls._with_markup(amp_decay_tt, lot.origin.item)
@@ -486,8 +505,10 @@ class SessionMiningService:
 
     @staticmethod
     def _with_markup(value: Decimal, item: Item) -> Decimal:
-        """Apply an item's catalogue markup to a TT cost."""
+        """Apply catalogue markup only to consumed L value; UL value stays at 100 percent."""
 
+        if value == 0 or not is_limited_item(item):
+            return value
         economy = item.economy
         if economy is None:
             return value
@@ -506,7 +527,7 @@ def get_session_mining_service(session: AsyncSession) -> SessionMiningService:
         session,
         SessionMiningRepository(session),
         lot_service,
-        get_enhancer_service(session, lot_service),
+        get_session_line_service(session),
         get_finder_service(session, lot_service),
         get_excavator_service(session, lot_service),
         get_finder_amplifier_service(session, lot_service),

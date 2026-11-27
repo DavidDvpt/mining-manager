@@ -99,3 +99,38 @@ def test_close_mining_session_maps_payload_to_service(monkeypatch):
         "enhancer_quantities": {enhancer_line_id: 4},
         "produced_quantities": {produced_line_id: 7},
     }
+
+
+def test_current_mining_session_returns_null_without_an_open_session(monkeypatch):
+    """Expose authenticated open-session absence without allowing cross-user lookup."""
+
+    user_id = uuid4()
+    calls = {}
+
+    async def fake_get_open_session(**kwargs):
+        """Capture the authenticated owner used for the session lookup."""
+
+        calls.update(kwargs)
+        return None
+
+    async def fake_session():
+        """Provide a placeholder database dependency for this request."""
+
+        yield object()
+
+    async def fake_user():
+        """Return the signed-in owner independently of request parameters."""
+
+        return {"id": user_id, "role": "USER", "pseudo": "test-user"}
+
+    monkeypatch.setattr(mining_session_controller, "get_session_mining_service", lambda _: SimpleNamespace(get_open_session=fake_get_open_session))
+    app.dependency_overrides[get_session] = fake_session
+    app.dependency_overrides[get_current_user] = fake_user
+    try:
+        with TestClient(app) as client:
+            response = client.get(endpoint("/mining/current"))
+    finally:
+        app.dependency_overrides.clear()
+    assert response.status_code == 200
+    assert response.json() is None
+    assert calls == {"user_id": user_id}

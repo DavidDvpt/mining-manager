@@ -482,3 +482,21 @@ async def test_reserve_quantity_rejects_non_stackable_item(session):
 
     assert error.value.status_code == 409
     repository.update_quantities.assert_not_awaited()
+
+
+@pytest.mark.parametrize("limited,tt,decay,remaining", [(True, "8", "7", "1"), (True, "3", "3", "0"), (False, "0", "7", "0")])
+async def test_consume_finder_decay_only_decreases_limited_tt(session, limited, tt, decay, remaining):
+    """Decrease each L tool by its allocated share, deactivating exhausted tools; allow UL repairs."""
+
+    repository = AsyncMock()
+    item = SimpleNamespace(name="Finder (L)" if limited else "Finder")
+    lot = SimpleNamespace(origin=SimpleNamespace(item=item), tool_lot=SimpleNamespace(tt=Decimal(tt), tier=0))
+    service = lot_service.LotService(session, repository, AsyncMock(), AsyncMock())
+    service.get_unstackable_lot = AsyncMock(return_value=lot)
+    result = await service.consume_tool_decay(user_id=uuid4(), lot_id=uuid4(), decay=Decimal(decay))
+    assert result is lot
+    if limited:
+        assert repository.update_tool_lot.await_args.kwargs["tt"] == Decimal(remaining)
+        assert repository.update_tool_lot.await_args.kwargs["is_active"] is (Decimal(remaining) > 0)
+    else:
+        repository.update_tool_lot.assert_not_awaited()

@@ -13,11 +13,21 @@ function SidebarButton({
   const [expanded, setExpanded] = useState(false);
   const hasChildren = Boolean(button.children?.length);
 
+  /** Match the sidebar destination against the current URL. */
   function isRouteActive(linkTo: string, pathname: string): boolean {
     return Boolean(matchPath({ path: linkTo, end: true }, pathname));
   }
 
-  const handleClick = () => (level === 0 ? setExpanded(!expanded) : undefined);
+  /** Prevent disabled navigation and expand enabled top-level groups. */
+  const handleClick = (
+    event: import('react').MouseEvent<HTMLAnchorElement>,
+  ): void => {
+    if (button.disabled) {
+      event.preventDefault();
+      return;
+    }
+    if (level === 0) setExpanded(!expanded);
+  };
 
   const isActive = isRouteActive(button.linkTo, pathname);
 
@@ -29,6 +39,8 @@ function SidebarButton({
       <div className={styles.item}>
         <NavLink
           to={button.linkTo}
+          aria-disabled={button.disabled || undefined}
+          tabIndex={button.disabled ? -1 : undefined}
           onClick={handleClick}
           className={[
             styles.link,

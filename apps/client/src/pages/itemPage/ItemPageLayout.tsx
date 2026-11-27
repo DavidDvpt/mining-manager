@@ -14,7 +14,6 @@ function ItemPageLayout(): import('react').JSX.Element {
   return (
     <SidebarLayout
       buttons={transactionButtons(t, materialTypes)}
-      defaultButtonId="finder"
       sidebarLabel={t('TRANSACTIONS.SIDEBAR_LABEL')}
     >
       <Outlet context={{ materialTypes }} />

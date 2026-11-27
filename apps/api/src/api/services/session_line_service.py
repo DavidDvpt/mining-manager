@@ -7,7 +7,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.core.exceptions import AppError, UnprocessingError
-from api.db.models import SessionLine, SessionLineType
+from api.db.models import Item, SessionLine, SessionLineType
 from api.db.repositories import SessionLineRepository
 from api.db.repositories.enhancer_repository import EnhancerRepository
 from api.services.enhancer_service import EnhancerService
@@ -192,6 +192,45 @@ class SessionLineService:
             session_line_id=session_line_id,
             user_id=user_id,
         )
+
+    async def prepare_mining_enhancers(
+        self, *, session_id: UUID, user_id: UUID, item_ids: list[UUID],
+        tool: str, minimum_tier: int,
+    ) -> list[tuple[Item, int]]:
+        """Validate selected socket stock and initialize zero-use FIFO lines for closing."""
+
+        if not item_ids:
+            return []
+        session = await self._session_service.get_mining_session_for_user(
+            session_id=session_id, user_id=user_id
+        )
+        if session.ended_at is not None:
+            raise UnprocessingError("The mining session is closed")
+        from api.services.lot_service import get_lot_service
+
+        lot_service = self._lot_service or get_lot_service(self._repository.session)
+        result = []
+        sockets = set()
+        for item_id in item_ids:
+            item, lots, stock = await lot_service.get_fifo_lots(
+                user_id=user_id, item_id=item_id
+            )
+            self._enhancer_service.validate_item(item)
+            enhancer = item.enhancer
+            if enhancer.tool.value != tool or enhancer.socket > minimum_tier:
+                raise UnprocessingError("Enhancer is incompatible with the selected tool tiers")
+            if enhancer.socket in sockets:
+                raise UnprocessingError("Only one enhancer may be selected per socket")
+            if stock < 1:
+                raise UnprocessingError("The selected enhancer is out of stock")
+            sockets.add(enhancer.socket)
+            for lot in lots:
+                if lot.qty > lot.reserved:
+                    await self._repository.create_consumed_enhancer_line(
+                        session=session, lot=lot, quantity=0
+                    )
+            result.append((item, stock))
+        return result
 
     async def consume_enhancer(
         self,

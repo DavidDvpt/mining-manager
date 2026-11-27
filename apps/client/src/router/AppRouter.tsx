@@ -1,5 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 
+import MiningPage from '@/pages/miningPage/MiningPage';
+import MiningPageContent from '@/pages/miningPage/MiningPageContent';
+import MiningSessionForm from '@/pages/miningPage/createSession';
 import HomePage from '@/pages/homePage/HomePage';
 import MainLayout from '@/layouts/mainLayout/MainLayout';
 import SignInPage from '@/pages/signinPage/SignInPage';
@@ -24,9 +27,15 @@ export function AppRouter(): import('react').JSX.Element {
 
           {itemRoutes(parsed)}
 
-          {/* <Route path="/mining" element={<MiningPage />}>
-         
-          </Route> */}
+          <Route path="/mining" element={<MiningPage />}>
+            <Route element={<MiningPageContent />}>
+              <Route index element={null} />
+              <Route path="create" element={<MiningSessionForm />} />
+              <Route path="current" element={null} />
+              <Route path=":sessionId/running" element={null} />
+              <Route path=":sessionId/close" element={null} />
+            </Route>
+          </Route>
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

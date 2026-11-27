@@ -32,13 +32,13 @@ class ConsumeEnhancerRequest(BaseModel):
 
 
 class SessionLineResponse(ApiResponseModel):
-    """Serialized session line, including its session and item."""
+    """Serialize a session line and relations, exposing ORM quantity as API qty."""
 
     id: UUID
     session_id: UUID
     item_id: UUID | None
     type: SessionLineType
     lot_id: UUID | None
-    qty: int | None
+    qty: int | None = Field(validation_alias="quantity")
     session: SessionResponse
     item: ItemSummaryResponse | None

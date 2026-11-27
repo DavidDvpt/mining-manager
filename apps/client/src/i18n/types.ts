@@ -44,6 +44,38 @@ export type TranslationSchema = {
     TT_EXCEEDS_BASE: string;
   };
   MINING: {
+    SETUP: {
+      TITLE: string;
+      FINDER_MODEL: string;
+      CHOOSE_FINDER: string;
+      EXCAVATORS: string;
+      REPAIRABLE: string;
+      DECAY_COST: string;
+      CLOSING_COST: string;
+      NO_TOOLS: string;
+      AMMO: string;
+      AMP_MODEL: string;
+      NO_AMP: string;
+      AVAILABLE: string;
+      CLICKS: string;
+      SESSION_COST: string;
+      COMMON_TIER: string;
+      DEFERRED_USAGE: string;
+      UNIT_COST: string;
+      NO_SOCKETS: string;
+      ESTIMATE: string;
+      DEFERRED_COST: string;
+      LOADING: string;
+      LOAD_ERROR: string;
+      SUBMIT: string;
+      FINDER_TT: string;
+      INVALID_FINDERS: string;
+      INCOMPLETE_FINDER: string;
+      FINDER_CAPACITY: string;
+      INVALID_EXCAVATORS: string;
+      AMP_CAPACITY: string;
+      INVALID_ENHANCER: string;
+    };
     TITLE: string;
     SIDEBAR_LABEL: string;
     LOOTS: string;

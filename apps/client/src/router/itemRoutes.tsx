@@ -1,6 +1,5 @@
 import ItemPageContent from '@/pages/itemPage/ItemPageContent';
 import ItemPageLayout from '@/pages/itemPage/ItemPageLayout';
-import RunningTransactions from '@/pages/itemPage/RunningTransactionsRoute';
 import { ITEM_ROUTES, ITEM_SUB_ROUTES } from '@/router/constants';
 import itemModalRoutes from '@/router/ItemModalRoutes';
 import { Navigate, Route } from 'react-router-dom';

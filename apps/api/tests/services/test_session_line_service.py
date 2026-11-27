@@ -237,3 +237,28 @@ async def test_increment_produced_line_rejects_lines_with_origin_lot():
         )
 
     repository.update_quantity.assert_not_awaited()
+
+
+async def test_prepare_mining_enhancers_checks_tier_and_initializes_zero_consumption():
+    """Persist selected owned enhancer lots without estimating their consumption."""
+
+    service, repository, session_service, _ = _service()
+    service._lot_service = AsyncMock()
+    item = SimpleNamespace(
+        id=uuid4(), enhancer=SimpleNamespace(tool=SimpleNamespace(value="FINDER"), socket=1)
+    )
+    lots = [SimpleNamespace(qty=2, reserved=0), SimpleNamespace(qty=3, reserved=0)]
+    service._lot_service.get_fifo_lots.return_value = (item, lots, 5)
+    result = await service.prepare_mining_enhancers(
+        session_id=uuid4(), user_id=uuid4(), item_ids=[item.id], tool="FINDER", minimum_tier=4
+    )
+    assert result == [(item, 5)]
+    assert repository.create_consumed_enhancer_line.await_count == 2
+    for call in repository.create_consumed_enhancer_line.await_args_list:
+        assert call.kwargs["quantity"] == 0
+    repository.create_consumed_enhancer_line.reset_mock()
+    with pytest.raises(UnprocessingError):
+        await service.prepare_mining_enhancers(
+            session_id=uuid4(), user_id=uuid4(), item_ids=[item.id], tool="FINDER", minimum_tier=0
+        )
+    repository.create_consumed_enhancer_line.assert_not_awaited()

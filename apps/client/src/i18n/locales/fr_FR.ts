@@ -52,6 +52,44 @@ export const fr_FR: TranslationSchema = {
       'Le TT ne peut pas dépasser la valeur TT de base de l’objet.',
   },
   MINING: {
+    SETUP: {
+      TITLE: 'Créer une session mining',
+      FINDER_MODEL: 'Modèle de finder',
+      CHOOSE_FINDER: 'Sélectionner un finder',
+      EXCAVATORS: 'Excavateurs',
+      REPAIRABLE: 'Unlimited · réparable',
+      DECAY_COST: 'PED de decay pour cette session',
+      CLOSING_COST: 'Coût réel à renseigner à la fermeture',
+      NO_TOOLS: 'Aucun outil disponible.',
+      AMMO: 'Munitions',
+      AMP_MODEL: 'Modèle d’amplificateur',
+      NO_AMP: 'Sans amplificateur',
+      AVAILABLE: 'disponibles',
+      CLICKS: 'clics',
+      SESSION_COST: 'PED pour cette session',
+      COMMON_TIER: 'Tier commun',
+      DEFERRED_USAGE: 'Consommation et coût à la fermeture.',
+      UNIT_COST: 'PED / unité · coût réel à la fermeture',
+      NO_SOCKETS: 'Aucun socket utilisable.',
+      ESTIMATE: 'Coût estimé',
+      DEFERRED_COST:
+        'Le coût des excavateurs et enhancers sera confirmé à la fermeture.',
+      LOADING: 'Chargement du stock…',
+      LOAD_ERROR:
+        'Impossible de charger le stock ou la session courante. Fermez puis réessayez.',
+      SUBMIT: 'Créer la session',
+      FINDER_TT: 'TT sélectionné',
+      INVALID_FINDERS:
+        'Sélectionnez au moins un finder disponible du même modèle.',
+      INCOMPLETE_FINDER: 'Les données de coût de ce finder sont incomplètes.',
+      FINDER_CAPACITY:
+        'Le TT cumulé des finders L doit couvrir le decay prévu.',
+      INVALID_EXCAVATORS: 'Sélectionnez au moins un excavateur disponible.',
+      AMP_CAPACITY:
+        'La capacité des amplificateurs sélectionnés doit couvrir les clics demandés.',
+      INVALID_ENHANCER:
+        'Enhancer incompatible avec les sockets ou le stock disponible.',
+    },
     TITLE: 'Mining',
     SIDEBAR_LABEL: 'Navigation du mining',
     LOOTS: 'Loots',

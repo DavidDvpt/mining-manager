@@ -47,6 +47,43 @@ export const en_EN: TranslationSchema = {
     TT_EXCEEDS_BASE: 'The TT cannot exceed the item base TT value.',
   },
   MINING: {
+    SETUP: {
+      TITLE: 'Create a mining session',
+      FINDER_MODEL: 'Finder model',
+      CHOOSE_FINDER: 'Select a finder',
+      EXCAVATORS: 'Excavators',
+      REPAIRABLE: 'Unlimited · repairable',
+      DECAY_COST: 'PED decay for this session',
+      CLOSING_COST: 'Enter actual cost at closing',
+      NO_TOOLS: 'No tools available.',
+      AMMO: 'Ammo',
+      AMP_MODEL: 'Amplifier model',
+      NO_AMP: 'No amplifier',
+      AVAILABLE: 'available',
+      CLICKS: 'clicks',
+      SESSION_COST: 'PED for this session',
+      COMMON_TIER: 'Shared tier',
+      DEFERRED_USAGE: 'Usage and cost confirmed at closing.',
+      UNIT_COST: 'PED / unit · actual cost at closing',
+      NO_SOCKETS: 'No usable sockets.',
+      ESTIMATE: 'Estimated cost',
+      DEFERRED_COST:
+        'Excavator and enhancer costs will be confirmed at closing.',
+      LOADING: 'Loading inventory…',
+      LOAD_ERROR:
+        'Could not load inventory or the current session. Close and retry.',
+      SUBMIT: 'Create session',
+      FINDER_TT: 'Selected TT',
+      INVALID_FINDERS:
+        'Select at least one available finder of the same model.',
+      INCOMPLETE_FINDER: 'Cost data for this finder is incomplete.',
+      FINDER_CAPACITY:
+        'The combined TT of limited finders must cover the estimated decay.',
+      INVALID_EXCAVATORS: 'Select at least one available excavator.',
+      AMP_CAPACITY: 'Selected amplifiers must cover the requested clicks.',
+      INVALID_ENHANCER:
+        'Enhancer incompatible with the available sockets or stock.',
+    },
     TITLE: 'Mining',
     SIDEBAR_LABEL: 'Mining navigation',
     LOOTS: 'Loots',

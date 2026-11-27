@@ -2536,6 +2536,76 @@ export const usePatchApiV1MiningSessionIdClaimsClaimId = <TError = ErrorType<HTT
     }
 
 /**
+ * Return the authenticated user's open mining session, or null.
+ * @summary Get Current Mining Session
+ */
+export const getApiV1MiningCurrent = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<SessionResponse | null>(
+      {url: `/api/v1/mining/current`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1MiningCurrentQueryKey = () => {
+    return [
+    `/api/v1/mining/current`
+    ] as const;
+    }
+
+
+export const getGetApiV1MiningCurrentQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1MiningCurrent>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1MiningCurrent>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1MiningCurrentQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1MiningCurrent>>> = ({ signal }) => getApiV1MiningCurrent(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1MiningCurrent>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetApiV1MiningCurrentQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1MiningCurrent>>>
+export type GetApiV1MiningCurrentQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get Current Mining Session
+ */
+
+export function useGetApiV1MiningCurrent<TData = Awaited<ReturnType<typeof getApiV1MiningCurrent>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1MiningCurrent>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetApiV1MiningCurrentQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
  * Create an owned mining session with validated cost lines.
  * @summary Create Mining Session
  */

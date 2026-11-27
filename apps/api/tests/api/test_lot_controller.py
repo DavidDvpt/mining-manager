@@ -9,6 +9,7 @@ from api.api.deps import get_current_user
 from api.api.v1 import lot_controller
 from api.core.config import get_settings
 from api.db import get_session
+from api.db.models import Lot, LotType, Session, SessionLine, SessionLineType
 from api.main import app
 
 
@@ -124,6 +125,65 @@ def test_get_lots_accepts_item_id_in_path(client, monkeypatch):
     assert response.json()["lots"] == []
     assert response.json()["totalQuantity"] == 0
     assert calls == {"user_id": user_id, "item_id": item_id}
+
+
+@pytest.mark.parametrize("use_path", [True, False])
+@pytest.mark.parametrize("quantity", [12, 0, None])
+def test_get_lots_serializes_origin_quantity(client, monkeypatch, use_path, quantity):
+    """Return ORM origin quantity as qty, preserving zero and null on both routes."""
+
+    test_client, user_id = client
+    item_id = uuid4()
+    item = item_response_data(item_id)
+    origin = SessionLine(
+        id=uuid4(),
+        session_id=uuid4(),
+        item_id=item_id,
+        type=SessionLineType.PRODUCED,
+        lot_id=None,
+        quantity=quantity,
+        session=Session(
+            id=uuid4(),
+            user_id=user_id,
+            started_at=datetime.now(UTC).date(),
+            ended_at=None,
+        ),
+    )
+    lot = Lot(
+        id=uuid4(),
+        user_id=user_id,
+        type=LotType.TRANSACTION,
+        origin_id=str(origin.id),
+        origin=origin,
+        qty=5,
+        reserved=0,
+        created_at=datetime.now(UTC),
+        updated_at=None,
+        is_active=True,
+    )
+
+    async def fake_get_fifo_lots(**kwargs):
+        """Return a populated FIFO lot with its ORM session-line origin."""
+
+        return item, [lot], lot.qty
+
+    monkeypatch.setattr(
+        lot_controller,
+        "get_lot_service",
+        lambda _session: SimpleNamespace(get_fifo_lots=fake_get_fifo_lots),
+    )
+
+    response = test_client.get(
+        endpoint(f"/lots/{item_id}" if use_path else "/lots"),
+        params=None if use_path else {"item_id": str(item_id)},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["totalQuantity"] == 5
+    assert data["lots"][0]["qty"] == 5
+    assert data["lots"][0]["origin"]["qty"] == quantity
+    assert "quantity" not in data["lots"][0]["origin"]
 
 
 def test_get_unstackable_lot_returns_item_and_tool_attributes(client, monkeypatch):

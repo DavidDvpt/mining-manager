@@ -89,7 +89,7 @@ class LotRepository:
     async def get_unstackable_lot(
         self, *, user_id: UUID, lot_id: UUID
     ) -> Lot | None:
-        """Load an owned unstackable lot with specialized item details."""
+        """Lock an owned tool lot with catalogue roles and economy ready for async consumers."""
 
         statement = (
             select(Lot)
@@ -104,6 +104,12 @@ class LotRepository:
                 joinedload(Lot.origin)
                 .joinedload(SessionLine.item)
                 .joinedload(Item.refiner),
+                joinedload(Lot.origin)
+                .joinedload(SessionLine.item)
+                .joinedload(Item.economy),
+                joinedload(Lot.origin)
+                .joinedload(SessionLine.item)
+                .joinedload(Item.finder_amplifier),
                 joinedload(Lot.tool_lot),
                 joinedload(Lot.material_lot),
                 joinedload(Lot.enhancer_lot),
@@ -205,9 +211,13 @@ class LotRepository:
     async def get_fifo_lots_for_item(
         self, *, user_id: UUID, item_id: UUID
     ) -> tuple[Item | None, list[Lot], int]:
-        """Load an item, FIFO lots with unreserved stock, and available quantity."""
+        """Lock FIFO stock and load its item with enhancer details/economy for async validation."""
 
-        item = await self._session.scalar(select(Item).where(Item.id == item_id))
+        item = await self._session.scalar(
+            select(Item)
+            .options(joinedload(Item.enhancer), joinedload(Item.economy))
+            .where(Item.id == item_id)
+        )
         if item is None:
             return None, [], 0
 

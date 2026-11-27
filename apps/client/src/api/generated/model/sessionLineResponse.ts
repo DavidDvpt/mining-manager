@@ -7,7 +7,7 @@ import type { SessionLineType } from './sessionLineType.js';
 import type { SessionResponse } from './sessionResponse.js';
 
 /**
- * Serialized session line, including its session and item.
+ * Serialize a session line and relations, exposing ORM quantity as API qty.
  */
 export interface SessionLineResponse {
   id: string;

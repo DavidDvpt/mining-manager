@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
 from api.db.models import (
+    Item,
     Session,
     SessionLine,
     SessionLineDecay,
@@ -58,7 +59,7 @@ class SessionMiningRepository:
     async def get_session_for_close(
         self, *, session_id: UUID, user_id: UUID
     ) -> Session | None:
-        """Lock a user's mining session with all lines and lot details."""
+        """Lock the owned session and load lines, tool TT, catalogue roles and planned decay."""
 
         statement = (
             select(Session)
@@ -72,6 +73,11 @@ class SessionMiningRepository:
                 .selectinload(SessionLine.lot)
                 .selectinload(Lot.tool_lot),
                 selectinload(Session.lines).selectinload(SessionLine.decay),
+                selectinload(Session.lines).selectinload(SessionLine.lot).selectinload(Lot.origin).selectinload(SessionLine.item).selectinload(Item.finder),
+                selectinload(Session.lines).selectinload(SessionLine.lot).selectinload(Lot.origin).selectinload(SessionLine.item).selectinload(Item.excavator),
+                selectinload(Session.lines).selectinload(SessionLine.lot).selectinload(Lot.origin).selectinload(SessionLine.item).selectinload(Item.finder_amplifier),
+                selectinload(Session.lines).selectinload(SessionLine.lot).selectinload(Lot.origin).selectinload(SessionLine.item).selectinload(Item.enhancer),
+
             )
             .where(
                 Session.id == session_id,

@@ -67,6 +67,19 @@ def _serialize_enhancer(item: Item, stock: int) -> MiningEnhancerResponse:
     )
 
 
+@router.get("/current", response_model=SessionResponse | None)
+async def get_current_mining_session(
+    current_user: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> SessionResponse | None:
+    """Return the authenticated user's open mining session, or null."""
+
+    current = await get_session_mining_service(session).get_open_session(
+        user_id=current_user["id"]
+    )
+    return SessionResponse.model_validate(current) if current is not None else None
+
+
 @router.post("/create", response_model=CreateMiningSessionResponse, status_code=201)
 async def create_mining_session(
     payload: CreateMiningSessionRequest,

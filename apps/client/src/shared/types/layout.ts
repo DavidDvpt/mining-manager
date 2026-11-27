@@ -16,18 +16,9 @@ export type SidebarButtonType<Id extends SidebarButtonId = SidebarButtonId> = {
   highlighted?: boolean;
 };
 
-/** State and actions exposed by a sidebar layout context. */
-export type SidebarLayoutContextValue = {
-  activeButtonId: string;
-  selectButton: (buttonId: string) => void;
-};
-
 /** Public properties accepted by the sidebar layout component. */
 export type SidebarLayoutProps = PropsWithChildren<{
   buttons: SidebarButtonType[];
-  defaultButtonId?: string;
-  activeButtonId?: string;
-  onButtonChange?: (buttonId: string) => void;
   sidebarLabel?: string;
 }>;
 

@@ -202,6 +202,23 @@ class LotService:
             await self._repository.set_default_tool_lot(lot=lot)
             return lot
 
+    async def consume_tool_decay(self, *, user_id: UUID, lot_id: UUID, decay: Decimal) -> Lot:
+        """Return an owned tool after consuming its allocated L decay; leave UL TT unchanged."""
+
+        if decay < 0:
+            raise UnprocessingError("Tool decay cannot be negative")
+        lot = await self.get_unstackable_lot(user_id=user_id, lot_id=lot_id)
+        if not is_limited_item(lot.origin.item):
+            return lot
+        tt = lot.tool_lot.tt
+        if tt is None or decay > tt:
+            raise UnprocessingError("Tool decay exceeds the available TT")
+        remaining = tt - decay
+        await self._repository.update_tool_lot(
+            lot=lot, tier=lot.tool_lot.tier, tt=remaining, is_active=remaining > 0,
+        )
+        return lot
+
     async def update_unstackable_lot(
         self,
         *,

@@ -13,7 +13,9 @@ export const miningSessionFormSchema: z.ZodType<
   zone: z.string().trim(),
   finderItemId: z.string().min(1, 'Select a finder.'),
   finderLotIds: z.array(z.string()).min(1, 'Select at least one finder.'),
-  amplifierIds: z.array(z.string()),
+  amplifierItemId: z.string(),
+  excavatorLotIds: z.array(z.string()).min(1, 'Select at least one excavator.'),
+  excavatorEnhancers: z.record(z.string(), z.string()),
   enhancers: z.record(z.string(), z.string()),
 }) as z.ZodType<MiningSessionFormValues, MiningSessionFormValues>;
 
@@ -25,6 +27,8 @@ export const miningSessionFormDefaultValues: MiningSessionFormValues = {
   zone: '',
   finderItemId: '',
   finderLotIds: [],
-  amplifierIds: [],
+  amplifierItemId: '',
+  excavatorLotIds: [],
+  excavatorEnhancers: {},
   enhancers: {},
 };

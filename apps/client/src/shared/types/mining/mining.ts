@@ -9,6 +9,8 @@ export type MiningSessionFormValues = {
   zone: string;
   finderItemId: string;
   finderLotIds: string[];
-  amplifierIds: string[];
+  amplifierItemId: string;
+  excavatorLotIds: string[];
+  excavatorEnhancers: Record<string, string>;
   enhancers: Record<string, string>;
 };
