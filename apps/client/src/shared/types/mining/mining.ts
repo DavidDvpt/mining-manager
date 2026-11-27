@@ -7,7 +7,6 @@ export type MiningSessionFormValues = {
   searchType: MiningSearchType;
   planet: string;
   zone: string;
-  finderItemId: string;
   finderLotIds: string[];
   amplifierItemId: string;
   excavatorLotIds: string[];

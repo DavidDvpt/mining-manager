@@ -46,11 +46,14 @@ export type TranslationSchema = {
   MINING: {
     SETUP: {
       TITLE: string;
-      FINDER_MODEL: string;
+      SEARCH_SETUP: string;
+      ADD_FINDER: string;
+      REMOVE_FINDER: string;
+      FINDER_DEPTH: string;
+      FINDER_DECAY: string;
       CHOOSE_FINDER: string;
       EXCAVATORS: string;
       REPAIRABLE: string;
-      DECAY_COST: string;
       CLOSING_COST: string;
       NO_TOOLS: string;
       AMMO: string;
@@ -68,7 +71,6 @@ export type TranslationSchema = {
       LOADING: string;
       LOAD_ERROR: string;
       SUBMIT: string;
-      FINDER_TT: string;
       INVALID_FINDERS: string;
       INCOMPLETE_FINDER: string;
       FINDER_CAPACITY: string;

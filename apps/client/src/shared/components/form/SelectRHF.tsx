@@ -1,26 +1,26 @@
 import type { SelectHTMLAttributes } from 'react';
-
 import { Label } from '@/components/ui/label/label';
-
+import { CustomSelectField, type CustomSelectProps } from './CustomSelectField';
 import { useSafeFormContext } from './useSafeFormContext';
 import styles from './select-rhf.module.scss';
 
-type SelectRHFProps = Omit<SelectHTMLAttributes<HTMLSelectElement>, 'name'> & {
+type NativeSelectProps = Omit<
+  SelectHTMLAttributes<HTMLSelectElement>,
+  'name'
+> & {
+  variant?: never;
   name: string;
   label: string;
   options: Array<{ value: string; label: string }>;
 };
 
-/** Bind a native select and its validation message to the current RHF form. */
-export function SelectRHF({
-  name,
-  label,
-  options,
-  className,
-  id,
-  ...props
-}: SelectRHFProps): import('react').JSX.Element {
+/** Bind a plain native select or a custom option list to the current RHF form. */
+export function SelectRHF(
+  props: NativeSelectProps | CustomSelectProps,
+): import('react').JSX.Element {
   const form = useSafeFormContext();
+  if (props.variant === 'custom') return <CustomSelectField {...props} />;
+  const { name, label, options, className, id, ...nativeProps } = props;
   const fieldState = form.getFieldState(name, form.formState);
   const selectId = id ?? name;
 
@@ -29,7 +29,7 @@ export function SelectRHF({
       <Label htmlFor={selectId}>{label}</Label>
       <select
         {...form.register(name)}
-        {...props}
+        {...nativeProps}
         id={selectId}
         aria-invalid={fieldState.invalid || undefined}
         aria-describedby={fieldState.error ? `${selectId}-error` : undefined}

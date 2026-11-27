@@ -65,9 +65,9 @@ export const SelectContent = forwardRef<
 /** Render one selectable option inside the Radix select list. */
 export const SelectItem = forwardRef<
   ElementRef<typeof SelectPrimitive.Item>,
-  ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
+  ComponentPropsWithoutRef<typeof SelectPrimitive.Item> & { rich?: boolean }
 >(function SelectItem(
-  { className, children, ...props },
+  { className, children, rich, ...props },
   ref,
 ): import('react').JSX.Element {
   return (
@@ -76,7 +76,9 @@ export const SelectItem = forwardRef<
       className={[styles.item, className].filter(Boolean).join(' ')}
       {...props}
     >
-      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      <SelectPrimitive.ItemText asChild={rich}>
+        {rich ? <div>{children}</div> : children}
+      </SelectPrimitive.ItemText>
     </SelectPrimitive.Item>
   );
 });

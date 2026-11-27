@@ -162,6 +162,17 @@ class LotRepository:
     ) -> list[Lot]:
         """Load active, available tool lots for one catalogue item."""
 
+        return await self.get_unstackable_lots_for_items(
+            user_id=user_id, item_ids=[item_id]
+        )
+
+    async def get_unstackable_lots_for_items(
+        self, *, user_id: UUID, item_ids: Collection[UUID]
+    ) -> list[Lot]:
+        """Load the user's available tool lots for the requested catalogue items."""
+
+        if not item_ids:
+            return []
         statement = (
             select(Lot)
             .join(SessionLine, cast(SessionLine.id, String) == Lot.origin_id)
@@ -172,7 +183,7 @@ class LotRepository:
             )
             .where(
                 Lot.user_id == user_id,
-                SessionLine.item_id == item_id,
+                SessionLine.item_id.in_(item_ids),
                 Lot.is_active.is_(True),
                 Lot.qty - Lot.reserved > 0,
             )

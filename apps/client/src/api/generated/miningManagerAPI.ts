@@ -39,6 +39,7 @@ import type {
   FinderResponse,
   GetApiV1ExcavatorsStock200,
   GetApiV1FinderAmplifiersStock200,
+  GetApiV1FindersLots200,
   GetApiV1FindersStock200,
   GetApiV1RefinersStock200,
   GetApiV1StorageMaterialMaterialIdStock200,
@@ -1200,6 +1201,76 @@ export function useGetApiV1FindersStock<TData = Awaited<ReturnType<typeof getApi
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetApiV1FindersStockQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Return available finder lots for the authenticated user, grouped by item ID.
+ * @summary Get Available Finder Lots
+ */
+export const getApiV1FindersLots = (
+
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+
+
+      return customInstance<GetApiV1FindersLots200>(
+      {url: `/api/v1/finders/lots`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1FindersLotsQueryKey = () => {
+    return [
+    `/api/v1/finders/lots`
+    ] as const;
+    }
+
+
+export const getGetApiV1FindersLotsQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1FindersLots>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1FindersLots>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1FindersLotsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1FindersLots>>> = ({ signal }) => getApiV1FindersLots(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1FindersLots>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetApiV1FindersLotsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1FindersLots>>>
+export type GetApiV1FindersLotsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get Available Finder Lots
+ */
+
+export function useGetApiV1FindersLots<TData = Awaited<ReturnType<typeof getApiV1FindersLots>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getApiV1FindersLots>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetApiV1FindersLotsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

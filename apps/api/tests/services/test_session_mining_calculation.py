@@ -108,23 +108,27 @@ def test_finders_reject_unnecessary_limited_and_unlimited_tools():
         SessionMiningService._validate_limited_tool_capacity([unlimited, equipment_lot(item=unlimited.origin.item)], role="finder", clic=10, multiplier=Decimal(1))
 
 
-def test_finder_decay_consumes_lowest_tt_first():
-    """Allocate a single ten-PED budget as 3 then 7 despite reversed input order."""
+@pytest.mark.parametrize("second_tt", ["3", "10"])
+def test_finder_decay_follows_selection_order(second_tt):
+    """Keep the first finder before a lower-TT lot or one that could cover the session alone."""
 
     first = equipment_lot(tt="8", decay="1")
-    second = equipment_lot(tt="3", item=first.origin.item)
+    second = equipment_lot(tt=second_tt, item=first.origin.item)
+    SessionMiningService._validate_limited_tool_capacity(
+        [first, second], role="finder", clic=10, multiplier=Decimal(1)
+    )
     assert SessionMiningService._allocate_finder_decay([first, second], Decimal(10)) == [
-        {"lot_id": second.id, "decay": Decimal(3)},
-        {"lot_id": first.id, "decay": Decimal(7)},
+        {"lot_id": first.id, "decay": Decimal(8)},
+        {"lot_id": second.id, "decay": Decimal(2)},
     ]
 
 
 async def test_close_consumes_each_finders_allocated_share_once():
-    """Consume low TT first at closing and reject duplicated per-finder session decay."""
+    """Use each stored allocation at closing even when it differs from TT order."""
 
     first = equipment_lot(tt="8", decay="1")
     second = equipment_lot(tt="3", item=first.origin.item)
-    lines = [SimpleNamespace(id=uuid4(), lot=lot, lot_id=lot.id, type=SessionLineType.CONSUMED, decay=SimpleNamespace(decay_ttc=Decimal(decay))) for lot, decay in [(first, 7), (second, 3)]]
+    lines = [SimpleNamespace(id=uuid4(), lot=lot, lot_id=lot.id, type=SessionLineType.CONSUMED, decay=SimpleNamespace(decay_ttc=Decimal(decay))) for lot, decay in [(first, 8), (second, 2)]]
     session = MagicMock()
     session.in_transaction.return_value = False
     session.begin.return_value = AsyncMock()
@@ -132,9 +136,9 @@ async def test_close_consumes_each_finders_allocated_share_once():
     repository.get_session_for_close.return_value = SimpleNamespace(lines=lines, ended_at=None)
     lots = AsyncMock()
     service = SessionMiningService(session, repository, lots, AsyncMock(), AsyncMock(), AsyncMock(), AsyncMock())
-    await service.close(user_id=uuid4(), session_id=uuid4(), tool_decays={lines[0].id: Decimal(7), lines[1].id: Decimal(3)}, amplifier_tts={}, enhancer_quantities={}, produced_quantities={})
+    await service.close(user_id=uuid4(), session_id=uuid4(), tool_decays={lines[0].id: Decimal(8), lines[1].id: Decimal(2)}, amplifier_tts={}, enhancer_quantities={}, produced_quantities={})
     assert [call.kwargs["lot_id"] for call in lots.consume_tool_decay.await_args_list] == [second.id, first.id]
-    assert [call.kwargs["decay"] for call in lots.consume_tool_decay.await_args_list] == [Decimal(3), Decimal(7)]
+    assert [call.kwargs["decay"] for call in lots.consume_tool_decay.await_args_list] == [Decimal(2), Decimal(8)]
     lots.consume_tool_decay.reset_mock()
     with pytest.raises(UnprocessingError):
         await service.close(user_id=uuid4(), session_id=uuid4(), tool_decays={line.id: Decimal(10) for line in lines}, amplifier_tts={}, enhancer_quantities={}, produced_quantities={})

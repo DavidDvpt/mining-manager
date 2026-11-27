@@ -49,11 +49,14 @@ export const en_EN: TranslationSchema = {
   MINING: {
     SETUP: {
       TITLE: 'Create a mining session',
-      FINDER_MODEL: 'Finder model',
+      SEARCH_SETUP: 'Search setup',
+      ADD_FINDER: 'Add a compatible finder',
+      REMOVE_FINDER: 'Remove {finder}',
+      FINDER_DEPTH: 'Depth: {depth} m',
+      FINDER_DECAY: 'Decay',
       CHOOSE_FINDER: 'Select a finder',
       EXCAVATORS: 'Excavators',
       REPAIRABLE: 'Unlimited · repairable',
-      DECAY_COST: 'PED decay for this session',
       CLOSING_COST: 'Enter actual cost at closing',
       NO_TOOLS: 'No tools available.',
       AMMO: 'Ammo',
@@ -73,7 +76,6 @@ export const en_EN: TranslationSchema = {
       LOAD_ERROR:
         'Could not load inventory or the current session. Close and retry.',
       SUBMIT: 'Create session',
-      FINDER_TT: 'Selected TT',
       INVALID_FINDERS:
         'Select at least one available finder of the same model.',
       INCOMPLETE_FINDER: 'Cost data for this finder is incomplete.',

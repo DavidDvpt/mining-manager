@@ -33,13 +33,13 @@ class LotCollectionResponse(ApiResponseModel):
     total_quantity: int
 
 
-class UnstackableLotResponse(ApiResponseModel):
-    """Serialized unstackable lot with specialized item attributes."""
+class ToolLotResponse[TItem: ApiResponseModel](ApiResponseModel):
+    """Serialized tool lot with its endpoint-specific catalogue item."""
 
     id: UUID
     user_id: UUID
     type: str
-    item: ItemSummaryResponse
+    item: TItem
     qty: int
     reserved: int
     tier: int | None
@@ -48,6 +48,10 @@ class UnstackableLotResponse(ApiResponseModel):
     created_at: datetime
     updated_at: datetime | None
     is_active: bool
+
+
+class UnstackableLotResponse(ToolLotResponse[ItemSummaryResponse]):
+    """Serialized unstackable lot with specialized item attributes."""
 
 
 class UpdateUnstackableLotRequest(BaseModel):

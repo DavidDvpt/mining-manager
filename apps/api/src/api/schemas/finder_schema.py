@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from .base import ApiResponseModel
 from .item_schema import ItemResponse
+from .lot_schema import ToolLotResponse
 
 
 class FinderDetailsResponse(ApiResponseModel):
@@ -19,3 +20,7 @@ class FinderDetailsResponse(ApiResponseModel):
 
 class FinderResponse(ItemResponse[FinderDetailsResponse]):
     """Flattened item response with finder details."""
+
+
+class FinderLotResponse(ToolLotResponse[FinderResponse]):
+    """An available finder lot with the catalogue data needed for mining estimates."""

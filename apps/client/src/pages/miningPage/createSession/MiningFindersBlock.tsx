@@ -1,169 +1,209 @@
 import { useTranslations } from '@/i18n/useTranslations';
-import { useEffect } from 'react';
-import { useFormContext, useWatch } from 'react-hook-form';
-import {
-  CheckboxRHF,
-  SelectRHF,
-  SubSection,
-  EntropiaImage,
-} from '@/shared/components';
+import { useEffect, useState } from 'react';
+import { useFormContext } from 'react-hook-form';
+import { SubSection, EntropiaImage, SelectRHF } from '@/shared/components';
+import { AppIcon } from '@/shared/components/icon';
 import { getItemImageUrl } from '@/config/images';
 import type { MiningSessionFormValues } from '@/shared/types/mining';
-import type { MiningEquipment } from './useMiningEquipment';
+import { formatDecimalValue, formatRoundedDecimalValue } from '@/shared/utils';
+import type {
+  FinderResponse,
+  UnstackableLotResponse,
+} from '@/api/generated/model';
 import {
   calculateMiningSession,
   selectUsefulFinders,
 } from './miningSessionCalculation';
+import type { MiningEquipment } from './useMiningEquipment';
+import { toPositiveNumber } from '../utils';
 import styles from './mining-session-form.module.scss';
 
-type Props = { equipment: MiningEquipment; toolRole: 'finder' | 'excavator' };
+type FinderLot = {
+  item: FinderResponse;
+  lot: UnstackableLotResponse;
+};
 
-/** Offer additional finders only until capacity is covered and display each lot’s allocated decay. */
+/** Format a calculated PED cost to catalogue precision, with at least two decimals. */
+function formatFinderCost(value: number): string {
+  return formatDecimalValue(formatRoundedDecimalValue(value));
+}
+
+/** Show the model and tier on one line, with the option TT or finder depth underneath. */
+function FinderIdentity({
+  item,
+  lot,
+  optionTt,
+}: FinderLot & { optionTt?: string }): import('react').JSX.Element {
+  const { t } = useTranslations();
+  const tier = `T${lot.tier ?? 0}`;
+  return (
+    <div className={styles.itemRow}>
+      <div aria-hidden="true">
+        <EntropiaImage url={getItemImageUrl(item.imgId)} alt="" size="small" />
+      </div>
+      <span>
+        {item.name} · {tier}
+        <br />{' '}
+        <small>
+          {optionTt ??
+            t('MINING.SETUP.FINDER_DEPTH').replace(
+              '{depth}',
+              formatDecimalValue(item.details.depth),
+            )}
+        </small>
+      </span>
+    </div>
+  );
+}
+
+/** List all owned finder lots and add matching limited lots in the order they will be used. */
 export function MiningFindersBlock({
   equipment,
-  toolRole: role,
-}: Props): import('react').JSX.Element {
+  estimate,
+  selectedIds,
+}: {
+  equipment: MiningEquipment;
+  estimate: ReturnType<typeof calculateMiningSession>;
+  selectedIds: string[];
+}): import('react').JSX.Element {
   const { t } = useTranslations();
-  const { control, setValue } = useFormContext<MiningSessionFormValues>();
-  const values = useWatch({ control }) as MiningSessionFormValues;
-  const field = role === 'finder' ? 'finderLotIds' : 'excavatorLotIds';
-  const tools = role === 'finder' ? equipment.finders : equipment.excavators;
-  const allLots = equipment.lots.filter(
-    (lot) =>
-      tools.some((item) => item.id === lot.item.id) &&
-      (role !== 'finder' || lot.item.id === values.finderItemId),
+  const { setValue } = useFormContext<MiningSessionFormValues>();
+  const [pickerMode, setPickerMode] = useState<'hidden' | 'add' | 'replace'>(
+    'hidden',
   );
+  const { finder, finderLots, finderDecay, needsMoreFinderTt } = estimate;
+  const options = equipment.lots.flatMap((lot) => {
+    const item = equipment.finders.find((entry) => entry.id === lot.item.id);
+    return item ? [{ item, lot }] : [];
+  });
   useEffect(() => {
-    if (role === 'finder')
-      setValue('finderLotIds', [], { shouldValidate: true });
-  }, [values.finderItemId, role, setValue]);
-  const estimate = calculateMiningSession(values, equipment);
-  const finder = estimate.finder;
-  useEffect(() => {
-    if (role !== 'finder' || !finder) return;
-    const selectedLots = values.finderLotIds.flatMap((id) =>
-      allLots.filter((lot) => lot.id === id),
-    );
+    if (!finder || finderLots.length !== selectedIds.length) return;
     const useful = selectUsefulFinders(
-      selectedLots,
-      estimate.finderDecay,
+      finderLots,
+      finderDecay,
       finder.details.isLimited,
-    ).map((lot) => lot.id);
-    if (useful.join(',') !== values.finderLotIds.join(','))
-      setValue('finderLotIds', useful, { shouldValidate: true });
-  }, [
-    role,
-    finder,
-    values.finderLotIds,
-    allLots,
-    estimate.finderDecay,
-    setValue,
-  ]);
-  const covered =
-    estimate.finderLots.length > 0 &&
-    (!finder?.details.isLimited ||
-      !estimate.issues.some(
-        (issue) => issue.message === 'MINING.SETUP.FINDER_CAPACITY',
-      ));
-  const lots = allLots
-    .filter(
-      (lot) =>
-        role !== 'finder' || values.finderLotIds.includes(lot.id) || !covered,
-    )
-    .sort(
-      (a, b) =>
-        Number(a.tt ?? 0) - Number(b.tt ?? 0) || a.id.localeCompare(b.id),
     );
-  /** Prefer a newly chosen sufficient finder and retain additional L lots only while needed. */
-  const selectFinder = (id: string, checked: boolean): void => {
-    if (!finder) return;
-    const ids = checked
-      ? [id, ...values.finderLotIds.filter((value) => value !== id)]
-      : values.finderLotIds.filter((value) => value !== id);
-    const selected = ids.flatMap((value) =>
-      allLots.filter((lot) => lot.id === value),
-    );
-    setValue(
-      'finderLotIds',
-      selectUsefulFinders(
-        selected,
-        estimate.finderDecay,
-        finder.details.isLimited,
-      ).map((lot) => lot.id),
-      { shouldDirty: true, shouldValidate: true },
-    );
+    if (useful.length < selectedIds.length) {
+      setValue(
+        'finderLotIds',
+        useful.map((lot) => lot.id),
+        {
+          shouldDirty: true,
+          shouldValidate: true,
+        },
+      );
+    }
+  }, [finder, finderLots, finderDecay, selectedIds, setValue]);
+
+  /** Format the current TT for both the option content and select typeahead. */
+  const renderOption = ({ item, lot }: FinderLot) => {
+    const tt = formatDecimalValue(lot.tt);
+    return {
+      value: lot.id,
+      label: `${item.name} · T${lot.tier ?? 0} · ${tt}`,
+      content: <FinderIdentity item={item} lot={lot} optionTt={tt} />,
+    };
   };
+
+  const compatible = needsMoreFinderTt
+    ? options.filter(
+        ({ item, lot }) =>
+          item.id === finder?.id &&
+          !selectedIds.includes(lot.id) &&
+          toPositiveNumber(lot.tt) > 0,
+      )
+    : [];
+  const chooseLabel = t('MINING.SETUP.CHOOSE_FINDER');
+  const addLabel = t('MINING.SETUP.ADD_FINDER');
+
+  /** Remove any lot and show a replacement picker when the remaining setup needs one. */
+  const removeFinder = (id: string): void => {
+    const remainingIds = selectedIds.filter((selected) => selected !== id);
+    setPickerMode(remainingIds.length ? 'replace' : 'hidden');
+    setValue('finderLotIds', remainingIds, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
+
+  /** Return to the add button when the supplemental dropdown closes. */
+  const handlePickerOpenChange = (open: boolean): void => {
+    if (!open) setPickerMode('hidden');
+  };
+
   return (
     <SubSection>
-      <h3>
-        {role === 'finder' ? t('MINING.FINDERS') : t('MINING.SETUP.EXCAVATORS')}
-      </h3>
-      {role === 'finder' && (
-        <SelectRHF
-          name="finderItemId"
-          label={t('MINING.SETUP.FINDER_MODEL')}
-          options={[
-            { value: '', label: t('MINING.SETUP.CHOOSE_FINDER') },
-            ...tools.map((item) => ({ value: item.id, label: item.name })),
-          ]}
-        />
-      )}
+      <h3>{t('MINING.FINDERS')}</h3>
       <div className={styles.lotList}>
-        {lots.map((lot) => {
-          const item = tools.find((tool) => tool.id === lot.item.id);
-          if (!item) return null;
-          const decay = estimate.finderDecayByLot[lot.id] ?? 0;
-          return (
-            <div key={lot.id} className={styles.itemRow}>
-              <EntropiaImage
-                url={getItemImageUrl(item.imgId)}
-                alt={item.name}
-                size="small"
-              />
-              <div>
-                <CheckboxRHF
-                  name={field}
-                  onCheckedChange={
-                    role === 'finder'
-                      ? (checked) => selectFinder(lot.id, checked)
-                      : undefined
-                  }
-                  checkedValue={lot.id}
-                  label={`${item.name} · T${lot.tier ?? 0}`}
-                />
-                <small>
-                  {item.details.isLimited
-                    ? `${lot.tt ?? '—'} TT · L`
-                    : t('MINING.SETUP.REPAIRABLE')}
-                </small>
-                <p className={styles.muted}>
-                  {role === 'finder'
-                    ? `${decay.toFixed(2)} ${t('MINING.SETUP.DECAY_COST')}`
-                    : t('MINING.SETUP.CLOSING_COST')}
-                </p>
+        {!finder && options.length > 0 && (
+          <SelectRHF
+            variant="custom"
+            name="finderLotIds"
+            selection="replace"
+            label={chooseLabel}
+            trigger={chooseLabel}
+            options={options.map(renderOption)}
+          />
+        )}
+        {!options.length && (
+          <p className={styles.muted}>{t('MINING.SETUP.NO_TOOLS')}</p>
+        )}
+        {finder &&
+          finderLots.map((lot) => (
+            <div key={lot.id} className={styles.finderCard}>
+              <div className={styles.finderCardHeader}>
+                <FinderIdentity item={finder} lot={lot} />
+                <button
+                  type="button"
+                  className={styles.removeFinder}
+                  aria-label={t('MINING.SETUP.REMOVE_FINDER').replace(
+                    '{finder}',
+                    `${finder.name} · T${lot.tier ?? 0}`,
+                  )}
+                  onClick={() => removeFinder(lot.id)}
+                >
+                  <AppIcon name="Trash2" size={16} aria-hidden="true" />
+                </button>
+              </div>
+              <div className={styles.muted}>
+                <div>
+                  {t('MINING.SETUP.FINDER_DECAY')} ·{' '}
+                  {formatFinderCost(estimate.finderDecayByLot[lot.id])} PED
+                </div>
+                <div>
+                  {t('MINING.SETUP.AMMO')} ·{' '}
+                  {formatFinderCost(estimate.finderAmmoByLot[lot.id])} PED
+                </div>
               </div>
             </div>
-          );
-        })}
+          ))}
+        {compatible.length > 0 && pickerMode === 'hidden' && (
+          <button
+            type="button"
+            className={styles.addFinder}
+            aria-label={addLabel}
+            aria-haspopup="listbox"
+            onClick={() => setPickerMode('add')}
+          >
+            <span aria-hidden="true">+</span>
+          </button>
+        )}
+        {compatible.length > 0 && pickerMode !== 'hidden' && (
+          <SelectRHF
+            variant="custom"
+            name="finderLotIds"
+            label={addLabel}
+            trigger={chooseLabel}
+            options={compatible.map(renderOption)}
+            selection="append"
+            defaultOpen={pickerMode === 'add'}
+            onOpenChange={handlePickerOpenChange}
+            onSelect={() => setPickerMode('hidden')}
+          />
+        )}
       </div>
-      {!lots.length && (
-        <p className={styles.muted}>{t('MINING.SETUP.NO_TOOLS')}</p>
-      )}
-      {role === 'finder' && estimate.finder && (
-        <p
-          className={
-            estimate.issues.some((issue) => issue.path === 'finderLotIds')
-              ? styles.error
-              : styles.muted
-          }
-        >
-          {t('MINING.SETUP.FINDER_TT')} : {estimate.finderTt.toFixed(2)} · decay
-          : {estimate.finderDecay.toFixed(2)} PED
-          <br />
-          {t('MINING.SETUP.AMMO')} : {estimate.ammo.toFixed(2)} PED
-        </p>
-      )}
     </SubSection>
   );
 }
+
 export default MiningFindersBlock;

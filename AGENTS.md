@@ -38,7 +38,7 @@
 - Before adding a function, helper, service method, repository query, or API endpoint, search the existing services, repositories, controllers, generated client, and shared helpers for an equivalent capability.
 - Prefer reusing or extending the existing domain-owned implementation over introducing a parallel abstraction or endpoint.
 - Preserve the existing OpenAPI surface when it already supports the use case; add a new endpoint only when the existing contract cannot support the requirement.
-- Never regenerate or update the OpenAPI specification or generated client automatically. The repository owner updates it manually after reviewing and validating the backend and frontend changes.
+- After every API endpoint addition or modification, run `npm run api:update` from the workspace root to regenerate the frontend client with Orval and run the client typecheck. Use the generated OpenAPI client and types in the frontend.
 
 <!-- nx configuration end-->
 

@@ -17,7 +17,7 @@ export function minimumTier(lots: UnstackableLotResponse[]): number {
   return lots.length ? Math.min(...lots.map((lot) => lot.tier ?? 0)) : 0;
 }
 
-/** Retain only useful user-selected finders; a repairable UL or sufficient L stands alone. */
+/** Keep the selected prefix needed to cover the decay budget, with one finder for UL. */
 export function selectUsefulFinders(
   lots: UnstackableLotResponse[],
   requiredDecay: number,
@@ -25,25 +25,12 @@ export function selectUsefulFinders(
 ): UnstackableLotResponse[] {
   if (!limited) return lots.slice(0, 1);
   const tolerance = Number.EPSILON * Math.max(1, requiredDecay) * 4;
-  const usable = lots.filter((lot) => toPositiveNumber(lot.tt) > 0);
-  const sufficient = usable.find(
-    (lot) => toPositiveNumber(lot.tt) + tolerance >= requiredDecay,
-  );
-  if (sufficient) return [sufficient];
-  let total = usable.reduce((sum, lot) => sum + toPositiveNumber(lot.tt), 0);
-  const retained = [...usable];
-  for (let index = retained.length - 1; index >= 0; index--) {
-    const tt = toPositiveNumber(retained[index].tt);
-    if (total - tt + tolerance >= requiredDecay) {
-      retained.splice(index, 1);
-      total -= tt;
-    }
-  }
-  return retained.sort(
-    (a, b) =>
-      toPositiveNumber(a.tt) - toPositiveNumber(b.tt) ||
-      a.id.localeCompare(b.id),
-  );
+  let total = 0;
+  const lastNeeded = lots.findIndex((lot) => {
+    total += toPositiveNumber(lot.tt);
+    return total + tolerance >= requiredDecay;
+  });
+  return lastNeeded < 0 ? lots : lots.slice(0, lastNeeded + 1);
 }
 
 /** Apply catalogue markup to an L tool's consumed TT; UL tools and unpriced L tools stay at 100%. */
@@ -66,18 +53,14 @@ export function calculateMiningSession(
 ) {
   const { lots, finders, excavators, amplifiers, enhancers, enhancerStock } =
     equipment;
-  const finder = finders.find((item) => item.id === values.finderItemId);
-  const finderLots = lots
-    .filter(
-      (lot) =>
-        values.finderLotIds.includes(lot.id) &&
-        lot.item.id === values.finderItemId,
-    )
-    .sort(
-      (a, b) =>
-        toPositiveNumber(a.tt) - toPositiveNumber(b.tt) ||
-        a.id.localeCompare(b.id),
+  const firstLot = lots.find((lot) => lot.id === values.finderLotIds[0]);
+  const finder = finders.find((item) => item.id === firstLot?.item.id);
+  const finderLots = [...new Set(values.finderLotIds)].flatMap((id) => {
+    const lot = lots.find(
+      (entry) => entry.id === id && entry.item.id === finder?.id,
     );
+    return lot ? [lot] : [];
+  });
   const excavatorLots = lots.filter(
     (lot) =>
       values.excavatorLotIds.includes(lot.id) &&
@@ -132,14 +115,16 @@ export function calculateMiningSession(
       toPositiveNumber(finder.economy.decay) === 0)
   )
     issues.push({
-      path: 'finderItemId',
+      path: 'finderLotIds',
       message: 'MINING.SETUP.INCOMPLETE_FINDER',
     });
+  const needsMoreFinderTt =
+    finder?.details.isLimited === true &&
+    finderTt + Number.EPSILON * Math.max(1, finderTt, finderDecay) * 4 <
+      finderDecay;
   if (
     finder?.details.isLimited &&
-    (finderLots.some((lot) => lot.tt === null) ||
-      finderTt + Number.EPSILON * Math.max(1, finderTt, finderDecay) * 4 <
-        finderDecay)
+    (finderLots.some((lot) => lot.tt === null) || needsMoreFinderTt)
   )
     issues.push({
       path: 'finderLotIds',
@@ -195,6 +180,12 @@ export function calculateMiningSession(
       return [lot.id, decay];
     }),
   );
+  const finderAmmoByLot = Object.fromEntries(
+    finderLots.map((lot) => [
+      lot.id,
+      finderDecay > 0 ? ammo * (finderDecayByLot[lot.id] / finderDecay) : 0,
+    ]),
+  );
   const finderTtc = miningCostTtc(
     finderDecay,
     finder?.details.isLimited ?? false,
@@ -228,7 +219,8 @@ export function calculateMiningSession(
     amplifierLots,
     finderDecay,
     finderDecayByLot,
-    finderTt,
+    finderAmmoByLot,
+    needsMoreFinderTt,
     ammo,
     amplifierClicks,
     amplifierCost,

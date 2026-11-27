@@ -1,7 +1,7 @@
 import { useQueries } from '@tanstack/react-query';
 import {
-  useGetApiV1Finders,
-  useGetApiV1FindersStock,
+  useGetApiV1FindersLots,
+  getGetApiV1FindersLotsQueryKey,
   useGetApiV1Excavators,
   useGetApiV1ExcavatorsStock,
   useGetApiV1FinderAmplifiers,
@@ -29,16 +29,15 @@ export type MiningEquipment = {
 
 /** Load owned equipment lots and enhancer stocks, exposing errors before submission. */
 export function useMiningEquipment() {
-  const finders = useGetApiV1Finders();
-  const finderStock = useGetApiV1FindersStock();
+  const finderInventory = useGetApiV1FindersLots({
+    query: { queryKey: getGetApiV1FindersLotsQueryKey(), staleTime: 0 },
+  });
   const excavators = useGetApiV1Excavators();
   const excavatorStock = useGetApiV1ExcavatorsStock();
   const amplifiers = useGetApiV1FinderAmplifiers();
   const amplifierStock = useGetApiV1FinderAmplifiersStock();
   const enhancers = useGetApiV1Enhancers();
-  const ownedFinders = (finders.data ?? []).filter(
-    (item) => item.isActive !== false && (finderStock.data?.[item.id] ?? 0) > 0,
-  );
+  const finderGroups = Object.values(finderInventory.data ?? {});
   const ownedExcavators = (excavators.data ?? []).filter(
     (item) =>
       item.isActive !== false && (excavatorStock.data?.[item.id] ?? 0) > 0,
@@ -47,7 +46,7 @@ export function useMiningEquipment() {
     (item) =>
       item.isActive !== false && (amplifierStock.data?.[item.id] ?? 0) > 0,
   );
-  const owned = [...ownedFinders, ...ownedExcavators, ...ownedAmplifiers];
+  const owned = [...ownedExcavators, ...ownedAmplifiers];
   const lots = useQueries({
     queries: owned.map((item) =>
       getGetApiV1LotsUnstackableItemItemIdQueryOptions(item.id),
@@ -59,8 +58,7 @@ export function useMiningEquipment() {
     ),
   });
   const queries = [
-    finders,
-    finderStock,
+    finderInventory,
     excavators,
     excavatorStock,
     amplifiers,
@@ -70,13 +68,14 @@ export function useMiningEquipment() {
     ...stock,
   ];
   const equipment: MiningEquipment = {
-    finders: ownedFinders,
+    finders: finderGroups.flatMap((group) => (group[0] ? [group[0].item] : [])),
     excavators: ownedExcavators,
     amplifiers: ownedAmplifiers,
     enhancers: enhancers.data ?? [],
-    lots: lots
-      .flatMap((query) => query.data ?? [])
-      .filter((lot) => lot.isActive && lot.qty > lot.reserved),
+    lots: [
+      ...finderGroups.flat(),
+      ...lots.flatMap((query) => query.data ?? []),
+    ].filter((lot) => lot.isActive && lot.qty > lot.reserved),
     enhancerStock: Object.fromEntries(
       (enhancers.data ?? []).map((item, index) => [
         item.id,

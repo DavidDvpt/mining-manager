@@ -96,7 +96,8 @@ class SessionMiningService:
     ) -> MiningSessionCreation:
         """Create one owned setup after validating model, pooled L capacity and enhancer tiers.
 
-        Estimate ammo and tool decay; excavator and enhancer use is confirmed at closing.
+        Plan finder decay in selection order and estimate ammo and other tool costs.
+        Excavator and enhancer use is confirmed at closing.
         """
 
         if clic < 1:
@@ -122,7 +123,6 @@ class SessionMiningService:
                 for lot_id in finders
             ]
             self._validate_identical_finders(finder_lots)
-            finder_lots.sort(key=lambda lot: (lot.tool_lot.tt or Decimal(0), str(lot.id)))
             self._validate_limited_tool_capacity(
                 finder_lots, role="finder", clic=clic, multiplier=multiplier
             )
@@ -193,7 +193,7 @@ class SessionMiningService:
     ) -> Session:
         """Close a mining session after confirming every final line value.
 
-        Finder decay is distributed once by ascending TT and consumed from L lots.
+        Each finder line must match its planned decay, which is consumed from L lots.
         Every excavator line must have a decay entry, enhancer quantities are
         finalized from the payload, produced quantities are reconciled, and a
         transaction lot is created for every produced line before the session
@@ -232,17 +232,12 @@ class SessionMiningService:
             if finder_lines:
                 if any(line.decay is None for line in finder_lines):
                     raise UnprocessingError("Finder lines are missing their planned decay")
-                total_decay = sum((line.decay.decay_ttc for line in finder_lines), Decimal(0))
-                allocations = {
-                    values["lot_id"]: values["decay"]
-                    for values in self._allocate_finder_decay([line.lot for line in finder_lines], total_decay)
-                }
+                if any(tool_decays[line.id] != line.decay.decay_ttc for line in finder_lines):
+                    raise UnprocessingError("Finder decay must match the planned allocation")
+                # Keep stock updates in a stable order independent of the allocation.
                 for line in sorted(finder_lines, key=lambda line: (line.lot.tool_lot.tt or Decimal(0), str(line.lot_id))):
-                    decay = allocations[line.lot_id]
-                    if tool_decays[line.id] != decay:
-                        raise UnprocessingError("Finder decay must follow the ascending TT allocation")
                     await self._lot_service.consume_tool_decay(
-                        user_id=user_id, lot_id=line.lot_id, decay=decay
+                        user_id=user_id, lot_id=line.lot_id, decay=line.decay.decay_ttc
                     )
             for line in tool_lines:
                 await self._repository.update_session_line_decay(
@@ -380,7 +375,7 @@ class SessionMiningService:
     def _validate_limited_tool_capacity(
         cls, lots: list, *, role: str, clic: int, multiplier: Decimal
     ) -> None:
-        """Require sufficient pooled L TT and reject redundant finders; one repairable UL suffices."""
+        """Require sufficient pooled L TT, with each additional lot needed when selected."""
 
         if any(not is_limited_item(lot.origin.item) for lot in lots):
             if len(lots) > 1:
@@ -392,7 +387,7 @@ class SessionMiningService:
         required = Decimal(clic) * cls._item_decay(lots[0].origin.item) * multiplier
         if total_tt < required:
             raise UnprocessingError(f"Limited {role} TT must cover the requested decay")
-        if len(lots) > 1 and any(total_tt - lot.tool_lot.tt >= required for lot in lots):
+        if len(lots) > 1 and total_tt - lots[-1].tool_lot.tt >= required:
             raise UnprocessingError("Remove finders that are not needed for the session")
 
     @classmethod
@@ -424,7 +419,7 @@ class SessionMiningService:
         cls, *, finder_lots: list, excavator_lots: list, amplifier_lots: list,
         clic: int, multiplier: Decimal,
     ) -> list[dict[str, object]]:
-        """Allocate finder decay by ascending TT and amp clicks once; defer excavator use."""
+        """Allocate finder decay in selection order and amp clicks once; defer excavator use."""
 
         required_decay = Decimal(clic) * cls._item_decay(finder_lots[0].origin.item) * multiplier
         lines = cls._allocate_finder_decay(finder_lots, required_decay)
@@ -442,11 +437,11 @@ class SessionMiningService:
 
     @staticmethod
     def _allocate_finder_decay(lots: list, total_decay: Decimal) -> list[dict[str, object]]:
-        """Distribute a single decay budget across selected finders in ascending TT order."""
+        """Distribute a single decay budget across finders in the supplied selection order."""
 
         remaining = total_decay
         lines = []
-        for lot in sorted(lots, key=lambda lot: (lot.tool_lot.tt or Decimal(0), str(lot.id))):
+        for lot in lots:
             available = lot.tool_lot.tt if is_limited_item(lot.origin.item) else remaining
             used = min(remaining, available or Decimal(0))
             lines.append({"lot_id": lot.id, "decay": used})

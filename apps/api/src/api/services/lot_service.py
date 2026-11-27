@@ -179,6 +179,15 @@ class LotService:
             item_id=item_id,
         )
 
+    async def get_unstackable_lots_for_items(
+        self, *, user_id: UUID, item_ids: Collection[UUID]
+    ) -> list[Lot]:
+        """Return available tool lots for the user's requested catalogue items."""
+
+        return await self._repository.get_unstackable_lots_for_items(
+            user_id=user_id, item_ids=item_ids
+        )
+
     async def set_default_tool_lot(self, *, user_id: UUID, lot_id: UUID) -> Lot:
         """Set an owned finder, excavator, or refiner lot as the default.
 

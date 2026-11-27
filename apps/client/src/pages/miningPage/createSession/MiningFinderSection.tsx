@@ -1,31 +1,48 @@
 import { useTranslations } from '@/i18n/useTranslations';
 import { Section } from '@/shared/components';
 import type { MiningEquipment } from './useMiningEquipment';
-import type { UnstackableLotResponse } from '@/api/generated/model';
 import MiningFindersBlock from './MiningFindersBlock';
+import { MiningExcavatorsBlock } from './MiningExcavatorsBlock';
 import MiningAmplifiersBlock from './MiningAmplifiersBlock';
 import MiningEnhancersBlock from './MiningEnhancersBlock';
-import { minimumTier } from './miningSessionCalculation';
+import {
+  calculateMiningSession,
+  minimumTier,
+} from './miningSessionCalculation';
 import styles from './mining-session-form.module.scss';
 
 /** Render finder in three columns or excavators in two, with sockets shared at the lowest tier. */
 export function MiningFinderSection({
   equipment,
-  selectedLots,
+  estimate,
+  selectedFinderIds,
   toolRole: role = 'finder',
 }: {
   equipment: MiningEquipment;
-  selectedLots: UnstackableLotResponse[];
+  estimate: ReturnType<typeof calculateMiningSession>;
+  selectedFinderIds: string[];
   toolRole?: 'finder' | 'excavator';
 }): import('react').JSX.Element {
   const { t } = useTranslations();
+  const selectedLots =
+    role === 'finder' ? estimate.finderLots : estimate.excavatorLots;
   return (
     <Section>
       <h2>
-        {role === 'finder' ? t('MINING.FINDER') : t('MINING.SETUP.EXCAVATORS')}
+        {role === 'finder'
+          ? t('MINING.SETUP.SEARCH_SETUP')
+          : t('MINING.SETUP.EXCAVATORS')}
       </h2>
       <div className={styles.finderBlocks}>
-        <MiningFindersBlock equipment={equipment} toolRole={role} />
+        {role === 'finder' ? (
+          <MiningFindersBlock
+            equipment={equipment}
+            estimate={estimate}
+            selectedIds={selectedFinderIds}
+          />
+        ) : (
+          <MiningExcavatorsBlock equipment={equipment} />
+        )}
         {role === 'finder' && <MiningAmplifiersBlock equipment={equipment} />}
         <MiningEnhancersBlock
           equipment={equipment}

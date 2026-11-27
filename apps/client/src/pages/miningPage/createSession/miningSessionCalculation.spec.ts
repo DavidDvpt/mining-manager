@@ -71,7 +71,6 @@ function fixture(limited = true) {
     ...miningSessionFormDefaultValues,
     clicks: 10,
     planet: 'planet',
-    finderItemId: 'finder',
     finderLotIds: ['f1', 'f2'],
     excavatorLotIds: ['e1'],
   };
@@ -88,15 +87,16 @@ describe('mining session calculations', () => {
     (searchType, ammo, decay) => {
       const { equipment, values } = fixture(false);
       const estimate = calculateMiningSession(
-        { ...values, searchType },
+        { ...values, searchType, finderLotIds: ['f1'] },
         equipment,
       );
       expect(estimate.ammo).toBe(ammo);
       expect(estimate.finderDecay).toBe(decay);
+      expect(estimate.finderAmmoByLot.f1).toBe(ammo);
     },
   );
 
-  it('pools TT only from checked finders and uses their lowest tier', () => {
+  it('pools TT only from selected finders and uses their lowest tier', () => {
     const { equipment, values } = fixture();
     const estimate = calculateMiningSession(values, equipment);
     expect(estimate.issues).toEqual([]);
@@ -109,11 +109,12 @@ describe('mining session calculations', () => {
     ).toBe(true);
   });
 
-  it('keeps one sufficient finder and removes redundant partial or unlimited tools', () => {
+  it('preserves the primary finder and trims trailing lots once covered', () => {
     const { equipment } = fixture();
     const [first, second] = equipment.lots;
     const sufficient = { ...first, id: 'sufficient', tt: '1' };
     expect(selectUsefulFinders([first, sufficient, second], 1, true)).toEqual([
+      first,
       sufficient,
     ]);
     expect(
@@ -122,14 +123,16 @@ describe('mining session calculations', () => {
     expect(selectUsefulFinders([first, second], 1, false)).toEqual([first]);
   });
 
-  it('allocates decay once, using the lowest TT finder first regardless of inventory order', () => {
+  it('allocates decay and ammo in selection order even when the second finder could cover the session alone', () => {
     const { equipment, values } = fixture();
     equipment.lots[0].tt = '0.8';
-    equipment.lots[1].tt = '0.3';
+    equipment.lots[1].tt = '1';
     const estimate = calculateMiningSession(values, equipment);
-    expect(estimate.finderLots.map((lot) => lot.id)).toEqual(['f2', 'f1']);
-    expect(estimate.finderDecayByLot.f2).toBe(0.3);
-    expect(estimate.finderDecayByLot.f1).toBeCloseTo(0.7);
+    expect(estimate.finderLots.map((lot) => lot.id)).toEqual(['f1', 'f2']);
+    expect(estimate.finderDecayByLot.f1).toBe(0.8);
+    expect(estimate.finderDecayByLot.f2).toBeCloseTo(0.2);
+    expect(estimate.finderAmmoByLot.f1).toBeCloseTo(4);
+    expect(estimate.finderAmmoByLot.f2).toBeCloseTo(1);
   });
 
   it('estimates TTC using markup only on L tools and leaves ammunition at TT', () => {
@@ -179,7 +182,12 @@ describe('mining session calculations', () => {
   it('allows repairable unlimited tools despite their low current TT', () => {
     const { equipment, values } = fixture(false);
     const estimate = calculateMiningSession(
-      { ...values, clicks: 10000, amplifierItemId: 'amp' },
+      {
+        ...values,
+        clicks: 10000,
+        finderLotIds: ['f1'],
+        amplifierItemId: 'amp',
+      },
       equipment,
     );
     expect(estimate.issues).toEqual([]);

@@ -56,6 +56,28 @@ class FinderService:
             item_ids=[finder.id for finder in finders],
         )
 
+    async def get_available_lots(
+        self, *, user_id: UUID
+    ) -> dict[UUID, list[tuple[Lot, ItemEntity[Finder]]]]:
+        """Group the user's available lots by active finder model and attach catalogue data."""
+
+        if self._lot_service is None:
+            raise RuntimeError("LotService is required for finder lot queries")
+        finders = {
+            finder.id: finder
+            for finder in await self.get_all()
+            if finder.is_active is not False
+        }
+        lots = await self._lot_service.get_unstackable_lots_for_items(
+            user_id=user_id, item_ids=finders.keys()
+        )
+        inventory: dict[UUID, list[tuple[Lot, ItemEntity[Finder]]]] = {}
+        for lot in lots:
+            finder = finders.get(lot.origin.item_id) if lot.origin is not None else None
+            if finder is not None:
+                inventory.setdefault(finder.id, []).append((lot, finder))
+        return inventory
+
     async def get_owned_lot(self, *, user_id: UUID, lot_id: UUID) -> Lot:
         """Return an owned lot after confirming that it contains a finder."""
 

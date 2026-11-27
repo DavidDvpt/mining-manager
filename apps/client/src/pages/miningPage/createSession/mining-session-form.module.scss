@@ -136,6 +136,46 @@
     color: var(--text-muted);
   }
 
+  .finderCard {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.625rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .finderCardHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .removeFinder {
+    display: grid;
+    flex: 0 0 auto;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--primary-500);
+    cursor: pointer;
+  }
+
+  .addFinder {
+    min-height: 2.25rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--input-bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 1.25rem;
+    cursor: pointer;
+  }
+
   .error {
     margin: 0;
     color: var(--error-300);

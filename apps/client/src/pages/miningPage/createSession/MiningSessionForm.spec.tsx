@@ -4,6 +4,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
@@ -26,6 +27,10 @@ class TestResizeObserver {
   }
 }
 vi.stubGlobal('ResizeObserver', TestResizeObserver);
+Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+  configurable: true,
+  value: vi.fn(),
+});
 
 const mocks = vi.hoisted(() => ({
   create: vi.fn(),
@@ -58,7 +63,14 @@ vi.mock('./useMiningEquipment', () => ({
           name: 'Finder (L)',
           imgId: null,
           economy: { decay: '0.1' },
-          details: { ammoBurn: 10, isLimited: true },
+          details: { ammoBurn: 10, isLimited: true, depth: '250' },
+        },
+        {
+          id: 'unlimited',
+          name: 'Unlimited finder',
+          imgId: null,
+          economy: { decay: '0.00220' },
+          details: { ammoBurn: 10, isLimited: false, depth: '350' },
         },
       ],
       excavators: [
@@ -90,6 +102,9 @@ vi.mock('./useMiningEquipment', () => ({
       lots: [
         { id: 'f4', item: { id: 'finder' }, tt: '10', tier: 4 },
         { id: 'f0', item: { id: 'finder' }, tt: '10', tier: 0 },
+        { id: 'f6', item: { id: 'finder' }, tt: '10', tier: 6 },
+        { id: 'fu', item: { id: 'unlimited' }, tt: '1', tier: 2 },
+        { id: 'fu2', item: { id: 'unlimited' }, tt: '2.12340', tier: 3 },
         { id: 'e0', item: { id: 'excavator' }, tt: '0', tier: 0 },
         { id: 'a1', item: { id: 'amp1' }, tt: '183', tier: 0 },
         { id: 'a2', item: { id: 'amp2' }, tt: '183', tier: 0 },
@@ -122,6 +137,16 @@ function renderCreation() {
   );
 }
 
+/** Open the accessible finder picker and choose a specific lot. */
+function selectFinder(trigger: string, option: RegExp): void {
+  fireEvent.keyDown(screen.getByRole('combobox', { name: trigger }), {
+    key: 'ArrowDown',
+  });
+  fireEvent.click(
+    within(screen.getByRole('listbox')).getByRole('option', { name: option }),
+  );
+}
+
 describe('mining creation route', () => {
   const originalLanguage = document.documentElement.lang;
   afterEach(() => {
@@ -139,10 +164,21 @@ describe('mining creation route', () => {
     expect(screen.getByText(/Coût estimé/).textContent).toMatch(
       /PED TT.*PED TTC/,
     );
-    fireEvent.change(screen.getByLabelText('Modèle de finder'), {
-      target: { value: 'finder' },
+    fireEvent.keyDown(
+      screen.getByRole('combobox', { name: 'Sélectionner un finder' }),
+      { key: 'ArrowDown' },
+    );
+    const options = within(screen.getByRole('listbox'));
+    const finderOption = options.getByRole('option', {
+      name: /^Finder \(L\) · T4 10,00$/,
     });
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Finder (L) · T4' }));
+    expect(
+      within(finderOption).getByText('10,00').previousElementSibling?.tagName,
+    ).toBe('BR');
+    expect(
+      options.getByRole('option', { name: /^Unlimited finder · T3 2,1234$/ }),
+    ).toBeTruthy();
+    fireEvent.click(finderOption);
     fireEvent.click(screen.getByRole('checkbox', { name: 'Excavator · T0' }));
     fireEvent.click(screen.getByRole('radio', { name: /Amp 1/ }));
     fireEvent.click(screen.getByRole('radio', { name: /Amp 2/ }));
@@ -176,14 +212,18 @@ describe('mining creation route', () => {
     fireEvent.change(screen.getByLabelText('Nombre de clics'), {
       target: { value: '150' },
     });
-    fireEvent.change(screen.getByLabelText('Modèle de finder'), {
-      target: { value: 'finder' },
-    });
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Finder (L) · T4' }));
+    selectFinder('Sélectionner un finder', /Finder \(L\).*T4.*10,00/);
     fireEvent.change(screen.getByLabelText('Socket 1'), {
       target: { value: 'enhancer' },
     });
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Finder (L) · T0' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Ajouter un finder compatible' }),
+    );
+    fireEvent.click(
+      within(screen.getByRole('listbox')).getByRole('option', {
+        name: /Finder \(L\).*T0/,
+      }),
+    );
     expect(screen.queryByLabelText('Socket 1')).toBeNull();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Excavator · T0' }));
     fireEvent.click(screen.getByRole('button', { name: 'Créer la session' }));
@@ -192,33 +232,95 @@ describe('mining creation route', () => {
     );
   });
 
-  it('hides unnecessary finders and restores choices when the requested decay increases', async () => {
+  it('adds only same-model lots when needed and displays the allocated costs per lot', async () => {
     renderCreation();
-    fireEvent.change(screen.getByLabelText('Modèle de finder'), {
-      target: { value: 'finder' },
-    });
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Finder (L) · T4' }));
     expect(
-      screen.queryByRole('checkbox', { name: 'Finder (L) · T0' }),
+      screen.getByRole('heading', { name: 'Setup de recherche' }),
+    ).toBeTruthy();
+    selectFinder('Sélectionner un finder', /Finder \(L\).*T4/);
+    expect(screen.getByText('Finder (L) · T4')).toBeTruthy();
+    expect(screen.getByText('Profondeur : 250,00 m')).toBeTruthy();
+    expect(
+      screen.queryByRole('combobox', { name: 'Sélectionner un finder' }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: 'Ajouter un finder compatible' }),
     ).toBeNull();
     fireEvent.change(screen.getByLabelText('Nombre de clics'), {
       target: { value: '150' },
     });
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Finder (L) · T0' }));
-    expect(screen.getAllByRole('checkbox', { name: /Finder/ })).toHaveLength(2);
+    const addFinder = screen.getByRole('button', {
+      name: 'Ajouter un finder compatible',
+    });
+    expect(screen.queryByRole('listbox')).toBeNull();
+    fireEvent.click(addFinder);
+    const options = within(screen.getByRole('listbox'));
+    expect(options.getAllByRole('option')).toHaveLength(2);
+    expect(options.queryByRole('option', { name: /Unlimited/ })).toBeNull();
+    fireEvent.click(options.getByRole('option', { name: /Finder \(L\).*T0/ }));
+    expect(
+      screen.queryByRole('combobox', { name: 'Ajouter un finder compatible' }),
+    ).toBeNull();
+    expect(screen.getByText('Decay · 10,00 PED')).toBeTruthy();
+    expect(screen.getByText('Decay · 5,00 PED')).toBeTruthy();
+    expect(screen.getByText('Munitions · 50,00 PED')).toBeTruthy();
+    expect(screen.getByText('Munitions · 25,00 PED')).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText('Nombre de clics'), {
+      target: { value: '250' },
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Ajouter un finder compatible' }),
+    );
+    fireEvent.click(
+      within(screen.getByRole('listbox')).getByRole('option', {
+        name: /Finder \(L\).*T6/,
+      }),
+    );
+    expect(
+      screen.getAllByRole('button', { name: /Retirer Finder/ }),
+    ).toHaveLength(3);
+    expect(screen.getByText('Munitions · 25,00 PED')).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Retirer Finder (L) · T6' }),
+      );
+    });
+    expect(screen.queryByText('Finder (L) · T6')).toBeNull();
+    expect(screen.getByText('Finder (L) · T4')).toBeTruthy();
+    expect(screen.getByText('Finder (L) · T0')).toBeTruthy();
+    selectFinder('Ajouter un finder compatible', /Finder \(L\).*T6/);
+
     fireEvent.change(screen.getByLabelText('Nombre de clics'), {
       target: { value: '100' },
     });
     await waitFor(() =>
-      expect(screen.getAllByRole('checkbox', { name: /Finder/ })).toHaveLength(
-        1,
-      ),
+      expect(
+        screen.queryByRole('button', { name: 'Retirer Finder (L) · T0' }),
+      ).toBeNull(),
     );
-    fireEvent.click(screen.getByRole('checkbox', { name: /Finder/ }));
-    expect(screen.getAllByRole('checkbox', { name: /Finder/ })).toHaveLength(2);
+    expect(screen.getByText('Finder (L) · T4')).toBeTruthy();
+
     await act(async () => {
-      await Promise.resolve();
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Retirer Finder (L) · T4' }),
+      );
     });
+    expect(screen.queryByText('Finder (L) · T4')).toBeNull();
+    selectFinder('Sélectionner un finder', /Unlimited finder.*T2.*1,00/);
+    fireEvent.change(screen.getByLabelText('Nombre de clics'), {
+      target: { value: '1' },
+    });
+    expect(screen.getByText('Decay · 0,0022 PED')).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Nombre de clics'), {
+      target: { value: '200' },
+    });
+    expect(
+      screen.queryByRole('button', { name: 'Ajouter un finder compatible' }),
+    ).toBeNull();
+    expect(screen.getByText('Decay · 0,44 PED')).toBeTruthy();
+    expect(screen.getByText('Munitions · 100,00 PED')).toBeTruthy();
   });
 
   it('cancels to mining and refuses direct creation when a session is already open', () => {
